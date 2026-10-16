@@ -1,0 +1,77 @@
+# Acoustic Forensics - Default Configuration
+seed: 42
+seeds: [42, 1337, 2024]
+device: "cuda"  # auto-detected as cuda, mps, or cpu
+
+project:
+  name: "acoustic-forensics"
+  version: "1.0.0"
+  description: "Deployable Synthetic Speech & Deepfake Audio Detection"
+
+audio:
+  sample_rate: 16000
+  target_length_sec: 4.0
+  target_length_samples: 64000
+  min_duration_sec: 0.5
+  normalization_method: "peak"  # options: 'peak', 'rms', 'none'
+  vad_silence_trim: false       # used for shortcut learning ablation
+  eval_crop_strategy: "center"  # 'center' or 'multi_crop'
+  multi_crop_overlap_ratio: 0.5
+
+features:
+  feature_type: "lfcc"  # 'lfcc', 'logmel', 'combined'
+  normalization: "global_meanstd"  # 'global_meanstd', 'per_utt_cmvn'
+  stats_file: "checkpoints/normalization_stats.json"
+
+  lfcc:
+    n_fft: 512
+    win_length: 400      # 25 ms at 16 kHz
+    hop_length: 160      # 10 ms at 16 kHz
+    n_filter: 20         # 20 linear filterbank channels
+    n_lfcc: 20           # 20 base cepstral coefficients
+    with_deltas: true    # include delta and delta-delta -> 60 total coefficients
+
+  logmel:
+    n_fft: 512
+    win_length: 400
+    hop_length: 160
+    n_mels: 80
+    f_min: 0.0
+    f_max: 8000.0
+    power: 2.0
+    top_db: 80.0
+
+data:
+  asvspoof_root: "data/raw/LA"
+  protocols_dir: "data/raw/LA/ASVspoof2019_LA_cm_protocols"
+  train_protocol: "ASVspoof2019.LA.cm.train.trn.txt"
+  dev_protocol: "ASVspoof2019.LA.cm.dev.trl.txt"
+  eval_protocol: "ASVspoof2019.LA.cm.eval.trl.txt"
+  train_audio_dir: "ASVspoof2019_LA_train/flac"
+  dev_audio_dir: "ASVspoof2019_LA_dev/flac"
+  eval_audio_dir: "ASVspoof2019_LA_eval/flac"
+  asv_eval_score_file: "data/raw/LA/ASVspoof2019_LA_asv_scores/ASVspoof2019.LA.asv.eval.gi.trl.scores.txt"
+  asv_dev_score_file: "data/raw/LA/ASVspoof2019_LA_asv_scores/ASVspoof2019.LA.asv.dev.gi.trl.scores.txt"
+
+  in_the_wild_root: "data/raw/in_the_wild"
+  in_the_wild_meta: "data/raw/in_the_wild/meta.csv"
+
+  compressed_data_dir: "data/compressed"
+  feature_cache_dir: "data/cache"
+
+smoke_test:
+  enabled: false
+  data_dir: "data/smoke_test"
+  train_samples: 200
+  dev_samples: 100
+  eval_samples: 100
+  epochs: 2
+  batch_size: 16
+
+paths:
+  checkpoints_dir: "checkpoints"
+  results_dir: "results"
+  metrics_dir: "results/metrics"
+  tables_dir: "results/tables"
+  figures_dir: "results/figures"
+  logs_dir: "results/logs"

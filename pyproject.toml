@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "acforensics"
+version = "0.1.0"
+description = "Acoustic Forensics - Synthetic Speech and Deepfake Audio Detection"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [
+    { name = "Agam Ghotra", email = "iit2024226@iiita.ac.in" },
+    { name = "Paras Bansal", email = "iit2024221@iiita.ac.in" },
+    { name = "Jashan Goyal", email = "iit2024223@iiita.ac.in" },
+    { name = "Chunit Bansal", email = "iit2024233@iiita.ac.in" }
+]
+dependencies = [
+    "torch>=2.2.0",
+    "torchaudio>=2.2.0",
+    "numpy>=1.24.0,<2.3.0",
+    "scipy>=1.11.0",
+    "scikit-learn>=1.3.0",
+    "pandas>=2.1.0",
+    "soundfile>=0.12.1",
+    "matplotlib>=3.8.0",
+    "seaborn>=0.13.0",
+    "plotly>=5.18.0",
+    "streamlit>=1.32.0",
+    "pyyaml>=6.0.1",
+    "tqdm>=4.66.0",
+    "joblib>=1.3.2",
+    "tabulate>=0.9.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=4.1.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-v --durations=10"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::UserWarning",
+]

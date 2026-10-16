@@ -1,0 +1,71 @@
+/* Forensic Lab Dark Theme Custom Styles */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+html, body, [class*="css"] {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+code, pre {
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* Glassmorphic Forensic Card */
+.forensic-card {
+    background-color: #161B22;
+    border: 1px solid #30363D;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Verdict Badges */
+.badge-genuine {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.05));
+    border: 2px solid #22C55E;
+    color: #4ADE80;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 1.4rem;
+    font-weight: 700;
+    text-align: center;
+    letter-spacing: 0.05em;
+    display: inline-block;
+}
+
+.badge-synthetic {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.05));
+    border: 2px solid #EF4444;
+    color: #F87171;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 1.4rem;
+    font-weight: 700;
+    text-align: center;
+    letter-spacing: 0.05em;
+    display: inline-block;
+}
+
+.badge-uncertain {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.05));
+    border: 2px solid #F59E0B;
+    color: #FBBF24;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 1.4rem;
+    font-weight: 700;
+    text-align: center;
+    letter-spacing: 0.05em;
+    display: inline-block;
+}
+
+/* Persistent Disclaimer Banner */
+.disclaimer-banner {
+    background-color: #1F2937;
+    border-left: 4px solid #2DD4BF;
+    padding: 12px 16px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    color: #D1D5DB;
+    margin-top: 24px;
+}

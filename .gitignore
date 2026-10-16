@@ -1,0 +1,76 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# Distribution / packaging
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyTorch checkpoints / model weights
+checkpoints/*.pt
+checkpoints/*.pth
+checkpoints/*.onnx
+checkpoints/*.bin
+checkpoints/classical/*.joblib
+checkpoints/calibrator.joblib
+!checkpoints/.gitkeep
+!checkpoints/classical/.gitkeep
+
+# Data directories (large audio files)
+data/
+data/raw/
+data/compressed/
+data/cache/
+!data/.gitkeep
+
+# Results & artifacts
+results/figures/*.png
+results/figures/*.svg
+results/tables/*.csv
+results/metrics/*.json
+results/logs/*.log
+results/logs/*.csv
+!results/figures/.gitkeep
+!results/tables/.gitkeep
+!results/metrics/.gitkeep
+!results/logs/.gitkeep
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+
+# IDE and OS
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Test coverage & pytest
+.pytest_cache/
+.coverage
+htmlcov/
