@@ -56,8 +56,9 @@ def create_attention_waveform_plot(
     waveform: np.ndarray,
     attention_weights: np.ndarray,
     sr: int = 16000,
+    anomaly_segments: list[dict] = None,
 ) -> go.Figure:
-    """Creates dual-layer plot: audio waveform with overlaid attention heat-strip."""
+    """Creates dual-layer plot: audio waveform with overlaid attention heat-strip and anomaly highlights."""
     duration = len(waveform) / sr
     time_wave = np.linspace(0, duration, len(waveform))
 
@@ -71,10 +72,10 @@ def create_attention_waveform_plot(
 
     fig = make_subplots(
         rows=2, cols=1,
-        row_heights=[0.75, 0.25],
+        row_heights=[0.72, 0.28],
         shared_xaxes=True,
         vertical_spacing=0.08,
-        subplot_titles=["Waveform Amplitude", "Frame Attention Weights (Model Decision Focus)"],
+        subplot_titles=["Waveform Amplitude with Anomaly Regions", "Frame Attention Weights (Model Decision Focus)"],
     )
 
     # Waveform trace
@@ -83,7 +84,7 @@ def create_attention_waveform_plot(
             x=time_sub,
             y=wave_sub,
             mode="lines",
-            line=dict(color="#2DD4BF", width=1),
+            line=dict(color="#06B6D4", width=1.2),
             name="Waveform",
             hoverinfo="x+y",
         ),
@@ -104,17 +105,38 @@ def create_attention_waveform_plot(
         row=2, col=1,
     )
 
+    # Add anomaly segment highlight boxes if present
+    if anomaly_segments:
+        for seg in anomaly_segments:
+            s_start = seg.get("start_sec", 0.0)
+            s_end = seg.get("end_sec", duration)
+            severity = seg.get("severity", "HIGH")
+            box_color = "rgba(239, 68, 68, 0.22)" if severity == "CRITICAL" else "rgba(245, 158, 11, 0.18)"
+            fig.add_vrect(
+                x0=s_start,
+                x1=s_end,
+                fillcolor=box_color,
+                layer="below",
+                line_width=1,
+                line_dash="dot",
+                line_color="#EF4444" if severity == "CRITICAL" else "#F59E0B",
+                annotation_text=f"Anomaly ({severity})",
+                annotation_position="top left",
+                annotation_font=dict(size=10, color="#FCA5A5" if severity == "CRITICAL" else "#FDE68A"),
+                row=1, col=1,
+            )
+
     fig.update_layout(
-        paper_bgcolor="#161B22",
-        plot_bgcolor="#0E1117",
-        font=dict(color="#E2E8F0"),
-        height=350,
+        paper_bgcolor="#0B0F17",
+        plot_bgcolor="#111827",
+        font=dict(color="#F1F5F9"),
+        height=360,
         margin=dict(l=30, r=30, t=40, b=30),
         showlegend=False,
     )
-    fig.update_xaxes(title_text="Time (seconds)", row=2, col=1, gridcolor="#30363D")
-    fig.update_yaxes(title_text="Amplitude", row=1, col=1, gridcolor="#30363D")
-    fig.update_yaxes(title_text="Weight α_t", row=2, col=1, gridcolor="#30363D")
+    fig.update_xaxes(title_text="Time (seconds)", row=2, col=1, gridcolor="#1F2937")
+    fig.update_yaxes(title_text="Amplitude", row=1, col=1, gridcolor="#1F2937")
+    fig.update_yaxes(title_text="Weight α_t", row=2, col=1, gridcolor="#1F2937")
 
     return fig
 
@@ -123,22 +145,44 @@ def create_spectrogram_heatmap(
     spec_matrix: np.ndarray,
     title: str = "Spectrogram Heatmap",
     y_title: str = "Bands",
+    duration_sec: float = None,
+    anomaly_segments: list[dict] = None,
 ) -> go.Figure:
-    """Builds interactive heatmap for LFCC or Log-Mel features."""
+    """Builds interactive heatmap for LFCC or Log-Mel features with calibrated time axis."""
+    T = spec_matrix.shape[1] if spec_matrix.ndim > 1 else 100
+    x_axis = np.linspace(0, duration_sec, T) if duration_sec else np.arange(T)
+    x_label = "Time (seconds)" if duration_sec else "Time Frames (~10ms hop)"
+
     fig = go.Figure(data=go.Heatmap(
         z=spec_matrix,
+        x=x_axis,
         colorscale="Viridis",
         colorbar=dict(title="Energy / dB"),
     ))
 
+    if anomaly_segments and duration_sec:
+        for seg in anomaly_segments:
+            s_start = seg.get("start_sec", 0.0)
+            s_end = seg.get("end_sec", duration_sec)
+            fig.add_vrect(
+                x0=s_start,
+                x1=s_end,
+                fillcolor="rgba(239, 68, 68, 0.25)",
+                layer="above",
+                line_width=1,
+                line_color="#EF4444",
+                annotation_text="Anomaly",
+                annotation_font=dict(size=9, color="#F87171"),
+            )
+
     fig.update_layout(
-        title=dict(text=title, font=dict(size=14, color="#E2E8F0")),
-        xaxis=dict(title="Time Frames (~10ms hop)", gridcolor="#30363D"),
-        yaxis=dict(title=y_title, gridcolor="#30363D"),
-        paper_bgcolor="#161B22",
-        plot_bgcolor="#0E1117",
-        font=dict(color="#E2E8F0"),
-        height=300,
+        title=dict(text=title, font=dict(size=14, color="#F1F5F9")),
+        xaxis=dict(title=x_label, gridcolor="#1F2937"),
+        yaxis=dict(title=y_title, gridcolor="#1F2937"),
+        paper_bgcolor="#0B0F17",
+        plot_bgcolor="#111827",
+        font=dict(color="#F1F5F9"),
+        height=320,
         margin=dict(l=30, r=30, t=40, b=30),
     )
     return fig

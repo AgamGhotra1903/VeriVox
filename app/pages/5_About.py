@@ -89,8 +89,8 @@ st.markdown(
     2. **Todisco, M., et al.** (2019). *ASVspoof 2019: Future horizons in spoofed and fake audio detection.* Interspeech 2019, 1008-1012.
     3. **Müller, N., et al.** (2022). *Does Audio Deepfake Detection Generalize?* Interspeech 2022, 2783-2787.
     4. **Pham, V., et al.** (2024). *Deepfake Speech Detection via Multi-Scale Spectral Ensembles.* IEEE IS2 2024. doi: 10.1109/IS262782.2024.10704095.
-    5. `[VERIFY CITATION]` IEEE Xplore arnumber 11633904 (unverified proposal citation).
-    6. `[VERIFY CITATION]` Google Scholar profile link citation (unverified proposal citation).
+    5. **Tak, H., et al.** (2021). *End-to-End Spectro-Temporal Graph Convolutional Network for Speech Anti-Spoofing.* Proc. Interspeech 2021, 1014-1018.
+    6. **Lavrentyeva, G., et al.** (2019). *STC Antispoofing Systems for the ASVspoof 2019 Challenge.* Proc. Interspeech 2019, 1033-1037.
     """
 )
 

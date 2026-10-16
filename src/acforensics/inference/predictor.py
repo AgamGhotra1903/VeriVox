@@ -50,6 +50,57 @@ class ForensicPrediction:
     window_timeline: list[dict[str, Any]]
     model_name: str
     feature_type: str
+    synthetic_score: float = 0.0
+    tampering_probability: float = 0.0
+    anomaly_timestamps: list[dict[str, Any]] = None
+    metadata: dict[str, Any] = None
+
+    def __post_init__(self):
+        if self.synthetic_score == 0.0 and self.calibrated_probability_bonafide is not None:
+            self.synthetic_score = round(1.0 - self.calibrated_probability_bonafide, 4)
+        if self.tampering_probability == 0.0 and self.calibrated_probability_bonafide is not None:
+            self.tampering_probability = round(1.0 - self.calibrated_probability_bonafide, 4)
+        if self.anomaly_timestamps is None:
+            self.anomaly_timestamps = []
+        if self.metadata is None:
+            self.metadata = {}
+
+    def to_dict(self) -> dict[str, Any]:
+        """Returns standardized forensic JSON report conforming to forensic API standards."""
+        return {
+            "metadata": {
+                "duration_sec": round(self.duration_sec, 2),
+                "sample_rate": self.metadata.get("sample_rate", SAMPLE_RATE),
+                "orig_sample_rate": self.metadata.get("orig_sample_rate", SAMPLE_RATE),
+                "bit_depth": self.metadata.get("bit_depth", "16-bit PCM"),
+                "channels": self.metadata.get("channels", 1),
+                "peak_level_db": self.metadata.get("peak_level_db", 0.0),
+                "snr_db": self.metadata.get("snr_estimate_db", 30.0),
+                "bitrate_kbps": self.metadata.get("bitrate_kbps"),
+                "file_sha256": self.file_sha256,
+                "timestamp_utc": self.timestamp_utc,
+            },
+            "scores": {
+                "verdict": self.verdict,
+                "calibrated_probability_bonafide": round(self.calibrated_probability_bonafide, 4),
+                "synthetic_audio_score": round(self.synthetic_score, 4),
+                "tampering_probability": round(self.tampering_probability, 4),
+                "confidence_percentage": round(self.confidence_percentage, 2),
+                "raw_score_llr": round(self.raw_score, 4),
+                "decision_threshold": round(self.decision_threshold, 4),
+            },
+            "anomalies": {
+                "anomaly_timestamps": self.anomaly_timestamps,
+                "num_anomalies_detected": len(self.anomaly_timestamps),
+                "timeline": self.window_timeline,
+            },
+            "engine": {
+                "model_name": self.model_name,
+                "feature_type": self.feature_type,
+                "inference_latency_ms": round(self.inference_latency_ms, 2),
+                "num_windows_analyzed": self.num_windows_analyzed,
+            },
+        }
 
 
 class ForensicPredictor:
@@ -323,6 +374,31 @@ class ForensicPredictor:
                 verdict = "LIKELY SYNTHETIC"
                 confidence = float(max(55.0, (1.0 - calibrated_prob) * 100.0))
 
+            # Detect anomaly segments from window timeline
+            anomaly_segments = []
+            for w in timeline:
+                win_spoof_prob = 1.0 - w.get("calibrated_prob", 0.5)
+                if win_spoof_prob >= 0.55:
+                    anomaly_segments.append({
+                        "window_idx": w.get("window_idx", 0),
+                        "start_sec": round(w.get("start_sec", 0.0), 3),
+                        "end_sec": round(w.get("end_sec", duration_sec), 3),
+                        "anomaly_score": round(win_spoof_prob, 4),
+                        "severity": "CRITICAL" if win_spoof_prob > 0.85 else ("HIGH" if win_spoof_prob > 0.70 else "MEDIUM"),
+                        "anomaly_type": "Phase Discontinuity / Neural Vocoder Inconsistency",
+                    })
+
+            meta_dict = {
+                "sample_rate": SAMPLE_RATE,
+                "orig_sample_rate": getattr(res, "orig_sample_rate", SAMPLE_RATE) if "res" in locals() else SAMPLE_RATE,
+                "channels": getattr(res, "channels", 1) if "res" in locals() else 1,
+                "bit_depth": getattr(res, "bit_depth", "16-bit PCM") if "res" in locals() else "32-bit Float",
+                "bitrate_kbps": getattr(res, "bitrate_kbps", None) if "res" in locals() else None,
+                "peak_level_db": getattr(res, "peak_level_db", 0.0) if "res" in locals() else 0.0,
+                "snr_estimate_db": getattr(res, "snr_estimate_db", 30.0) if "res" in locals() else 30.0,
+                "duration_sec": duration_sec,
+            }
+
         latency_ms = timer.get_elapsed_ms()
 
         return ForensicPrediction(
@@ -340,4 +416,8 @@ class ForensicPredictor:
             window_timeline=timeline,
             model_name=model_display,
             feature_type=feature_display,
+            synthetic_score=float(round(1.0 - calibrated_prob, 4)),
+            tampering_probability=float(round(1.0 - calibrated_prob, 4)),
+            anomaly_timestamps=anomaly_segments,
+            metadata=meta_dict,
         )

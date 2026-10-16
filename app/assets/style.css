@@ -1,71 +1,185 @@
-/* Forensic Lab Dark Theme Custom Styles */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+/* VeriVox Forensic Lab Dark Theme & Precision HUD Stylesheet */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
-html, body, [class*="css"] {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+:root {
+    --bg-darkest: #080B11;
+    --bg-card: rgba(15, 23, 42, 0.7);
+    --bg-card-hover: rgba(30, 41, 59, 0.85);
+    --border-glass: rgba(148, 163, 184, 0.12);
+    --border-glass-hover: rgba(148, 163, 184, 0.3);
+    --text-primary: #F8FAFC;
+    --text-secondary: #94A3B8;
+    --text-muted: #64748B;
+    --accent-cyan: #06B6D4;
+    --accent-emerald: #10B981;
+    --accent-rose: #EF4444;
+    --accent-amber: #F59E0B;
 }
 
-code, pre {
-    font-family: 'JetBrains Mono', monospace;
+html, body, [class*="css"] {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--text-primary);
+}
+
+code, pre, .mono-data {
+    font-family: 'JetBrains Mono', monospace !important;
 }
 
 /* Glassmorphic Forensic Card */
 .forensic-card {
-    background-color: #161B22;
-    border: 1px solid #30363D;
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 16px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    background: var(--bg-card);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border-glass);
+    border-radius: 12px;
+    padding: 22px;
+    margin-bottom: 18px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Verdict Badges */
-.badge-genuine {
-    background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.05));
-    border: 2px solid #22C55E;
-    color: #4ADE80;
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-size: 1.4rem;
+.forensic-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--border-glass-hover);
+    box-shadow: 0 12px 36px 0 rgba(0, 0, 0, 0.5);
+}
+
+/* HUD Metric Cards */
+.hud-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+    margin: 16px 0;
+}
+
+.hud-tile {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+    border-radius: 10px;
+    padding: 14px 16px;
+    text-align: left;
+}
+
+.hud-tile-title {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+}
+
+.hud-tile-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.25rem;
     font-weight: 700;
+    color: #F8FAFC;
+}
+
+.hud-tile-sub {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-top: 4px;
+}
+
+/* Verdict Badges with Sleek Glow */
+.verdict-container {
     text-align: center;
-    letter-spacing: 0.05em;
+    margin: 14px 0 20px 0;
+}
+
+.badge-genuine {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(16, 185, 129, 0.05));
+    border: 2px solid #10B981;
+    color: #34D399;
+    padding: 14px 28px;
+    border-radius: 10px;
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
     display: inline-block;
+    box-shadow: 0 0 24px rgba(16, 185, 129, 0.35);
 }
 
 .badge-synthetic {
-    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.05));
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.18), rgba(239, 68, 68, 0.05));
     border: 2px solid #EF4444;
     color: #F87171;
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-size: 1.4rem;
-    font-weight: 700;
-    text-align: center;
-    letter-spacing: 0.05em;
+    padding: 14px 28px;
+    border-radius: 10px;
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
     display: inline-block;
+    box-shadow: 0 0 24px rgba(239, 68, 68, 0.35);
 }
 
 .badge-uncertain {
-    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.05));
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(245, 158, 11, 0.05));
     border: 2px solid #F59E0B;
     color: #FBBF24;
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-size: 1.4rem;
-    font-weight: 700;
-    text-align: center;
-    letter-spacing: 0.05em;
+    padding: 14px 28px;
+    border-radius: 10px;
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
     display: inline-block;
+    box-shadow: 0 0 24px rgba(245, 158, 11, 0.35);
 }
 
-/* Persistent Disclaimer Banner */
+/* Anomaly Table Badge */
+.anomaly-tag-critical {
+    background: rgba(239, 68, 68, 0.25);
+    color: #FCA5A5;
+    border: 1px solid #EF4444;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.anomaly-tag-high {
+    background: rgba(245, 158, 11, 0.25);
+    color: #FDE68A;
+    border: 1px solid #F59E0B;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* Disclaimer & Notice Banner */
 .disclaimer-banner {
-    background-color: #1F2937;
-    border-left: 4px solid #2DD4BF;
-    padding: 12px 16px;
-    border-radius: 4px;
-    font-size: 0.85rem;
-    color: #D1D5DB;
+    background: rgba(30, 41, 59, 0.6);
+    border-left: 4px solid var(--accent-cyan);
+    padding: 14px 18px;
+    border-radius: 6px;
+    font-size: 0.88rem;
+    color: #CBD5E1;
     margin-top: 24px;
+    line-height: 1.5;
+}
+
+/* Streamlit Button Tweaks */
+.stButton>button {
+    border-radius: 8px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    transition: all 0.2s ease;
+}
+
+.stButton>button:hover {
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 14px rgba(6, 182, 212, 0.35);
+}
+
+/* Audio Player Container */
+.player-container {
+    background: #0F172A;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 16px;
+    margin: 12px 0 20px 0;
 }

@@ -42,6 +42,18 @@ def test_predictor_end_to_end_on_synthetic_wav(tmp_path: Path):
     assert len(pred.attention_weights) > 0
     assert len(pred.window_timeline) >= 1
 
+    # Verify standardized forensic JSON output structure
+    report = pred.to_dict()
+    assert "metadata" in report
+    assert "scores" in report
+    assert "anomalies" in report
+    assert "engine" in report
+    assert "duration_sec" in report["metadata"]
+    assert "sample_rate" in report["metadata"]
+    assert "synthetic_audio_score" in report["scores"]
+    assert "tampering_probability" in report["scores"]
+    assert isinstance(report["anomalies"]["anomaly_timestamps"], list)
+
 
 def test_predictor_classical_baseline_inference(tmp_path: Path):
     audio_file = tmp_path / "test_rf.wav"
