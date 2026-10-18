@@ -62,15 +62,17 @@ def render_forensic_audio_player(audio_path: Path | str, height: int = 160) -> N
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }}
         body {{
-            background: #0B0F17;
+            background: transparent;
             color: #F8FAFC;
-            padding: 10px;
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
         }}
         .player-card {{
             background: linear-gradient(180deg, #111827 0%, #0B0F17 100%);
             border: 1px solid #1F2937;
             border-radius: 12px;
-            padding: 12px 16px;
+            padding: 12px 14px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
         }}
         .waveform-canvas {{

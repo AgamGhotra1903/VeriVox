@@ -4,6 +4,7 @@ Author: Chunit Bansal (IIT2024223)
 """
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
@@ -184,5 +185,95 @@ def create_spectrogram_heatmap(
         font=dict(color="#F1F5F9"),
         height=320,
         margin=dict(l=30, r=30, t=40, b=30),
+    )
+    return fig
+
+
+def create_robustness_chart(df_rob: pd.DataFrame) -> go.Figure:
+    """Builds interactive Plotly dark chart for Lossy Codec Degradation."""
+    fig = go.Figure()
+
+    # Baseline line at Clean EER (0.00%)
+    fig.add_trace(go.Scatter(
+        x=[16, 64],
+        y=[0.0, 0.0],
+        mode="lines",
+        name="Clean Baseline (0.00%)",
+        line=dict(color="#94A3B8", dash="dash", width=1.5),
+        hoverinfo="skip",
+    ))
+
+    color_map = {
+        "MP3": "#EF4444",   # Rose
+        "AAC": "#38BDF8",   # Sky
+        "OPUS": "#10B981",  # Emerald
+    }
+
+    for codec in ["MP3", "AAC", "OPUS"]:
+        sub = df_rob[df_rob["Codec"].str.upper() == codec]
+        if not sub.empty:
+            group_sorted = sub.sort_values("Bitrate (kbps)")
+            color = color_map.get(codec, "#A78BFA")
+            fig.add_trace(go.Scatter(
+                x=group_sorted["Bitrate (kbps)"],
+                y=group_sorted["Compressed EER (%)"],
+                mode="lines+markers",
+                name=f"{codec}",
+                line=dict(color=color, width=2.5),
+                marker=dict(size=8, color=color, symbol="circle"),
+                customdata=group_sorted[["Accuracy (%)", "Abs Degradation (pts)"]].to_numpy(),
+                hovertemplate="<b>%{data.name}</b><br>Bitrate: %{x} kbps<br>Compressed EER: %{y:.2f}%<br>Accuracy: %{customdata[0]:.1f}%<br>Degradation: %{customdata[1]} pts<extra></extra>",
+            ))
+
+    fig.update_layout(
+        title=dict(text="Lossy Codec Degradation: EER (%) vs. Bitrate", font=dict(size=14, color="#F8FAFC")),
+        xaxis=dict(title="Bitrate (kbps)", gridcolor="#1F2937", tickvals=[16, 24, 32, 48, 64]),
+        yaxis=dict(title="Equal Error Rate (EER %)", gridcolor="#1F2937"),
+        paper_bgcolor="#0B0F17",
+        plot_bgcolor="#111827",
+        font=dict(color="#F1F5F9"),
+        height=360,
+        margin=dict(l=35, r=35, t=50, b=40),
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1,
+            bgcolor="rgba(17, 24, 39, 0.7)",
+            bordercolor="#1F2937",
+            borderwidth=1,
+        ),
+    )
+    return fig
+
+
+def create_per_attack_chart(attack_dict: dict[str, float]) -> go.Figure:
+    """Builds interactive Plotly dark bar chart for Per-Attack EER Breakdown."""
+    attacks = sorted(attack_dict.keys())
+    eers = [float(attack_dict[a]) for a in attacks]
+
+    # Known training variants: A16, A17, A19 -> amber, others -> cyan
+    colors = ["#F59E0B" if a in ["A16", "A17", "A19"] else "#06B6D4" for a in attacks]
+
+    fig = go.Figure(go.Bar(
+        x=attacks,
+        y=eers,
+        marker=dict(
+            color=colors,
+            line=dict(color="rgba(255,255,255,0.2)", width=1),
+        ),
+        hovertemplate="<b>Attack %{x}</b><br>EER: %{y:.2f}%<extra></extra>",
+    ))
+
+    fig.update_layout(
+        title=dict(text="Per-Attack EER Breakdown (Amber = Known Training Variant)", font=dict(size=14, color="#F8FAFC")),
+        xaxis=dict(title="Attack Algorithm (A07–A19)", gridcolor="#1F2937"),
+        yaxis=dict(title="Equal Error Rate (%)", gridcolor="#1F2937", rangemode="tozero"),
+        paper_bgcolor="#0B0F17",
+        plot_bgcolor="#111827",
+        font=dict(color="#F1F5F9"),
+        height=320,
+        margin=dict(l=35, r=35, t=45, b=35),
     )
     return fig

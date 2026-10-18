@@ -39,11 +39,13 @@ checkpoints/calibrator.joblib
 !checkpoints/classical/.gitkeep
 
 # Data directories (large audio files)
-data/
 data/raw/
 data/compressed/
 data/cache/
+data/smoke_test/
 !data/.gitkeep
+!data/manifests/
+!data/test_dataset/
 
 # Results & artifacts
 results/figures/*.png

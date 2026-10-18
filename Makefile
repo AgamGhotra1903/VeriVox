@@ -1,16 +1,18 @@
 # Acoustic Forensics Makefile
 SHELL := /bin/bash
-PYTHON := $(shell if [ -f .venv/bin/python ]; then echo .venv/bin/python; else echo python3; fi)
+PYTHON := $(shell if [ -f .venv/bin/python3 ]; then echo .venv/bin/python3; elif [ -f .venv/bin/python ]; then echo .venv/bin/python; else echo python3; fi)
 PIP := $(shell if [ -f .venv/bin/pip ]; then echo .venv/bin/pip; else echo pip3; fi)
 
-.PHONY: help setup data features baselines train evaluate robustness crossdomain errors report demo test smoke clean
+.PHONY: help setup data manifests audit features baselines train evaluate robustness crossdomain errors report demo test smoke clean
 
 help:
 	@echo "Acoustic Forensics - Command Targets:"
 	@echo "  make setup        - Initialize Python virtual environment and install dependencies"
-	@echo "  make smoke        - Generate synthetic smoke-test data and run the end-to-end pipeline in debug mode"
+	@echo "  make smoke        - Generate synthetic smoke-test data, prepare manifests, audit leakage, run tests"
 	@echo "  make test         - Run full pytest test suite"
 	@echo "  make data         - Validate and summarize ASVspoof 2019 / In-the-Wild dataset protocols"
+	@echo "  make manifests    - Prepare and serialize standardized Parquet manifests (AF-Split v1)"
+	@echo "  make audit        - Run zero-leakage speaker, file ID, and audio content hash audit"
 	@echo "  make features     - Extract and cache LFCC and Log-Mel features"
 	@echo "  make baselines    - Train and evaluate classical baselines (LR, RBF-SVM, RF)"
 	@echo "  make train        - Train CRNN architecture on ASVspoof 2019 LA"
@@ -35,9 +37,17 @@ setup:
 data:
 	$(PYTHON) scripts/prepare_data.py --config configs/default.yaml
 
+manifests:
+	$(PYTHON) scripts/prepare_manifests.py --config configs/default.yaml
+
+audit:
+	$(PYTHON) scripts/audit_leakage.py --manifests-dir data/manifests
+
 smoke:
 	@echo "Running quick end-to-end smoke test pipeline..."
 	$(PYTHON) scripts/prepare_data.py --config configs/default.yaml --generate-smoke-data
+	$(PYTHON) scripts/prepare_manifests.py --debug
+	$(PYTHON) scripts/audit_leakage.py --manifests-dir data/manifests
 	$(PYTHON) -m pytest tests/ -v
 	@echo "Smoke test passed successfully."
 

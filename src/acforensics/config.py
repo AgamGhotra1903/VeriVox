@@ -75,6 +75,8 @@ class DataConfig:
     asv_dev_score_file: str = "data/raw/LA/ASVspoof2019_LA_asv_scores/ASVspoof2019.LA.asv.dev.gi.trl.scores.txt"
     in_the_wild_root: str = "data/raw/in_the_wild"
     in_the_wild_meta: str = "data/raw/in_the_wild/meta.csv"
+    itw_cal_ratio: float = 0.15
+    manifests_dir: str = "data/manifests"
     compressed_data_dir: str = "data/compressed"
     feature_cache_dir: str = "data/cache"
 

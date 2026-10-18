@@ -1,0 +1,34 @@
+# Audio & Feature Augmentation Configuration
+# Author: Paras Bansal (IIT2024221), Agam Ghotra (IIT2024226)
+
+spec_augment:
+  enabled: true
+  freq_mask_param: 8       # maximum frequency channels to mask
+  time_mask_param: 20      # maximum time steps to mask
+  freq_masks_num: 2        # number of frequency masks
+  time_masks_num: 2        # number of time masks
+  mask_value: 0.0
+
+rawboost:
+  enabled: false           # active in RawBoost ablation
+  algo: "LN"               # 'LN' (linear/non-linear), 'ISD' (impulsive/stationary), 'all'
+  n_bands: 5
+  min_snr: 10
+  max_snr: 30
+
+codec_aug:
+  enabled: false           # active in codec ablation
+  prob: 0.5
+  codecs: ["mp3", "aac", "opus"]
+  bitrates_kbps: [16, 24, 32, 48, 64]
+
+additive_noise:
+  enabled: false
+  prob: 0.3
+  noise_datasets: ["musan", "demand", "esc50"]
+  snr_range_db: [5.0, 30.0]
+
+reverberation:
+  enabled: false
+  prob: 0.2
+  rir_dataset: "rir"       # simulated / measured room impulse responses

@@ -1,0 +1,11 @@
+path,dataset,split,speaker,label,attack_id,duration,codec,bitrate,gender
+data/smoke_test/in_the_wild/audio/itw_clip_0001.wav,in_the_wild,itw_cal,public_speaker_1,0,unseen_itw,0.0,wav,0,unknown
+data/smoke_test/in_the_wild/audio/itw_clip_0006.wav,in_the_wild,itw_cal,public_speaker_1,1,unseen_itw,0.0,wav,0,unknown
+data/smoke_test/in_the_wild/audio/itw_clip_0011.wav,in_the_wild,itw_cal,public_speaker_1,0,unseen_itw,0.0,wav,0,unknown
+data/smoke_test/in_the_wild/audio/itw_clip_0016.wav,in_the_wild,itw_cal,public_speaker_1,0,unseen_itw,0.0,wav,0,unknown
+data/smoke_test/in_the_wild/audio/itw_clip_0021.wav,in_the_wild,itw_cal,public_speaker_1,1,unseen_itw,0.0,wav,0,unknown
+data/smoke_test/in_the_wild/audio/itw_clip_0026.wav,in_the_wild,itw_cal,public_speaker_1,0,unseen_itw,0.0,wav,0,unknown
+data/smoke_test/in_the_wild/audio/itw_clip_0031.wav,in_the_wild,itw_cal,public_speaker_1,0,unseen_itw,0.0,wav,0,unknown
+data/smoke_test/in_the_wild/audio/itw_clip_0036.wav,in_the_wild,itw_cal,public_speaker_1,1,unseen_itw,0.0,wav,0,unknown
+data/smoke_test/in_the_wild/audio/itw_clip_0041.wav,in_the_wild,itw_cal,public_speaker_1,0,unseen_itw,0.0,wav,0,unknown
+data/smoke_test/in_the_wild/audio/itw_clip_0046.wav,in_the_wild,itw_cal,public_speaker_1,0,unseen_itw,0.0,wav,0,unknown

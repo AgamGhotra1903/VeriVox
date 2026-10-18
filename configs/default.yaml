@@ -1,7 +1,7 @@
 # Acoustic Forensics - Default Configuration
 seed: 42
 seeds: [42, 1337, 2024]
-device: "cuda"  # auto-detected as cuda, mps, or cpu
+device: "auto"  # auto-detected as cuda, mps, or cpu
 
 project:
   name: "acoustic-forensics"
@@ -55,7 +55,9 @@ data:
 
   in_the_wild_root: "data/raw/in_the_wild"
   in_the_wild_meta: "data/raw/in_the_wild/meta.csv"
+  itw_cal_ratio: 0.15
 
+  manifests_dir: "data/manifests"
   compressed_data_dir: "data/compressed"
   feature_cache_dir: "data/cache"
 

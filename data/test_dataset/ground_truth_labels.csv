@@ -1,0 +1,31 @@
+filename,category,ground_truth,expected_verdict,source_dataset,attack_id,duration_sec
+human_01_authentic_speech.wav,Normal Human Speech,bonafide,GENUINE,ASVspoof 2019 LA Eval,None (Human Vocal Tract),4.43
+human_02_authentic_speech.wav,Normal Human Speech,bonafide,GENUINE,ASVspoof 2019 LA Eval,None (Human Vocal Tract),3.71
+human_03_authentic_speech.wav,Normal Human Speech,bonafide,GENUINE,ASVspoof 2019 LA Eval,None (Human Vocal Tract),4.41
+human_04_authentic_speech.wav,Normal Human Speech,bonafide,GENUINE,ASVspoof 2019 LA Eval,None (Human Vocal Tract),2.6
+human_05_authentic_speech.wav,Normal Human Speech,bonafide,GENUINE,ASVspoof 2019 LA Eval,None (Human Vocal Tract),3.73
+human_06_authentic_speech.wav,Normal Human Speech,bonafide,GENUINE,ASVspoof 2019 LA Eval,None (Human Vocal Tract),3.25
+human_07_authentic_speech.wav,Normal Human Speech,bonafide,GENUINE,ASVspoof 2019 LA Eval,None (Human Vocal Tract),2.93
+human_08_authentic_speech.wav,Normal Human Speech,bonafide,GENUINE,ASVspoof 2019 LA Eval,None (Human Vocal Tract),3.36
+human_09_authentic_speech.wav,Normal Human Speech,bonafide,GENUINE,ASVspoof 2019 LA Eval,None (Human Vocal Tract),3.08
+human_10_authentic_speech.wav,Normal Human Speech,bonafide,GENUINE,ASVspoof 2019 LA Eval,None (Human Vocal Tract),2.73
+deepfake_01_synthetic_A17.wav,Deepfake Speech,spoof,SYNTHETIC,ASVspoof 2019 LA Eval,A17,2.72
+deepfake_02_synthetic_A14.wav,Deepfake Speech,spoof,SYNTHETIC,ASVspoof 2019 LA Eval,A14,2.65
+deepfake_03_synthetic_A11.wav,Deepfake Speech,spoof,SYNTHETIC,ASVspoof 2019 LA Eval,A11,3.75
+deepfake_04_synthetic_A18.wav,Deepfake Speech,spoof,SYNTHETIC,ASVspoof 2019 LA Eval,A18,3.15
+deepfake_05_synthetic_A18.wav,Deepfake Speech,spoof,SYNTHETIC,ASVspoof 2019 LA Eval,A18,2.73
+deepfake_06_synthetic_A10.wav,Deepfake Speech,spoof,SYNTHETIC,ASVspoof 2019 LA Eval,A10,3.36
+deepfake_07_synthetic_A13.wav,Deepfake Speech,spoof,SYNTHETIC,ASVspoof 2019 LA Eval,A13,3.18
+deepfake_08_synthetic_A13.wav,Deepfake Speech,spoof,SYNTHETIC,ASVspoof 2019 LA Eval,A13,3.12
+deepfake_09_synthetic_A08.wav,Deepfake Speech,spoof,SYNTHETIC,ASVspoof 2019 LA Eval,A08,2.69
+deepfake_10_synthetic_A18.wav,Deepfake Speech,spoof,SYNTHETIC,ASVspoof 2019 LA Eval,A18,3.25
+itw_normal_01.wav,Normal Human (In-The-Wild),bonafide,GENUINE,In-The-Wild Dataset,None (Authentic Voice),3.91
+itw_normal_02.wav,Normal Human (In-The-Wild),bonafide,GENUINE,In-The-Wild Dataset,None (Authentic Voice),3.48
+itw_normal_03.wav,Normal Human (In-The-Wild),bonafide,GENUINE,In-The-Wild Dataset,None (Authentic Voice),4.98
+itw_normal_04.wav,Normal Human (In-The-Wild),bonafide,GENUINE,In-The-Wild Dataset,None (Authentic Voice),3.51
+itw_normal_05.wav,Normal Human (In-The-Wild),bonafide,GENUINE,In-The-Wild Dataset,None (Authentic Voice),4.54
+itw_deepfake_01.wav,Deepfake (In-The-Wild),spoof,SYNTHETIC,In-The-Wild Dataset,Unseen Wild Clone,3.03
+itw_deepfake_02.wav,Deepfake (In-The-Wild),spoof,SYNTHETIC,In-The-Wild Dataset,Unseen Wild Clone,3.86
+itw_deepfake_03.wav,Deepfake (In-The-Wild),spoof,SYNTHETIC,In-The-Wild Dataset,Unseen Wild Clone,3.48
+itw_deepfake_04.wav,Deepfake (In-The-Wild),spoof,SYNTHETIC,In-The-Wild Dataset,Unseen Wild Clone,4.95
+itw_deepfake_05.wav,Deepfake (In-The-Wild),spoof,SYNTHETIC,In-The-Wild Dataset,Unseen Wild Clone,4.05

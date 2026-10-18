@@ -22,14 +22,17 @@ def render_sidebar() -> dict:
     # Sidebar Brand Header
     st.sidebar.markdown(
         """
-        <div style="padding-bottom: 12px; border-bottom: 1px solid rgba(148, 163, 184, 0.15); margin-bottom: 14px;">
+        <div style="padding-bottom: 14px; border-bottom: 1px solid var(--border-subtle); margin-bottom: 16px;">
             <div style="display: flex; align-items: center; justify-content: space-between;">
-                <h2 style="margin: 0; font-size: 1.55rem; font-weight: 800; color: #F8FAFC; display: flex; align-items: center; gap: 8px;">
+                <h2 style="margin: 0; font-size: 1.5rem; font-weight: 900; color: var(--text-white); display: flex; align-items: center; gap: 8px;">
                     <span>🎙️</span> VeriVox
                 </h2>
-                <span style="font-size: 0.68rem; font-weight: 700; background: rgba(16, 185, 129, 0.15); color: #34D399; padding: 2px 8px; border-radius: 9999px; border: 1px solid rgba(16, 185, 129, 0.3); font-family: 'JetBrains Mono', monospace;">CALIBRATED</span>
+                <span class="vv-status-pip" style="font-size: 0.62rem; padding: 2px 8px;">
+                    <span class="vv-status-dot" style="width: 5px; height: 5px;"></span>
+                    CALIBRATED
+                </span>
             </div>
-            <div style="font-size: 0.8rem; color: #94A3B8; margin-top: 4px;">Acoustic Forensics & Speech Authentication</div>
+            <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">Acoustic Forensics &amp; Speech Authentication</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -57,7 +60,10 @@ def render_sidebar() -> dict:
         else 0
     )
 
-    st.sidebar.markdown("<p style='font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #64748B; letter-spacing: 0.08em; margin: 0 0 6px 0;'>Active Screener</p>", unsafe_allow_html=True)
+    st.sidebar.markdown(
+        '<p style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--text-dim); letter-spacing: 0.08em; margin: 0 0 6px 0;">Active Screener</p>',
+        unsafe_allow_html=True,
+    )
     active_model = st.sidebar.selectbox(
         "Active Model",
         model_options,
@@ -78,7 +84,10 @@ def render_sidebar() -> dict:
         else 0
     )
 
-    st.sidebar.markdown("<p style='font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #64748B; letter-spacing: 0.08em; margin: 12px 0 6px 0;'>Feature Mode</p>", unsafe_allow_html=True)
+    st.sidebar.markdown(
+        '<p style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--text-dim); letter-spacing: 0.08em; margin: 14px 0 6px 0;">Feature Mode</p>',
+        unsafe_allow_html=True,
+    )
     feature_choice = st.sidebar.selectbox(
         "Feature Representation",
         feature_options,
@@ -88,7 +97,10 @@ def render_sidebar() -> dict:
     )
     st.session_state["feature_representation"] = feature_choice
 
-    st.sidebar.markdown("<p style='font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #64748B; letter-spacing: 0.08em; margin: 12px 0 2px 0;'>Operating Decision Threshold</p>", unsafe_allow_html=True)
+    st.sidebar.markdown(
+        '<p style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--text-dim); letter-spacing: 0.08em; margin: 14px 0 2px 0;">Operating Threshold</p>',
+        unsafe_allow_html=True,
+    )
     threshold_override = st.sidebar.slider(
         "Operating Decision Threshold",
         min_value=-5.0,
@@ -110,14 +122,15 @@ def render_sidebar() -> dict:
     )
     st.session_state["show_tech"] = show_tech
 
+    # Team footer
     st.sidebar.markdown(
         """
-        <div style="margin-top: 24px; padding-top: 14px; border-top: 1px solid rgba(148, 163, 184, 0.15); font-size: 0.82rem; color: #94A3B8;">
-            <div style="font-weight: 700; color: #E2E8F0; margin-bottom: 6px;">Academic Engineering Team:</div>
-            <div>• <strong style="color: #38BDF8;">Paras Bansal</strong> (IIT2024221)</div>
-            <div>• <strong style="color: #38BDF8;">Jashan Goyal</strong> (IIT2024223)</div>
-            <div>• <strong style="color: #38BDF8;">Agam Ghotra</strong> (IIT2024226)</div>
-            <div>• <strong style="color: #38BDF8;">Chunit Bansal</strong> (IIT2024233)</div>
+        <div style="margin-top: 28px; padding-top: 14px; border-top: 1px solid var(--border-subtle); font-size: 0.78rem; color: var(--text-muted);">
+            <div style="font-weight: 700; color: var(--text-secondary); margin-bottom: 6px; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em;">Engineering Team</div>
+            <div>• <strong style="color: var(--accent-sky);">Paras Bansal</strong> <span style="color: var(--text-dim);">(IIT2024221)</span></div>
+            <div>• <strong style="color: var(--accent-sky);">Jashan Goyal</strong> <span style="color: var(--text-dim);">(IIT2024223)</span></div>
+            <div>• <strong style="color: var(--accent-sky);">Agam Ghotra</strong> <span style="color: var(--text-dim);">(IIT2024226)</span></div>
+            <div>• <strong style="color: var(--accent-sky);">Chunit Bansal</strong> <span style="color: var(--text-dim);">(IIT2024233)</span></div>
         </div>
         """,
         unsafe_allow_html=True,

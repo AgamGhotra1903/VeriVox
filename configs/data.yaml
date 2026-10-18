@@ -1,0 +1,67 @@
+# Data Pipeline & Split Configuration ("AF-Split v1")
+# Author: Paras Bansal (IIT2024221)
+
+protocols:
+  asvspoof2019_la:
+    root: "data/raw/LA"
+    protocol_dir: "data/raw/LA/ASVspoof2019_LA_cm_protocols"
+    asv_scores_dir: "data/raw/LA/ASVspoof2019_LA_asv_scores"
+    splits:
+      train:
+        protocol_file: "ASVspoof2019.LA.cm.train.trn.txt"
+        audio_dir: "ASVspoof2019_LA_train/flac"
+        expected_bonafide: 2580
+        expected_spoof: 22800
+        attacks: ["A01", "A02", "A03", "A04", "A05", "A06"]
+      dev:
+        protocol_file: "ASVspoof2019.LA.cm.dev.trl.txt"
+        audio_dir: "ASVspoof2019_LA_dev/flac"
+        asv_score_file: "ASVspoof2019.LA.asv.dev.gi.trl.scores.txt"
+        expected_bonafide: 2548
+        expected_spoof: 22296
+        attacks: ["A01", "A02", "A03", "A04", "A05", "A06"]
+      eval:
+        protocol_file: "ASVspoof2019.LA.cm.eval.trl.txt"
+        audio_dir: "ASVspoof2019_LA_eval/flac"
+        asv_score_file: "ASVspoof2019.LA.asv.eval.gi.trl.scores.txt"
+        expected_bonafide: 7355
+        expected_spoof: 63882
+        attacks: ["A07", "A08", "A09", "A10", "A11", "A12", "A13", "A14", "A15", "A16", "A17", "A18", "A19"]
+
+  in_the_wild:
+    root: "data/raw/in_the_wild"
+    meta_csv: "data/raw/in_the_wild/meta.csv"
+    audio_dir: "data/raw/in_the_wild/audio"
+    expected_bonafide: 19963
+    expected_spoof: 11816
+    cal_split_ratio: 0.15  # 15% of speakers reserved for few-shot calibration (ITW-CAL)
+    split_seed: 42
+
+  extension_dfadd:
+    # Optional multi-domain extension (STRETCH)
+    root: "data/raw/DFADD"
+    meta_csv: "data/raw/DFADD/meta.csv"
+    holdout_test_generator: "flow_matching"
+    holdout_val_generator: "diffusion_tts"
+
+manifests:
+  output_dir: "data/manifests"
+  format: "parquet"  # 'parquet' with csv mirror
+  columns:
+    - "path"
+    - "dataset"
+    - "split"
+    - "speaker"
+    - "label"
+    - "attack_id"
+    - "duration"
+    - "codec"
+    - "bitrate"
+    - "gender"
+
+leakage_audit:
+  check_speaker_disjoint: true
+  check_file_id_disjoint: true
+  check_audio_content_hash: true
+  vctk_warning_enabled: true
+  output_json: "results/audit/leakage_audit.json"
