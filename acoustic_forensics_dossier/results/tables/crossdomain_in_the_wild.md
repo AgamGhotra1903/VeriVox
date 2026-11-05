@@ -1,0 +1,3 @@
+| Model System                | Domain                         |   Evaluated Clips |   Optimal In-Domain EER (%) |   In-Domain ROC-AUC | Operating Threshold   |   Accuracy @ Dev Threshold (%) |
+|:----------------------------|:-------------------------------|------------------:|----------------------------:|--------------------:|:----------------------|-------------------------------:|
+| Stacked Ensemble (Proposed) | In-the-Wild (Unseen Zero-Shot) |                50 |                           0 |                   1 | 0.1795 (from Dev)     |                             98 |

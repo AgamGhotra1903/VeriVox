@@ -85,3 +85,29 @@ def test_peak_normalization():
     sig = torch.tensor([0.2, -0.8, 0.4, -0.1], dtype=torch.float32)
     norm = normalize_audio(sig, method="peak")
     assert torch.max(torch.abs(norm)).item() == pytest.approx(1.0)
+
+
+def test_spectral_lossy_compression_detection(tmp_path: Path):
+    from acforensics.data.audio_io import detect_lossy_compression_spectral
+    from acforensics.evaluation.robustness import compress_and_decompress_audio
+
+    clean_p = tmp_path / "clean_broadband.wav"
+    dur = 2.0
+    sr = 16000
+    t = np.linspace(0, dur, int(dur * sr), endpoint=False, dtype=np.float32)
+    np.random.seed(42)
+    sig = (0.3 * np.sin(2 * np.pi * 1000.0 * t) + 0.05 * np.random.randn(len(t))).astype(np.float32)
+    sf.write(str(clean_p), sig, sr)
+
+    res_clean = load_and_validate_audio(clean_p)
+    assert res_clean.is_valid
+    assert not res_clean.is_lossy_compressed
+    assert res_clean.spectral_cutoff_hz >= 7000.0
+
+    mp3_p = tmp_path / "compressed_mp3_16k.wav"
+    compress_and_decompress_audio(clean_p, mp3_p, codec="mp3", bitrate_kbps=16, compensate_delay=False)
+    if mp3_p.exists():
+        res_mp3 = load_and_validate_audio(mp3_p)
+        assert res_mp3.is_valid
+        assert res_mp3.is_lossy_compressed
+        assert res_mp3.spectral_cutoff_hz < 5000.0

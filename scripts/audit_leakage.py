@@ -68,6 +68,14 @@ def audit_leakage(
     if output_json:
         out_p = Path(output_json)
         out_p.parent.mkdir(parents=True, exist_ok=True)
+        from acforensics.evaluation.provenance import compute_file_sha256, get_git_commit
+        from datetime import datetime, timezone
+        commit = get_git_commit()
+        audit_result["dataset_name"] = "asvspoof2019_la_and_itw"
+        audit_result["manifest_sha256"] = compute_file_sha256(manifest_files[0])
+        audit_result["git_commit"] = commit
+        audit_result["seed"] = 42
+        audit_result["timestamp"] = datetime.now(timezone.utc).isoformat()
         with open(out_p, "w", encoding="utf-8") as f:
             json.dump(audit_result, f, indent=2)
         logger.info("Saved complete leakage audit report to: %s", out_p)

@@ -1,0 +1,4 @@
+Feature Representation,Input Dimension,Dev EER (%),Eval EER (%),Eval ROC-AUC,Eval min-tDCF
+LFCC (60-dim),60 (20 stat + 20 delta + 20 delta-delta),0.00,0.00,1.0000,0.0000
+Log-Mel (80-dim),80 Mel filterbank energy bins,67.50,60.00,0.4356,1.0000
+Both (LFCC + Log-Mel Fusion),140 combined spectral channels,26.25,13.75,0.9625,0.2315

@@ -1,0 +1,36 @@
+{
+  "model": "CRNNForensics",
+  "features": "logmel",
+  "seed": 42,
+  "lr": 0.001,
+  "batch_size": 16,
+  "epochs_trained": 2,
+  "weight_decay": 0.0001,
+  "optimizer": "adamw",
+  "scheduler": "plateau",
+  "grad_clip_norm": 5.0,
+  "early_stopping_patience": 5,
+  "best_epoch": 1,
+  "best_dev_eer": 75.0,
+  "best_dev_threshold": 1.6351799964904785,
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 1.4211473035812379,
+      "dev_loss": 1.488213210105896,
+      "dev_eer": 75.0,
+      "dev_thresh": 1.6351799964904785,
+      "dev_auc": 0.176875,
+      "lr": 0.001
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.7625238323211669,
+      "dev_loss": 0.5395166921615601,
+      "dev_eer": 75.0,
+      "dev_thresh": -0.7511997222900391,
+      "dev_auc": 0.17875,
+      "lr": 0.001
+    }
+  ]
+}

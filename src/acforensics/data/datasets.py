@@ -87,7 +87,7 @@ class ASVspoofDataset(Dataset):
         speaker_id = str(row["speaker_id"])
         attack_id = str(row.get("attack_id", "-"))
 
-        # Load and validate
+        # Load and validate audio (16 kHz mono)
         res = load_and_validate_audio(audio_path, target_sr=SAMPLE_RATE, log_rejections=True)
         if not res.is_valid or res.waveform is None:
             # Fallback for corrupted audio to prevent pipeline crashing
@@ -96,16 +96,20 @@ class ASVspoofDataset(Dataset):
         else:
             waveform = res.waveform
 
-        # Segment (crop or repeat-pad)
+        # Segment to fixed 4.0s (crop or repeat-pad)
         waveform = fixed_length_crop_or_pad(
             waveform,
             target_samples=self.target_samples,
             mode=self.crop_mode,
         )
+        assert waveform.shape == (self.target_samples,), (
+            f"Expected waveform of shape ({self.target_samples},), got {tuple(waveform.shape)}"
+        )
 
         # Optional waveform augmentation
         if self.audio_transform is not None:
             waveform = self.audio_transform(waveform)
+            assert waveform.shape == (self.target_samples,), "Augmentation altered waveform length"
 
         item = {
             "waveform": waveform,
@@ -115,9 +119,12 @@ class ASVspoofDataset(Dataset):
             "attack_id": attack_id,
         }
 
-        # Optional feature extraction
+        # Optional feature extraction (returns 2D or 3D tensor: (F, T) or (1, F, T))
         if self.feature_transform is not None:
             feature = self.feature_transform(waveform)
+            assert feature.ndim in (2, 3), (
+                f"Feature extractor must return 2D (F, T) or 3D (1, F, T) tensor, got {tuple(feature.shape)}"
+            )
             item["feature"] = feature
 
         return item
@@ -160,6 +167,9 @@ class InTheWildDataset(Dataset):
             waveform = res.waveform
 
         waveform = fixed_length_crop_or_pad(waveform, target_samples=self.target_samples, mode="center")
+        assert waveform.shape == (self.target_samples,), (
+            f"Expected waveform of shape ({self.target_samples},), got {tuple(waveform.shape)}"
+        )
 
         item = {
             "waveform": waveform,
@@ -170,7 +180,11 @@ class InTheWildDataset(Dataset):
         }
 
         if self.feature_transform is not None:
-            item["feature"] = self.feature_transform(waveform)
+            feature = self.feature_transform(waveform)
+            assert feature.ndim in (2, 3), (
+                f"Feature extractor must return 2D or 3D tensor, got {tuple(feature.shape)}"
+            )
+            item["feature"] = feature
 
         return item
 
@@ -178,10 +192,15 @@ class InTheWildDataset(Dataset):
 def collate_fn(batch: list[dict[str, Any]]) -> dict[str, Any]:
     """Collates a list of dataset items into batch tensors.
 
-    Batches waveforms and labels; preserves metadata lists for evaluation tracking.
+    Batches waveforms (B, T_samples) and labels (B,); preserves metadata lists for evaluation tracking.
+    Features, if present, are batched to (B, 1, F, T).
     """
-    waveforms = torch.stack([b["waveform"] for b in batch], dim=0)
-    labels = torch.stack([b["label"] for b in batch], dim=0)
+    assert len(batch) > 0, "Cannot collate empty batch"
+    waveforms = torch.stack([b["waveform"] for b in batch], dim=0)  # Shape: (B, TARGET_SAMPLES)
+    labels = torch.stack([b["label"] for b in batch], dim=0)        # Shape: (B,)
+
+    assert waveforms.ndim == 2, f"Expected 2D waveforms tensor (B, T), got {waveforms.shape}"
+    assert labels.ndim == 1, f"Expected 1D labels tensor (B,), got {labels.shape}"
 
     collated = {
         "waveform": waveforms,
@@ -193,6 +212,10 @@ def collate_fn(batch: list[dict[str, Any]]) -> dict[str, Any]:
 
     if "feature" in batch[0]:
         features = torch.stack([b["feature"] for b in batch], dim=0)
+        # Ensure 4D batched feature tensor: (B, 1, F, T)
+        if features.ndim == 3:
+            features = features.unsqueeze(1)
+        assert features.ndim == 4, f"Expected 4D batched feature tensor (B, 1, F, T), got {features.shape}"
         collated["feature"] = features
 
     return collated

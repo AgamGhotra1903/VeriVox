@@ -1,0 +1,15 @@
+| Attack ID   | Taxonomy          |   Spoof Trials |   Attack EER (%) |   ROC-AUC |
+|:------------|:------------------|---------------:|-----------------:|----------:|
+| A07         | Unseen Technology |              3 |                0 |         1 |
+| A08         | Unseen Technology |              6 |                0 |         1 |
+| A09         | Unseen Technology |              9 |                0 |         1 |
+| A10         | Unseen Technology |              6 |                0 |         1 |
+| A11         | Unseen Technology |              3 |                0 |         1 |
+| A12         | Unseen Technology |              6 |                0 |         1 |
+| A13         | Unseen Technology |              4 |                0 |         1 |
+| A14         | Unseen Technology |              5 |                0 |         1 |
+| A15         | Unseen Technology |             10 |                0 |         1 |
+| A16         | Known Variant     |              3 |                0 |         1 |
+| A17         | Known Variant     |              5 |                0 |         1 |
+| A18         | Unseen Technology |              8 |                0 |         1 |
+| A19         | Known Variant     |             12 |                0 |         1 |

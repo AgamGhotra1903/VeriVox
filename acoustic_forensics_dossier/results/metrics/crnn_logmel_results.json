@@ -1,0 +1,49 @@
+{
+  "model": "CRNN-LOGMEL",
+  "features": "logmel",
+  "seed": 42,
+  "parameters": 1472546,
+  "training_time_sec": 6.325317042006645,
+  "checkpoint_path": "checkpoints/crnn_logmel_best.pt",
+  "dev": {
+    "best_epoch": 1,
+    "eer": 75.0,
+    "threshold": 1.6351799964904785
+  },
+  "eval": {
+    "eer": 61.25000000000001,
+    "eer_threshold": 1.6361957192420964,
+    "applied_threshold": 1.6351799964904785,
+    "threshold_source": "dev",
+    "roc_auc": 0.30124999999999996,
+    "min_tdcf": 0.999999999998,
+    "at_applied_threshold": {
+      "accuracy": 0.35,
+      "precision": 0.15384615384615385,
+      "recall": 0.5,
+      "f1": 0.23529411764705882,
+      "tp": 10,
+      "fp": 55,
+      "tn": 25,
+      "fn": 10
+    },
+    "at_threshold_0_5": {
+      "accuracy": 0.2,
+      "precision": 0.2,
+      "recall": 1.0,
+      "f1": 0.3333333333333333,
+      "tp": 20,
+      "fp": 80,
+      "tn": 0,
+      "fn": 0
+    },
+    "eer_ci_95": [
+      51.85185185185185,
+      73.91304347825229
+    ],
+    "auc_ci_95": [
+      0.16893136407939038,
+      0.4417443902439024
+    ]
+  }
+}

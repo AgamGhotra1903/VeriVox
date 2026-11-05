@@ -33,10 +33,9 @@ def plot_per_attack_eer(attack_eers: dict[str, float], output_path: Path | str) 
 
     bars = ax.bar(attacks, eers, color="#3B82F6", edgecolor="black", alpha=0.85)
 
-    # Highlight known attack variants (A16 is A04 variant; A17/A19 are A06 variants)
     for i, a in enumerate(attacks):
-        if a in ("A16", "A17", "A19"):
-            bars[i].set_color("#F59E0B")  # Amber for variants
+        if a in ("A16", "A19"):
+            bars[i].set_color("#F59E0B")
 
     ax.axhline(np.mean(eers), color="#EF4444", linestyle="--", lw=1.5, label=f"Mean Attack EER ({np.mean(eers):.2f}%)")
     ax.set_xlabel("Attack Algorithm (A07 - A19 on ASVspoof 2019 LA Eval)", fontsize=11)
@@ -103,10 +102,12 @@ def run_error_audit(
     # Plot per-attack breakdown
     plot_per_attack_eer(attack_eers, figures_dir / "per_attack_eer.png")
 
-    # 2. Worst-Case Examples
-    # Top False Positives: Spoofs with highest bona fide scores
+    if "file_id" not in df.columns and "path" in df.columns:
+        df["file_id"] = [Path(p).stem for p in df["path"]]
+    if "speaker_id" not in df.columns and "speaker" in df.columns:
+        df["speaker_id"] = df["speaker"]
+
     top_fps = df[df["is_fp"]].sort_values("score", ascending=False).head(10)
-    # Top False Negatives: Bona fides with lowest bona fide scores
     top_fns = df[df["is_fn"]].sort_values("score", ascending=True).head(10)
 
     worst_cases = pd.concat([
@@ -117,18 +118,24 @@ def run_error_audit(
     available_cols = [c for c in worst_cases_cols if c in worst_cases.columns]
     worst_cases[available_cols].to_csv(tables_dir / "worst_case_errors.csv", index=False)
 
-    # 3. Plain Language Findings
     n_fp = int(df["is_fp"].sum())
     n_fn = int(df["is_fn"].sum())
     most_vulnerable_attack = max(attack_eers.items(), key=lambda x: x[1])[0] if attack_eers else "N/A"
     most_vulnerable_eer = attack_eers.get(most_vulnerable_attack, 0.0)
+    least_vulnerable_attack = min(attack_eers.items(), key=lambda x: x[1])[0] if attack_eers else "N/A"
+    least_vulnerable_eer = attack_eers.get(least_vulnerable_attack, 0.0)
+
+    known_keys = [k for k in ("A16", "A19") if k in attack_eers]
+    unseen_keys = [k for k in attack_eers if k not in ("A16", "A19")]
+    mean_known_eer = float(np.mean([attack_eers[k] for k in known_keys])) if known_keys else 0.0
+    mean_unseen_eer = float(np.mean([attack_eers[k] for k in unseen_keys])) if unseen_keys else 0.0
 
     findings = [
-        f"Audited {len(df)} evaluation trials at the dev-calibrated threshold of {threshold:.4f}.",
-        f"Detected {n_fp} False Positives (synthetic speech undetected) and {n_fn} False Negatives (legitimate speech falsely rejected).",
-        f"The highest error rate occurred on attack {most_vulnerable_attack} with an EER of {most_vulnerable_eer:.2f}%.",
-        "Known attack variants (A16, A17, A19) showed higher accuracy due to spectral representations overlapping with training conditions A04 and A06.",
-        "Unseen neural waveform generators using diffusion vocoders demonstrated higher miss rates than traditional concatenative systems.",
+        f"Audited {len(df)} evaluation trials at dev-calibrated threshold {threshold:.4f}.",
+        f"Detected {n_fp} False Positives ({n_fp / max(1, int(np.sum(df['label'] == SPOOF))) * 100:.2f}% spoof miss rate) and {n_fn} False Negatives ({n_fn / max(1, int(np.sum(df['label'] == BONAFIDE))) * 100:.2f}% genuine false alarm rate).",
+        f"Highest vulnerability observed on attack {most_vulnerable_attack} ({most_vulnerable_eer:.2f}% EER); lowest on {least_vulnerable_attack} ({least_vulnerable_eer:.2f}% EER).",
+        f"Known attack variants (A16, A19) achieved mean EER {mean_known_eer:.2f}%, compared to {mean_unseen_eer:.2f}% across unseen generation algorithms (delta: {mean_unseen_eer - mean_known_eer:+.2f} pts).",
+        f"Worst-case false alarms and missed detections logged to worst_case_errors.csv for inspection.",
     ]
 
     summary = {
@@ -139,6 +146,10 @@ def run_error_audit(
         "per_attack_eer": attack_eers,
         "most_vulnerable_attack": most_vulnerable_attack,
         "most_vulnerable_eer": most_vulnerable_eer,
+        "least_vulnerable_attack": least_vulnerable_attack,
+        "least_vulnerable_eer": least_vulnerable_eer,
+        "known_variants_mean_eer": mean_known_eer,
+        "unseen_attacks_mean_eer": mean_unseen_eer,
         "plain_language_findings": findings,
     }
     return summary

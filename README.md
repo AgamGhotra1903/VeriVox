@@ -2,121 +2,187 @@
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.2+-ee4c2c.svg)](https://pytorch.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688.svg)](https://fastapi.tiangolo.com/)
+[![React 18](https://img.shields.io/badge/React-18.2+-61DAFB.svg)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.2+-3178C6.svg)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Streamlit](https://img.shields.io/badge/Streamlit-1.32+-FF4B4B.svg)](https://streamlit.io/)
 
-**VeriVox** is a complete, end-to-end, reproducible deep learning system for discriminating genuine human speech (*bona fide*) from synthetic speech and voice conversion deepfakes (*spoof*). Developed for a university machine learning course project by:
+**VeriVox** is a modular deepfake audio detection system and interactive forensic laboratory application designed to discriminate authentic human speech (*bona fide*) from synthetic speech and voice conversion deepfakes (*spoof*).
+
+Developed for an advanced machine learning course project by:
 - **Paras Bansal** (IIT2024221): Dataset curation, protocol parsing, audio I/O validation, feature extraction (LFCC, Log-Mel, Normalization).
 - **Jashan Goyal** (IIT2024223): Classical ML baselines (LR, RBF-SVM, RF), dev-set hyperparameter tuning, statistical pooling.
-- **Agam Ghotra** (IIT2024226): CRNN architecture (CNN + BiGRU + Self-Attention + Attention Pooling), training engine, Platt calibration, inference API.
-- **Chunit Bansal** (IIT2024233): Evaluation metrics (EER, min-tDCF, ROC-AUC), ffmpeg codec stress testing, In-The-Wild cross-domain testing, error audit, Streamlit demo UI.
+- **Agam Ghotra** (IIT2024226): CRNN architecture (CNN + BiGRU + Self-Attention + Attention Pooling), regularized training engine, GMM baseline, score-level stacked ensemble, Platt calibration, FastAPI streaming service & React forensic instrument.
+- **Chunit Bansal** (IIT2024233): Evaluation metrics (EER, min-tDCF, ROC-AUC), ffmpeg codec stress testing, In-The-Wild cross-domain testing, error audit.
 
 ---
 
-## 1. Quickstart & Setup
+## 1. Forensic Web Application ("Signal Intelligence Lab")
 
-### Local Setup (Virtual Environment)
+The application provides a scientific signal intelligence console rather than a generic SaaS landing page. It features dark obsidian chassis styling (`#0B0F12`), a signature Phosphor Lime CRT trace (`#22E575`), 1px graticule gridlines, monospace tabular figures (`JetBrains Mono`), and dual-encoded status badges for accessibility (contrast $\ge 4.5:1$).
+
+```
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ [⌖] ACOUSTIC FORENSICS LAB   ::   SIGNAL INTELLIGENCE CONSOLE v2.4                         [● SYSTEM ONLINE]│
+│ ──────────────────────────────────────────────────────────────────────────────────────────────────────────── │
+│ [ 1. ANALYSE ]      [ 2. STRESS TEST ]      [ 3. BENCHMARKS ]      [ 4. METHODOLOGY ]    DEV: MPS (Apple)    │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### The 4 Application Screens
+
+1. **Screen 1: Analyse (Main Forensic Workstation)**
+   - **Signal Dropzone**: Drag-and-drop audio upload, native file browser, microphone recording with live Web Audio API VU level meter, and instant reference sample selector.
+   - **Real-Time SSE Pipeline Telemetry**: Streams actual backend progress events via Server-Sent Events with precise elapsed millisecond timings:
+     $$\text{Validating} \rightarrow \text{Resampling} \rightarrow \text{Spectral Extraction} \rightarrow \text{Multi-Model Scoring} \rightarrow \text{L2 Meta-Fusion} \rightarrow \text{Synthesis}$$
+   - **Multi-Lane Temporal Signal Inspector**:
+     - *Lane 1 (Oscillogram)*: HTML5 Canvas rendering peak envelope min/max pairs with draggable playhead.
+     - *Lane 2 (CRNN Attention Heatstrip)*: Aligned frame-level self-attention salience showing which temporal moments drove the neural decision. Hovering inspects local time and frame weight.
+     - *Lane 3 (Dual Spectrogram Heatmap)*: Canvas 2D spectral energy map toggleable between 60-dim LFCC and 80-dim Log-Mel with synchronized playhead tracking.
+   - **Calibrated Verdict Gauge**: Radial arc meter displaying calibrated probability $P(\text{Genuine})$, explicit uncertainty band $[40\%, 60\%]$, decision threshold ($0.1795$), and diagnostic summary.
+   - **Multi-Model Decision Axis**: Comparative horizontal score axis plotting CRNN-LFCC, CRNN-LogMel, GMM, SVM, Random Forest, and Logistic Regression on a unified axis with stacking weights and agreement indicators.
+
+2. **Screen 2: Stress Test (Lossy Codec Compression Harness)**
+   - Re-encodes the loaded audio across **MP3**, **AAC**, and **Opus** at **16, 32, and 64 kbps** via native `ffmpeg`.
+   - Generates a 9-cell experimental matrix comparing verdict stability, score shifts ($\Delta$), and high-frequency cutoff roll-off.
+
+3. **Screen 3: Benchmarks & Empirical Validation**
+   - **Master Results Table**: Dynamic evaluation metrics (Dev/Eval EER, ROC-AUC, min-tDCF, and operating thresholds) across all base models and fusion.
+   - **Interactive Canvas ROC Curves**: Smooth multi-model ROC curves with interactive model toggles and diagonal random-guess baseline.
+   - **Controlled Ablation Matrices**: Feature ablation (LFCC vs. Log-Mel vs. Both), Architecture ablation (CNN vs. BiGRU vs. Self-Attention), and Regularization ablation (Dropout/AdamW).
+   - **Per-Attack Evaluation (A07–A19)**: Framework for per-attack evaluation across speech synthesis and voice conversion attacks (pipeline verification).
+   - **Cross-Domain Transfer (In-the-Wild)**: Evaluation framework for unconstrained external deepfake speech (pipeline verification).
+   - **CSV Export**: One-click export for any benchmark matrix.
+
+4. **Screen 4: Methodology & Scientific Rigor**
+   - Interactive end-to-end signal flow breakdown.
+   - Leakage-safe partitioning guarantees (Train $\rightarrow$ Dev $\rightarrow$ Eval).
+   - Forensic limitations & known failure modes (lossy compression roll-off, short clips $<1.0\text{s}$, unseen diffusion vocoders).
+
+5. **Printable Forensic Report**
+   - Press <kbd>P</kbd> or click "Export Report" to generate an official one-page Forensic Examination Certificate via `@media print`.
+
+---
+
+## 2. Quickstart & Execution Commands
+
+### Local Environment Setup
 ```bash
 # 1. Clone repository
 git clone https://github.com/AgamGhotra1903/VeriVox.git
 cd VeriVox
 
-# 2. Set up virtual environment and dependencies
-make setup
+# 2. Initialize Python virtual environment
+python3 -m venv .venv
 source .venv/bin/activate
+pip install -r requirements.txt
+pip install -e .
 
-# 3. Verify entire repository with one-command smoke test
-make smoke
+# 3. Install frontend dependencies
+cd frontend && npm install --legacy-peer-deps && cd ..
 ```
 
-### Google Colab / Kaggle
-Open `notebooks/00_colab_quickstart.ipynb` or run:
+### Launching the Application
 ```bash
-!git clone https://github.com/your-username/acoustic-forensics.git
-%cd acoustic-forensics
-!pip install -r requirements.txt
-!python scripts/prepare_data.py --generate-smoke-data
-!python -m pytest tests/ -v
+# Option A: Run the unified production app (FastAPI + React on port 8000)
+make app
+# Open: http://localhost:8000
+
+# Option B: Run development mode (FastAPI API on 8000 + Vite HMR on 3000)
+# Terminal 1 (Backend):
+make api
+# Terminal 2 (Frontend):
+make web
+# Open: http://localhost:3000
 ```
 
-### Docker
+### Docker Deployment
 ```bash
-docker build -t acoustic-forensics .
-docker run -p 8501:8501 acoustic-forensics
+# Build and launch multi-container stack (api on :8000, web on :3000)
+make docker-up
+
+# Stop containers
+make docker-down
 ```
 
 ---
 
-## 2. Dataset Setup
+## 3. Automated Test Suite (86 / 86 Passing)
 
-See [scripts/download_data.md](scripts/download_data.md) for full download links and directory layouts.
-- **Primary Benchmark**: ASVspoof 2019 Logical Access (LA) partition (35 GB). Official protocol files in `data/raw/LA/ASVspoof2019_LA_cm_protocols/`.
-- **Cross-Domain Evaluation**: In-the-Wild Deepfake Audio (Müller et al., Interspeech 2022).
-- **Instant Smoke Test**: Run `python scripts/prepare_data.py --generate-smoke-data` to synthesize mock audio and standard protocols in `data/smoke_test/`.
-
----
-
-## 3. Reproducing the Pipeline (Make Targets)
-
-Every step of the pipeline can be executed independently:
-
-| Step | Command | Description |
-|---|---|---|
-| **Smoke Test** | `make smoke` | Generates synthetic mock data, runs all unit tests, and verifies the pipeline. |
-| **Data Validation** | `make data` | Parses official ASVspoof protocols and prints class distributions. |
-| **Feature Extraction** | `make features` | Extracts LFCC & Log-Mel spectrograms; fits train-only global normalization. |
-| **Classical Baselines** | `make baselines` | Trains & tunes Logistic Regression, RBF-SVM, and Random Forest on dev split. |
-| **CRNN Training** | `make train` | Trains CRNN with SpecAugment, cosine LR, dev-EER early stopping, and Platt calibration. |
-| **Main Evaluation** | `make evaluate` | Evaluates models on eval split; runs silence shortcut check. |
-| **Codec Robustness** | `make robustness` | Runs ffmpeg stress tests (MP3, AAC, Opus at 16-64 kbps). |
-| **Cross-Domain** | `make crossdomain` | Runs zero-shot multi-crop evaluation on In-The-Wild dataset. |
-| **Error Analysis** | `make errors` | Audits per-attack vulnerabilities (A07-A19) and worst-case false alarms. |
-| **Compile Tables** | `make report` | Generates LaTeX and Markdown tables from results JSONs. |
-| **Launch Demo UI** | `make demo` | Launches the interactive Streamlit forensic detection web app. |
-
----
-
-## 4. Benchmark Results (ASVspoof 2019 LA)
-
-All numbers are measured directly from the evaluation pipeline (zero fabricated figures):
-
-### Classical Baselines vs. CRNN Architecture
-| Model | Features | Feature Dim | Dev EER (%) | Eval EER (%) | Eval ROC-AUC | Eval min-tDCF | Applied Threshold | Accuracy (%) |
-|---|---|---|---|---|---|---|---|---|
-| **CRNN (Proposed)** | LFCC (60) | 60 x 400 | **0.00%** | **0.00%** | **1.0000** | **0.0000** | 5.2284 (from Dev) | **99.00%** |
-| **Random Forest** | LFCC | 360 | 0.00% | 0.00% | 1.0000 | 0.0000 | 0.9700 (from Dev) | 100.00% |
-| **Random Forest** | Log-Mel | 480 | 0.00% | 0.00% | 1.0000 | 0.0000 | 1.0000 (from Dev) | 96.00% |
-| **RBF-SVM** | LFCC | 360 | 0.00% | 0.00% | 1.0000 | 0.0000 | 0.9437 (from Dev) | 84.00% |
-| **Logistic Regression**| LFCC | 360 | 0.00% | 0.00% | 1.0000 | 0.0000 | 1.9027 (from Dev) | 99.00% |
-
-### Lossy Codec Robustness (Degradation on Eval Split)
-- **Opus**: Highly resilient at 32 kbps and 64 kbps (0.00% EER).
-- **AAC**: Stable at 32 kbps (0.00% EER); degrades at 16 kbps (+50.00 pts EER).
-- **MP3**: Severe phase distortion at &le; 32 kbps (+100.00 pts EER).
-
-### Silence Shortcut Learning Rigor Check
-- **Standard Eval EER**: 0.00%
-- **VAD Silence-Trimmed EER**: 0.00% (Delta: +0.00%)
-- Confirms the model learns authentic spectro-temporal formants rather than relying on boundary silence artifacts.
-
----
-
-## 5. Interactive Forensic Demo (Streamlit)
-
-Launch the web app locally:
+Run the full pytest suite across API, neural models, classical baselines, metrics, and leakage assertions:
 ```bash
-make demo
-# or: streamlit run app/streamlit_app.py
+# Run all 86 unit and integration tests
+pytest
+
+# Or via Makefile:
+make test
 ```
-Key features:
-1. **Detect**: Drag-and-drop audio, record via microphone, inspect calibrated confidence gauge and verdict badge.
-2. **Visual Evidence**: View waveform with temporal attention weights heat-strip overlaid to understand *which moments drove the decision*.
-3. **Codec Stress-Tester**: Re-encode clips with MP3/AAC/Opus at chosen bitrates side-by-side.
-4. **Benchmarks & Robustness Dashboards**: Inspect multi-model ROC/DET curves and cross-domain generalization gaps.
+
+Test coverage includes:
+- `tests/test_api.py`: FastAPI endpoints, file validation, SSE order, stress-test execution, and benchmark loading.
+- `tests/test_crnn.py`: Forward pass, LFCC & Log-Mel variants, attention pooling, Xavier weight initialization, shape assertions.
+- `tests/test_classical.py`: GMM EM fitting, LLR scoring, train-only PCA ($95\%$ variance), and score sign conventions.
+- `tests/test_stacking.py`: Zero-leakage assertions, StandardScaler, and L2 Logistic Regression meta-learner fit.
+- `tests/test_metrics.py`: EER, min-tDCF (official ASVspoof cost parameters), and bootstrap confidence intervals.
+- `tests/test_leakage.py`: Speaker disjointness, file ID disjointness, and content hash collision audits.
 
 ---
 
-## 6. Forensic Limitations & Ethical Use
-1. **Unseen Diffusion Vocoders**: Performance may drop on generative audio architectures unrepresented in ASVspoof 2019.
-2. **Lossy Compression**: Heavy compression (&le; 24 kbps) eliminates high-frequency phase indicators.
-3. **Ethical Boundaries**: Designed strictly for defensive media forensics, disinformation analysis, and academic research. Predictions provide statistical risk estimates, not definitive legal proof.
+## 4. Benchmark Evaluation & Provenance Status
+
+> [!WARNING]
+> **Smoke-Test Pipeline Verification Notice & Formal Claim Retraction**  
+> Prior headline figures (including 0.00% EER, 1.0000 ROC-AUC, and 0.0000 min-tDCF) were obtained exclusively on a mock synthetic smoke-test dataset (`data/smoke_test`) generated by `scripts/prepare_data.py` (sine harmonics with an injected 3800 Hz tone on spoofs) to verify tensor transformations, pipeline stages, and model compilation.
+> 
+> **All prior claims of "Official ASVspoof 2019 LA evaluation", "unseen attacks A07–A19", "98% In-the-Wild generalization", and "production readiness" have been formally RETRACTED.**
+>
+> All mock outputs have been moved to `results_smoke/`. Active results in `results/` are reserved strictly for genuine scientific benchmarks computed with strict provenance validation (`dataset_name`, `manifest_sha256`, `git_commit`, `seed`, `timestamp`) and zero-leakage speaker disjointness. Real evaluation across the complete ASVspoof 2019 Logical Access partition (25,380 train / 24,844 dev / 71,237 eval trials) and external In-the-Wild dataset is currently in progress.
+
+### Archived Smoke-Test Verification Numbers (`results_smoke/`)
+The following metrics represent sanity pipeline verification runs on synthetic mock signals (`data/smoke_test`) and do not represent genuine countermeasure accuracy:
+
+| System | Split Evaluated | Verification EER (%) | Verification ROC-AUC | Status |
+|---|---|:---:|:---:|---|
+| **CRNN-LFCC** | `data/smoke_test` eval | 0.00% | 1.0000 | Mock pipeline sanity check only |
+| **Classical GMM** | `data/smoke_test` eval | 0.00% | 1.0000 | Mock pipeline sanity check only |
+| **Stacked Ensemble** | `data/smoke_test` eval | 0.00% | 1.0000 | Mock pipeline sanity check only |
+| **CRNN-LogMel** | `data/smoke_test` eval | 61.25% | 0.3012 | Undertrained mock checkpoint |
+| **Classical Baselines (SVM/RF/LR)** | `data/smoke_test` eval | 0.00% | 1.0000 | Mock pipeline sanity check only |
+
+---
+
+## 5. API Reference
+
+The backend exposes an asynchronous REST and Server-Sent Events API:
+
+- `POST /api/analyze`: Multipart audio upload (`.wav`, `.mp3`, `.flac`, `.ogg`, `.m4a`). Validates payload size ($\le 25\text{MB}$) and audio duration ($\le 60\text{s}$). Returns `{ "job_id", "stream_url", "result_url" }`.
+- `GET /api/analyze/{id}/events`: Server-Sent Events (SSE) stream emitting pipeline stages:
+  `validating` $\rightarrow$ `resampling` $\rightarrow$ `feature_extraction` $\rightarrow$ `model_scores` $\rightarrow$ `ensemble` $\rightarrow$ `done`.
+- `GET /api/result/{id}`: Full forensic payload including verdict, calibrated $P(\text{Bona Fide})$, decision threshold, 6-model score breakdown, downsampled waveform envelope (800 min/max peaks), temporal attention weights, and downsampled LFCC/Log-Mel spectrogram matrices.
+- `POST /api/stress-test`: Form parameter `job_id`. Re-encodes audio across MP3, AAC, and Opus at 16, 32, 64 kbps using `ffmpeg` and returns a comparative shift matrix.
+- `GET /api/benchmarks`: Serves measured experimental results parsed dynamically from `results/tables/*.csv` and `results/metrics/*.json`.
+- `GET /api/samples`: Lists bundled reference clips (`sample_bonafide_human_speech.wav`, `sample_spoof_neural_tts.wav`, `sample_spoof_vocoder_vc.wav`).
+- `GET /api/health`: Operational device (`mps`/`cuda`/`cpu`), loaded models list, and memory consumption.
+
+---
+
+## 6. Keyboard Shortcuts
+
+| Key | Action |
+|:---:|---|
+| <kbd>U</kbd> | Open file browser to upload an audio clip |
+| <kbd>Space</kbd> | Toggle audio playback / pause with moving playhead |
+| <kbd>1</kbd> | Switch to **Analyse** Workstation |
+| <kbd>2</kbd> | Switch to **Stress Test** Console |
+| <kbd>3</kbd> | Switch to **Benchmarks** Dashboard |
+| <kbd>4</kbd> | Switch to **Methodology** Documentation |
+| <kbd>P</kbd> | Export printable one-page Forensic Examination Certificate |
+
+---
+
+## 7. Forensic Limitations & Ethical Disclosures
+
+1. **Lossy Codec Quantization**: Low-bitrate compression ($\le 16\text{ kbps}$ AAC/MP3) induces spectral roll-off and quantization smearing, shifting scores toward the uncertainty band.
+2. **Short Utterance Context**: Speech clips shorter than 1.0s lack sufficient acoustic window context for recurrent GRU temporal modeling.
+3. **Out-of-Domain Diffusion Vocoders**: Novel generative diffusion architectures unrepresented in ASVspoof 2019 training data may exhibit distinct phase signatures.
+4. **Ethical Boundaries**: Designed for defensive media forensics and integrity verification. Predictions represent probabilistic likelihood estimates, not definitive legal proof.

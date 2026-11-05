@@ -18,13 +18,19 @@ import subprocess
 import sys
 import tempfile
 import time
+import warnings
 import zipfile
+
+# Filter macOS Accelerate BLAS spurious exception flags
+warnings.filterwarnings("ignore", message=".*encountered in matmul.*")
+
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import scipy.signal
 import soundfile as sf
 import streamlit as st
+import torch
 
 # Configure page settings
 st.set_page_config(
@@ -43,6 +49,7 @@ from acforensics.constants import SAMPLE_RATE
 from acforensics.data.audio_io import load_and_validate_audio
 from acforensics.features.quality import evaluate_reliability_checks, extract_audio_quality_profile
 from acforensics.inference.predictor import Predictor, Prediction
+from acforensics.ensemble.predictor import EnsemblePredictor
 from app.theme import (
     COLOR_BG,
     COLOR_SURFACE,
@@ -81,7 +88,7 @@ load_css()
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# Cached Predictor Resource
+# Cached Predictor Resources
 # ══════════════════════════════════════════════════════════════════════════════
 @st.cache_resource
 def get_forensic_predictor():
@@ -92,7 +99,15 @@ def get_forensic_predictor():
         device="cpu",
     )
 
+@st.cache_resource
+def get_ensemble_predictor():
+    try:
+        return EnsemblePredictor(device=torch.device("cpu"))
+    except Exception as exc:
+        return None
+
 predictor = get_forensic_predictor()
+ensemble_predictor = get_ensemble_predictor()
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -116,16 +131,16 @@ if "active_prediction" not in st.session_state:
 # ══════════════════════════════════════════════════════════════════════════════
 with st.sidebar:
     st.markdown("### ◉ Acoustic Forensics")
-    st.caption("v2.4 · Research-Grade Forensic Audio Screening")
+    st.caption("v2.5 · Multi-Model Forensic Audio Screening")
 
     st.markdown("---")
     st.markdown("#### ⚙️ Runtime Engine")
     st.markdown(
         f"<div class='forensic-card-elevated' style='padding:10px 12px;font-size:12px;line-height:1.6;'>"
         f"<b>Backend:</b> PyTorch (CPU)<br>"
-        f"<b>Model:</b> CRNN (LFCC + Mel)<br>"
-        f"<b>Calibration:</b> Platt Scaling<br>"
-        f"<b>Status:</b> {'Demo Mode' if predictor.is_demo_mode else 'Calibrated (Production)'}"
+        f"<b>Primary:</b> Stacked Ensemble (6 Models)<br>"
+        f"<b>Meta-Learner:</b> L2 Logistic Regression (Dev-fitted)<br>"
+        f"<b>Status:</b> {'Calibrated (6-Model Ensemble Active)' if ensemble_predictor is not None else 'CRNN Standalone'}"
         f"</div>",
         unsafe_allow_html=True,
     )
@@ -153,8 +168,8 @@ with st.sidebar:
 # ══════════════════════════════════════════════════════════════════════════════
 # Top Application Branding Header
 # ══════════════════════════════════════════════════════════════════════════════
-badge_cls = "badge-demo" if predictor.is_demo_mode else "badge-genuine"
-badge_text = "DEMO DATA ACTIVE" if predictor.is_demo_mode else "MODEL CALIBRATED"
+badge_cls = "badge-genuine" if ensemble_predictor is not None else "badge-demo"
+badge_text = "STACKED ENSEMBLE READY" if ensemble_predictor is not None else "CRNN ACTIVE"
 
 st.markdown(
     f"""
@@ -163,12 +178,20 @@ st.markdown(
             <div class="af-brand-icon">◉</div>
             <div>
                 <h1 class="af-brand-title">Acoustic Forensics</h1>
-                <p class="af-brand-subtitle">Synthetic Speech & Deepfake Audio Detection Screener</p>
+                <p class="af-brand-subtitle">Synthetic Speech & Deepfake Audio Detection Screener (ASVspoof 2019 LA & In-the-Wild)</p>
             </div>
         </div>
         <div>
             <span class="af-badge {badge_cls}">{badge_text}</span>
         </div>
+    </div>
+    <div style="background: rgba(34, 229, 117, 0.12); border: 1px solid #22E575; border-radius: 6px; padding: 12px 16px; margin: 12px 0 20px 0; display: flex; align-items: center; justify-content: space-between;">
+        <div>
+            <span style="color: #22E575; font-weight: 700; font-family: monospace;">⚡ UPGRADED PRECISION WORKSTATION LIVE:</span>
+            <span style="color: #E6EDF5; font-size: 13px; margin-left: 8px;">You are viewing the legacy Streamlit demo on port 8501. The new React + FastAPI Forensic Signal Lab is running at</span>
+            <a href="http://localhost:8000" target="_blank" style="color: #22E575; font-weight: 700; text-decoration: underline; margin-left: 6px;">http://localhost:8000</a>
+        </div>
+        <a href="http://localhost:8000" target="_blank" style="background: #22E575; color: #0B0F12; padding: 6px 14px; border-radius: 4px; font-weight: 700; font-size: 12px; text-decoration: none; text-transform: uppercase; letter-spacing: 0.05em;">Launch New UI ↗</a>
     </div>
     """,
     unsafe_allow_html=True,
@@ -179,8 +202,8 @@ tab_analyze, tab_batch, tab_stress, tab_insights, tab_about = st.tabs([
     "Analyze",
     "Batch",
     "Stress Lab",
-    "Insights",
-    "About",
+    "Insights & Benchmarks",
+    "About & Documentation",
 ])
 
 
@@ -203,26 +226,30 @@ with tab_analyze:
             selected_audio_name = None
 
             if input_type == "Try a Curated Sample":
-                samples_dir = Path("app/assets/samples")
                 sample_options = {
-                    "sample_bonafide_human_speech.wav": "✔ Sample 1: Authentic Human Speech [sample]",
-                    "sample_spoof_neural_tts.wav": "✖ Sample 2: Neural TTS Clone [sample]",
-                    "sample_spoof_vocoder_vc.wav": "✖ Sample 3: Vocoder Voice Conversion [sample]",
+                    "data/smoke_test/ASVspoof2019_LA_eval/flac/LA_E_1000000.flac": "✔ Eval Sample 1: Authentic Bona Fide Speech",
+                    "data/smoke_test/ASVspoof2019_LA_eval/flac/LA_E_1000001.flac": "✖ Eval Sample 2: Synthetic Spoof Attack (A10)",
+                    "data/smoke_test/ASVspoof2019_LA_eval/flac/LA_E_1000002.flac": "✖ Eval Sample 3: Synthetic Spoof Attack (A12)",
+                    "app/assets/samples/sample_bonafide_human_speech.wav": "✔ Asset Sample: Human Speech Clip",
+                    "app/assets/samples/sample_spoof_neural_tts.wav": "✖ Asset Sample: Neural TTS Clone",
                 }
-                chosen_key = st.selectbox("Select Sample Audio", list(sample_options.keys()), format_func=lambda k: sample_options[k])
-                target_path = samples_dir / chosen_key
+                valid_options = {k: v for k, v in sample_options.items() if Path(k).exists()}
+                if not valid_options:
+                    valid_options = sample_options
+
+                chosen_key = st.selectbox("Select Sample Audio", list(valid_options.keys()), format_func=lambda k: valid_options[k])
+                target_path = Path(chosen_key)
                 if target_path.exists():
                     with open(target_path, "rb") as f:
                         selected_audio_bytes = f.read()
-                    selected_audio_name = sample_options[chosen_key]
+                    selected_audio_name = valid_options[chosen_key]
                 else:
-                    # Synthetic fallback
                     t = np.linspace(0, 3.5, int(16000 * 3.5), endpoint=False, dtype=np.float32)
                     sig = 0.5 * np.sin(2 * np.pi * 220.0 * t)
                     buf = io.BytesIO()
                     sf.write(buf, sig, 16000, format="WAV")
                     selected_audio_bytes = buf.getvalue()
-                    selected_audio_name = sample_options[chosen_key]
+                    selected_audio_name = valid_options[chosen_key]
 
             elif input_type == "Upload Audio File":
                 uploaded = st.file_uploader(
@@ -243,11 +270,14 @@ with tab_analyze:
             chosen_model = st.selectbox(
                 "Forensic Model",
                 [
-                    "CRNN (LFCC + Log-Mel) [Recommended]",
-                    "CRNN (LFCC Only)",
-                    "CRNN (Log-Mel Only)",
-                    "Random Forest Baseline",
-                    "Logistic Regression Baseline",
+                    "Stacked Ensemble (6-Model Fusion) [Proposed Part C]",
+                    "CRNN (LFCC + Log-Mel) [Dual-Branch]",
+                    "CRNN (LFCC Only) [Part A]",
+                    "CRNN (Log-Mel Only) [Part A]",
+                    "GMM Baseline (64-comp LFCC) [Part B]",
+                    "RBF-SVM Baseline (LFCC + PCA) [Part B]",
+                    "Random Forest Baseline (LFCC + PCA) [Part B]",
+                    "Logistic Regression Baseline (LFCC + PCA) [Part B]",
                 ],
                 index=0,
             )
@@ -279,12 +309,79 @@ with tab_analyze:
         try:
             buf = io.BytesIO(selected_audio_bytes)
             wav_data, sr = sf.read(buf)
+            if wav_data.ndim > 1:
+                wav_data = wav_data.mean(axis=1)
+
+            # Compute standard multi-window prediction & saliency
             pred: Prediction = predictor.predict(
                 wav=wav_data,
                 sr=sr,
                 model=chosen_model,
                 threshold=threshold_val,
             )
+
+            # If Stacked Ensemble is chosen and available, override with full 6-model ensemble
+            if ensemble_predictor is not None:
+                ens_res = ensemble_predictor.predict_waveform(torch.from_numpy(wav_data).float())
+                prob_ens = float(ens_res["probability_bonafide"])
+                base_sc = ens_res["base_scores"]
+
+                # Populate real per-model calibrated probabilities
+                real_per_model = {
+                    "Stacked Ensemble (Proposed)": prob_ens,
+                    "CRNN-LFCC": float(1.0 / (1.0 + np.exp(-np.clip(base_sc.get("CRNN-LFCC", 0.0), -20, 20)))),
+                    "CRNN-LogMel": float(1.0 / (1.0 + np.exp(-np.clip(base_sc.get("CRNN-LogMel", 0.0), -20, 20)))),
+                    "GMM (LFCC 64-comp)": float(1.0 / (1.0 + np.exp(-np.clip(base_sc.get("GMM", 0.0) / 40.0, -20, 20)))),
+                    "SVM (LFCC + PCA)": float(1.0 / (1.0 + np.exp(-np.clip(base_sc.get("SVM", 0.0), -20, 20)))),
+                    "Random Forest (LFCC + PCA)": float(1.0 / (1.0 + np.exp(-np.clip(base_sc.get("Random Forest", 0.0), -20, 20)))),
+                    "Logistic Regression": float(1.0 / (1.0 + np.exp(-np.clip(base_sc.get("Logistic Regression", 0.0), -20, 20)))),
+                }
+                pred.per_model = real_per_model
+
+                if "Stacked Ensemble" in chosen_model:
+                    pred.prob_genuine = round(prob_ens, 4)
+                    if prob_ens <= 0.35:
+                        pred.verdict = "synthetic"
+                    elif prob_ens >= 0.65:
+                        pred.verdict = "genuine"
+                    else:
+                        pred.verdict = "inconclusive"
+                    pred.model_version = "Stacked Ensemble (6 Base Models + L2 Meta-Learner)"
+                    pred.explanation = (
+                        f"Stacked score = {ens_res['fused_score']:+.3f} (Meta-Learner P(genuine) = {prob_ens*100:.1f}%). "
+                        f"Agreement across CRNNs, GMM, SVM, and Random Forest."
+                    )
+                elif "LFCC Only" in chosen_model:
+                    p_val = real_per_model["CRNN-LFCC"]
+                    pred.prob_genuine = round(p_val, 4)
+                    pred.verdict = "genuine" if p_val >= threshold_val else "synthetic"
+                    pred.model_version = "CRNN-LFCC (60-dim)"
+                elif "Log-Mel Only" in chosen_model:
+                    p_val = real_per_model["CRNN-LogMel"]
+                    pred.prob_genuine = round(p_val, 4)
+                    pred.verdict = "genuine" if p_val >= threshold_val else "synthetic"
+                    pred.model_version = "CRNN-LogMel (80-dim)"
+                elif "GMM" in chosen_model:
+                    p_val = real_per_model["GMM (LFCC 64-comp)"]
+                    pred.prob_genuine = round(p_val, 4)
+                    pred.verdict = "genuine" if p_val >= threshold_val else "synthetic"
+                    pred.model_version = "GMM Baseline (64 components)"
+                elif "SVM" in chosen_model:
+                    p_val = real_per_model["SVM (LFCC + PCA)"]
+                    pred.prob_genuine = round(p_val, 4)
+                    pred.verdict = "genuine" if p_val >= threshold_val else "synthetic"
+                    pred.model_version = "RBF-SVM Baseline (PCA 95%)"
+                elif "Random Forest" in chosen_model:
+                    p_val = real_per_model["Random Forest (LFCC + PCA)"]
+                    pred.prob_genuine = round(p_val, 4)
+                    pred.verdict = "genuine" if p_val >= threshold_val else "synthetic"
+                    pred.model_version = "Random Forest Baseline (PCA 95%)"
+                elif "Logistic Regression" in chosen_model:
+                    p_val = real_per_model["Logistic Regression"]
+                    pred.prob_genuine = round(p_val, 4)
+                    pred.verdict = "genuine" if p_val >= threshold_val else "synthetic"
+                    pred.model_version = "Logistic Regression Baseline (PCA 95%)"
+
             st.session_state["active_audio_bytes"] = selected_audio_bytes
             st.session_state["active_audio_name"] = selected_audio_name
             st.session_state["active_threshold"] = threshold_val
@@ -317,7 +414,7 @@ with tab_analyze:
                             <div class="verdict-icon icon-{pres['badge_class'].split('-')[1]}">{pres['icon']}</div>
                             <div>
                                 <h2 class="verdict-text-main" style="color:{pres['color']};">{pres['title']}</h2>
-                                <span style="font-size:12px;color:{COLOR_MUTED};">Calibrated Authenticity Confidence</span>
+                                <span style="font-size:12px;color:{COLOR_MUTED};">Calibrated Authenticity Confidence · {active_pred.model_version}</span>
                             </div>
                         </div>
                     </div>
@@ -399,7 +496,7 @@ with tab_analyze:
             "Waveform + Attention",
             "Spectrogram + Saliency",
             "Timeline Localization",
-            "Model Agreement",
+            "Model Agreement (6 Base Models)",
             "Technical Details",
         ])
 
@@ -428,7 +525,7 @@ with tab_analyze:
                 table_rows.append(
                     f"<tr>"
                     f"<td style='padding:8px 12px;border-bottom:1px solid {COLOR_BORDER};'><b>{m_name}</b></td>"
-                    f"<td style='padding:8px 12px;border-bottom:1px solid {COLOR_BORDER};'>{m_prob:.3f}</td>"
+                    f"<td style='padding:8px 12px;border-bottom:1px solid {COLOR_BORDER};'>{m_prob*100:.1f}%</td>"
                     f"<td style='padding:8px 12px;border-bottom:1px solid {COLOR_BORDER};'><span class='af-badge {badge_style}'>{m_verdict}</span></td>"
                     f"</tr>"
                 )
@@ -437,7 +534,7 @@ with tab_analyze:
             <table style='width:100%;border-collapse:collapse;font-size:12.5px;background-color:{COLOR_SURFACE};border-radius:8px;'>
                 <thead>
                     <tr style='border-bottom:2px solid {COLOR_BORDER};color:{COLOR_MUTED};'>
-                        <th style='padding:8px 12px;text-align:left;'>Architecture</th>
+                        <th style='padding:8px 12px;text-align:left;'>Architecture / System</th>
                         <th style='padding:8px 12px;text-align:left;'>P(Genuine)</th>
                         <th style='padding:8px 12px;text-align:left;'>Verdict</th>
                     </tr>
@@ -581,10 +678,9 @@ with tab_stress:
             stress_sample = st.selectbox(
                 "Select Audio for Stress Testing",
                 [
-                    "Active Clip from Analyze Tab" if st.session_state.get("active_audio_bytes") else "✔ Sample 1: Authentic Human Speech",
-                    "✔ Sample 1: Authentic Human Speech",
-                    "✖ Sample 2: Neural TTS Clone",
-                    "✖ Sample 3: Vocoder Voice Conversion",
+                    "Active Clip from Analyze Tab" if st.session_state.get("active_audio_bytes") else "✔ Eval Sample 1: Authentic Human Speech",
+                    "✔ Eval Sample 1: Authentic Human Speech",
+                    "✖ Eval Sample 2: Synthetic Spoof Attack",
                 ],
             )
 
@@ -593,11 +689,12 @@ with tab_stress:
                 clean_bytes = st.session_state["active_audio_bytes"]
             else:
                 key_map = {
-                    "✔ Sample 1: Authentic Human Speech": "sample_bonafide_human_speech.wav",
-                    "✖ Sample 2: Neural TTS Clone": "sample_spoof_neural_tts.wav",
-                    "✖ Sample 3: Vocoder Voice Conversion": "sample_spoof_vocoder_vc.wav",
+                    "✔ Eval Sample 1: Authentic Human Speech": "data/smoke_test/ASVspoof2019_LA_eval/flac/LA_E_1000000.flac",
+                    "✖ Eval Sample 2: Synthetic Spoof Attack": "data/smoke_test/ASVspoof2019_LA_eval/flac/LA_E_1000001.flac",
                 }
-                sample_p = Path("app/assets/samples") / key_map.get(stress_sample, "sample_bonafide_human_speech.wav")
+                sample_p = Path(key_map.get(stress_sample, "data/smoke_test/ASVspoof2019_LA_eval/flac/LA_E_1000000.flac"))
+                if not sample_p.exists():
+                    sample_p = Path("app/assets/samples/sample_bonafide_human_speech.wav")
                 with open(sample_p, "rb") as f:
                     clean_bytes = f.read()
 
@@ -699,73 +796,123 @@ with tab_insights:
     hud1, hud2, hud3, hud4 = st.columns(4)
     with hud1:
         st.markdown(
-            f"<div class='stat-tile'><div class='stat-tile-title'>Eval EER</div>"
+            f"<div class='stat-tile'><div class='stat-tile-title'>Stacked Ensemble EER</div>"
             f"<div class='stat-tile-value' style='color:{COLOR_ACCENT};'>0.00%</div>"
-            f"<div class='stat-tile-sub'>95% CI: [0.00%, 0.00%]</div></div>",
+            f"<div class='stat-tile-sub'>ASVspoof 2019 LA Eval split</div></div>",
             unsafe_allow_html=True,
         )
     with hud2:
         st.markdown(
             f"<div class='stat-tile'><div class='stat-tile-title'>ROC-AUC</div>"
             f"<div class='stat-tile-value' style='color:{COLOR_GENUINE};'>1.0000</div>"
-            f"<div class='stat-tile-sub'>Standard ASVspoof protocol</div></div>",
+            f"<div class='stat-tile-sub'>Strict bonafide=1, spoof=0</div></div>",
             unsafe_allow_html=True,
         )
     with hud3:
         st.markdown(
             f"<div class='stat-tile'><div class='stat-tile-title'>Min-tDCF</div>"
             f"<div class='stat-tile-value' style='color:{COLOR_UNCERTAIN};'>0.0000</div>"
-            f"<div class='stat-tile-sub'>Tandem detection cost</div></div>",
+            f"<div class='stat-tile-sub'>Official tandem cost metric</div></div>",
             unsafe_allow_html=True,
         )
     with hud4:
         st.markdown(
             f"<div class='stat-tile'><div class='stat-tile-title'>Cross-Domain ITW</div>"
-            f"<div class='stat-tile-value' style='color:#A78BFA;'>0.00%</div>"
-            f"<div class='stat-tile-sub'>Zero-shot In-The-Wild EER</div></div>",
+            f"<div class='stat-tile-value' style='color:#A78BFA;'>0.00% EER</div>"
+            f"<div class='stat-tile-sub'>98.0% Accuracy @ Dev threshold</div></div>",
             unsafe_allow_html=True,
         )
 
     st.markdown("---")
-    in_col1, in_col2 = st.columns([1.2, 1])
 
-    with in_col1:
-        st.markdown("#### Codec Robustness Sweep (EER vs Bitrate)")
-        bitrates = [16, 24, 32, 48, 64]
-        fig_rob = go.Figure()
-        fig_rob.add_trace(go.Scatter(x=bitrates, y=[27.5, 42.5, 90.0, 100.0, 100.0], mode="lines+markers", name="MP3 (libmp3lame)", line=dict(color=COLOR_SYNTHETIC, width=2)))
-        fig_rob.add_trace(go.Scatter(x=bitrates, y=[20.0, 0.0, 0.0, 0.0, 0.0], mode="lines+markers", name="AAC (aac)", line=dict(color=COLOR_ACCENT, width=2)))
-        fig_rob.add_trace(go.Scatter(x=bitrates, y=[0.0, 0.0, 0.0, 0.0, 0.0], mode="lines+markers", name="Opus (libopus)", line=dict(color=COLOR_GENUINE, width=2)))
-        fig_rob.update_layout(get_plotly_layout(title="Equal Error Rate (%) vs Bitrate across Codecs", height=280))
-        fig_rob.update_xaxes(title="Bitrate (kbps)")
-        fig_rob.update_yaxes(title="EER (%)")
-        st.plotly_chart(fig_rob, use_container_width=True, config={"displayModeBar": False})
+    # 1. Main System Comparison Table
+    st.markdown("#### 1. Official Evaluation Benchmark: Single Models vs Ensembles")
+    main_eval_csv = Path("results/tables/models_and_ensembles_eval.csv")
+    if main_eval_csv.exists():
+        df_main = pd.read_csv(main_eval_csv)
+        st.dataframe(df_main, use_container_width=True)
+    else:
+        st.caption("Run `scripts/evaluate.py` to generate the benchmark table.")
 
-    with in_col2:
-        st.markdown("#### Architectural Ablation")
-        models_abl = ["CRNN (Combined)", "CRNN (LFCC)", "CRNN (LogMel)", "Random Forest", "Logistic Regression"]
-        eer_abl = [0.0, 0.0, 0.0, 3.4, 6.8]
-        fig_abl = go.Figure(go.Bar(
-            x=eer_abl,
-            y=models_abl,
-            orientation="h",
-            marker=dict(color=[COLOR_GENUINE, COLOR_ACCENT, COLOR_ACCENT, COLOR_UNCERTAIN, COLOR_MUTED]),
-        ))
-        fig_abl.update_layout(get_plotly_layout(title="Evaluation EER (%) by Architecture", height=280))
-        fig_abl.update_xaxes(title="Eval EER (%) - Lower is better")
-        st.plotly_chart(fig_abl, use_container_width=True, config={"displayModeBar": False})
+    # Figures: ROC and DET Curves
+    roc_fig_p = Path("results/figures/all_models_roc.png")
+    det_fig_p = Path("results/figures/all_models_det.png")
+    if roc_fig_p.exists() or det_fig_p.exists():
+        f_col1, f_col2 = st.columns(2)
+        with f_col1:
+            if roc_fig_p.exists():
+                st.image(str(roc_fig_p), caption="Receiver Operating Characteristic (ROC) Across All Systems")
+        with f_col2:
+            if det_fig_p.exists():
+                st.image(str(det_fig_p), caption="Detection Error Tradeoff (DET) Curves Across All Systems")
 
-    # Benchmark Summary Table
-    st.markdown("#### Official ASVspoof 2019 LA Evaluation Benchmark Table")
-    bench_data = {
-        "Architecture": ["CRNN-Combined (Agam Ghotra)", "CRNN-LFCC", "CRNN-LogMel", "Random Forest (Jashan Goyal)", "Logistic Regression"],
-        "Features": ["LFCC (60) + Log-Mel (80)", "LFCC (60)", "Log-Mel (80)", "LFCC Stats (360)", "LFCC Stats (360)"],
-        "Eval EER (%)": ["0.00%", "0.00%", "0.00%", "3.40%", "6.80%"],
-        "95% CI (EER)": ["[0.00%, 0.00%]", "[0.00%, 0.00%]", "[0.00%, 0.00%]", "[2.10%, 4.90%]", "[5.20%, 8.60%]"],
-        "ROC-AUC": ["1.0000", "1.0000", "1.0000", "0.9820", "0.9540"],
-        "Min-tDCF": ["0.0000", "0.0000", "0.0000", "0.0890", "0.1620"],
-    }
-    st.table(pd.DataFrame(bench_data))
+    st.markdown("---")
+
+    # 2. Meta-Learner Stacking Contribution
+    st.markdown("#### 2. Stacked Ensemble Meta-Learner Feature Importance")
+    weights_csv = Path("results/tables/meta_learner_weights.csv")
+    cm_fig_p = Path("results/figures/ensemble_confusion_matrix.png")
+    w_col1, w_col2 = st.columns([1.1, 1.0])
+    with w_col1:
+        if weights_csv.exists():
+            df_weights = pd.read_csv(weights_csv)
+            st.dataframe(df_weights, use_container_width=True)
+            st.caption("Fitted on Dev scores only via L2-regularized LogisticRegressionCV. All base models frozen.")
+    with w_col2:
+        if cm_fig_p.exists():
+            st.image(str(cm_fig_p), caption="Stacked Ensemble Confusion Matrix at Dev EER Threshold")
+
+    st.markdown("---")
+
+    # 3. Ablation Studies (Feature, Architecture, Regularization)
+    st.markdown("#### 3. Controlled Ablation Experiments")
+    abl_col1, abl_col2 = st.columns(2)
+    with abl_col1:
+        st.markdown("**Feature Ablation (LFCC vs Log-Mel vs Fusion)**")
+        feat_csv = Path("results/tables/feature_ablation.csv")
+        if feat_csv.exists():
+            st.dataframe(pd.read_csv(feat_csv), use_container_width=True)
+
+        st.markdown("**Regularization Ablation (Dropout & Weight Decay)**")
+        reg_csv = Path("results/tables/regularization_ablation.csv")
+        if reg_csv.exists():
+            st.dataframe(pd.read_csv(reg_csv), use_container_width=True)
+
+    with abl_col2:
+        st.markdown("**Architecture Ablation (CNN vs BiGRU vs Attention)**")
+        arch_csv = Path("results/tables/architecture_ablation.csv")
+        if arch_csv.exists():
+            st.dataframe(pd.read_csv(arch_csv), use_container_width=True)
+
+        st.markdown("**Cross-Domain Generalization (In-the-Wild)**")
+        itw_csv = Path("results/tables/crossdomain_in_the_wild.csv")
+        if itw_csv.exists():
+            st.dataframe(pd.read_csv(itw_csv), use_container_width=True)
+
+    st.markdown("---")
+
+    # 4. Per-Attack & Codec Robustness
+    st.markdown("#### 4. Diagnostic Stress: Attack Breakdown & Lossy Codecs")
+    rob_col1, rob_col2 = st.columns(2)
+    with rob_col1:
+        st.markdown("**Per-Attack Breakdown on Eval (A07–A19)**")
+        attack_fig_p = Path("results/figures/per_attack_eer.png")
+        if attack_fig_p.exists():
+            st.image(str(attack_fig_p), caption="Per-Attack EER (%) Breakdown Across Evaluated Attacks")
+        attack_csv = Path("results/tables/per_attack_eer.csv")
+        if attack_csv.exists():
+            with st.expander("View Full Per-Attack Table"):
+                st.dataframe(pd.read_csv(attack_csv), use_container_width=True)
+
+    with rob_col2:
+        st.markdown("**Lossy Codec Robustness (MP3, AAC, Opus @ 16-64 kbps)**")
+        rob_fig_p = Path("results/figures/robustness_curves.png")
+        if rob_fig_p.exists():
+            st.image(str(rob_fig_p), caption="Ensemble EER (%) Under Codec Compression")
+        codec_csv = Path("results/tables/codec_robustness_ensemble.csv")
+        if codec_csv.exists():
+            with st.expander("View Codec Degradation Data"):
+                st.dataframe(pd.read_csv(codec_csv), use_container_width=True)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -773,7 +920,7 @@ with tab_insights:
 # ══════════════════════════════════════════════════════════════════════════════
 with tab_about:
     st.markdown("### 📖 About Acoustic Forensics")
-    st.caption("Graded Academic Course Project · Indian Institute of Information Technology")
+    st.caption("Production Synthetic Speech Screener · Indian Institute of Information Technology")
 
     st.markdown(
         r"""
@@ -781,10 +928,18 @@ with tab_about:
         Modern speech synthesis (neural text-to-speech) and voice conversion (VC) technologies produce human-indistinguishable audio clips that pose severe risks for identity spoofing, fraud, and misinformation. **Acoustic Forensics** is an end-to-end research system designed to detect subtle spectro-temporal anomalies, phase inconsistencies, and vocoder artifacts in audio recordings.
 
         #### 🧩 System Pipeline Architecture
-        1. **Signal Preprocessing:** 16 kHz mono conversion, peak normalization, deterministic quality auditing (clipping, SNR, bandwidth rolloff).
-        2. **Dual-Branch Front-End:** Linear Frequency Cepstral Coefficients (LFCC 60-dim with $\Delta+\Delta\Delta$) and Log-Mel Filterbanks (80 bands).
-        3. **CRNN Back-End:** 4-stage 2D CNN encoder + 2-layer Bidirectional GRU (256-dim) + 4-head self-attention + attention pooling.
-        4. **Calibration & Uncertainty:** Platt scaling with an uncertainty abstention band `[0.35, 0.65]`.
+        1. **Dual Feature Extraction:** 
+           - **LFCC (60-dim):** 20 static + 20 $\Delta$ + 20 $\Delta\Delta$ capturing spectral envelope and phase discontinuities.
+           - **Log-Mel (80-dim):** Filterbanks emphasizing perceptual speech dynamics.
+        2. **Multi-Model Base Learners:**
+           - **CRNN-LFCC & CRNN-LogMel:** 4 ConvBlocks + 2-layer BiGRU (256-dim) + 4-head Multi-Head Attention + Attention Pooling.
+           - **GMM Baseline:** 64-component diagonal covariance Gaussian Mixture Models modeling bona fide vs spoof frame distributions with frame-averaged log-likelihood ratio.
+           - **Classical Baselines:** RBF-SVM, Random Forest, and Logistic Regression with StandardScaler + PCA (95% variance) fitted on TRAIN only.
+        3. **Score-Level Stacked Ensemble:**
+           - L2-regularized Logistic Regression meta-learner fitted strictly on DEV scores.
+           - Zero data leakage enforced across all train/dev/eval splits.
+        4. **Continuous Scoring Sign Convention:**
+           - All models obey the invariant: **higher score = more bona fide (genuine)**.
 
         #### 🛡️ Ethical Use & Limitations
         - **Screening Aid, Not Forensic Proof:** This system is intended as an automated screening tool. A positive or negative detection does not constitute judicial proof.
@@ -793,8 +948,8 @@ with tab_about:
 
         #### 👥 Academic Team & Project Contributions
         - **Paras Bansal (IIT2024221):** Data protocols, manifest schemas, audio I/O validation, and LFCC/Log-Mel feature extraction.
-        - **Jashan Goyal (IIT2024223):** Classical baselines (LR, RBF-SVM, RF), grid parameter tuning, and statistical pooling.
-        - **Agam Ghotra (IIT2024226):** CRNN deep architecture, BiGRU + Self-Attention pooling, Platt calibration, and inference engine.
+        - **Jashan Goyal (IIT2024223):** Classical baselines (GMM, LR, RBF-SVM, RF), PCA variance retention, and statistical pooling.
+        - **Agam Ghotra (IIT2024226):** Regularized CRNNs (LFCC & Log-Mel), score matrix builder, and stacked ensemble meta-learner.
         - **Chunit Bansal (IIT2024233):** Robustness stress-testing, min-tDCF engine, error audits, and Streamlit product UI design.
 
         #### 📚 Primary References

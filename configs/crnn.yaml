@@ -1,13 +1,38 @@
 # CRNN Architecture & Training Configuration (Agam Ghotra)
 seed: 42
 seeds: [42, 1337, 2024]
-device: "cuda"
+device: "auto"
+
+features:
+  feature_type: "lfcc"
+  dim: 60
+  normalization: "global_meanstd"
+  stats_file: "checkpoints/normalization_stats.json"
+  lfcc:
+    sample_rate: 16000
+    n_fft: 512
+    win_length: 400
+    hop_length: 160
+    n_filter: 20
+    n_lfcc: 20
+    with_deltas: true
+  logmel:
+    sample_rate: 16000
+    n_fft: 512
+    win_length: 400
+    hop_length: 160
+    n_mels: 80
+    f_min: 0.0
+    f_max: 8000.0
+    power: 2.0
+    top_db: 80.0
 
 model:
   name: "crnn_forensics"
   in_channels: 1
+  in_freq_dim: 60
   features: "lfcc"  # 'lfcc', 'logmel', 'combined'
-  combined_fusion: "two_branch"  # 'two_branch' or 'channel_stack'
+  combined_fusion: "two_branch"
 
   # Architectural ablation toggles
   use_gru: true
@@ -20,7 +45,6 @@ model:
     kernel_size: 3
     stride: 1
     padding: 1
-    # MaxPool kernels and strides: prioritize frequency reduction while preserving temporal resolution
     pool_kernels: [[2, 2], [2, 2], [2, 1], [2, 1]]
     pool_strides: [[2, 2], [2, 2], [2, 1], [2, 1]]
     dropout: 0.1
@@ -47,14 +71,16 @@ model:
     num_classes: 2
     dropout: 0.3
 
+  init_weights: true
+
 training:
   batch_size: 32
-  num_workers: 4
+  num_workers: 0
   epochs: 40
   learning_rate: 0.001
   weight_decay: 0.0001
   optimizer: "adamw"  # 'adamw' or 'adam'
-  lr_scheduler: "cosine"  # 'cosine' or 'plateau'
+  lr_scheduler: "plateau"  # 'plateau' or 'cosine'
   min_lr: 0.000001
   warmup_epochs: 3
 
@@ -65,7 +91,7 @@ training:
   # Early stopping & model selection on dev EER
   early_stopping:
     enabled: true
-    patience: 8
+    patience: 5
     monitor: "dev_eer"
     mode: "min"
 
@@ -82,4 +108,4 @@ training:
     time_mask_max: 20
     freq_masks_num: 2
     time_masks_num: 2
-    codec_aug_prob: 0.0  # off by default, active only in codec ablation
+    codec_aug_prob: 0.0

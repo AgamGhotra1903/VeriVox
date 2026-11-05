@@ -1,0 +1,12 @@
+{
+  "model": "Stacked Forensic Ensemble (Frozen)",
+  "dataset": "In-the-Wild Deepfake Audio (M\u00fcller et al., 2022)",
+  "num_evaluated_clips": 50,
+  "bonafide_count": 17,
+  "spoof_count": 33,
+  "itw_optimal_eer": 0.0,
+  "itw_optimal_threshold": 0.16427700746512597,
+  "itw_roc_auc": 1.0,
+  "asvspoof_dev_threshold": 0.17949260718124432,
+  "accuracy_at_dev_threshold": 0.98
+}

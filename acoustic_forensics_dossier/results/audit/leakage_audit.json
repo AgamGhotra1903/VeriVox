@@ -1,0 +1,221 @@
+{
+  "status": "PASS",
+  "overall_passed": true,
+  "speaker_audit": {
+    "passed": true,
+    "pairwise_checks": {
+      "itw_cal_vs_train": {
+        "split_1": "itw_cal",
+        "split_2": "train",
+        "speakers_1_count": 1,
+        "speakers_2_count": 20,
+        "overlap_count": 0,
+        "overlapping_speakers": [],
+        "is_disjoint": true,
+        "is_strict_requirement": false
+      },
+      "itw_cal_vs_itw_test": {
+        "split_1": "itw_cal",
+        "split_2": "itw_test",
+        "speakers_1_count": 1,
+        "speakers_2_count": 4,
+        "overlap_count": 0,
+        "overlapping_speakers": [],
+        "is_disjoint": true,
+        "is_strict_requirement": true
+      },
+      "itw_cal_vs_dev": {
+        "split_1": "itw_cal",
+        "split_2": "dev",
+        "speakers_1_count": 1,
+        "speakers_2_count": 20,
+        "overlap_count": 0,
+        "overlapping_speakers": [],
+        "is_disjoint": true,
+        "is_strict_requirement": false
+      },
+      "itw_cal_vs_eval": {
+        "split_1": "itw_cal",
+        "split_2": "eval",
+        "speakers_1_count": 1,
+        "speakers_2_count": 20,
+        "overlap_count": 0,
+        "overlapping_speakers": [],
+        "is_disjoint": true,
+        "is_strict_requirement": false
+      },
+      "train_vs_itw_test": {
+        "split_1": "train",
+        "split_2": "itw_test",
+        "speakers_1_count": 20,
+        "speakers_2_count": 4,
+        "overlap_count": 0,
+        "overlapping_speakers": [],
+        "is_disjoint": true,
+        "is_strict_requirement": false
+      },
+      "train_vs_dev": {
+        "split_1": "train",
+        "split_2": "dev",
+        "speakers_1_count": 20,
+        "speakers_2_count": 20,
+        "overlap_count": 0,
+        "overlapping_speakers": [],
+        "is_disjoint": true,
+        "is_strict_requirement": true
+      },
+      "train_vs_eval": {
+        "split_1": "train",
+        "split_2": "eval",
+        "speakers_1_count": 20,
+        "speakers_2_count": 20,
+        "overlap_count": 0,
+        "overlapping_speakers": [],
+        "is_disjoint": true,
+        "is_strict_requirement": true
+      },
+      "itw_test_vs_dev": {
+        "split_1": "itw_test",
+        "split_2": "dev",
+        "speakers_1_count": 4,
+        "speakers_2_count": 20,
+        "overlap_count": 0,
+        "overlapping_speakers": [],
+        "is_disjoint": true,
+        "is_strict_requirement": false
+      },
+      "itw_test_vs_eval": {
+        "split_1": "itw_test",
+        "split_2": "eval",
+        "speakers_1_count": 4,
+        "speakers_2_count": 20,
+        "overlap_count": 0,
+        "overlapping_speakers": [],
+        "is_disjoint": true,
+        "is_strict_requirement": false
+      },
+      "dev_vs_eval": {
+        "split_1": "dev",
+        "split_2": "eval",
+        "speakers_1_count": 20,
+        "speakers_2_count": 20,
+        "overlap_count": 0,
+        "overlapping_speakers": [],
+        "is_disjoint": true,
+        "is_strict_requirement": true
+      }
+    },
+    "violations": []
+  },
+  "file_id_audit": {
+    "passed": true,
+    "pairwise_checks": {
+      "itw_cal_vs_train": {
+        "split_1": "itw_cal",
+        "split_2": "train",
+        "files_1_count": 10,
+        "files_2_count": 200,
+        "overlap_count": 0,
+        "overlapping_files": [],
+        "is_disjoint": true
+      },
+      "itw_cal_vs_itw_test": {
+        "split_1": "itw_cal",
+        "split_2": "itw_test",
+        "files_1_count": 10,
+        "files_2_count": 40,
+        "overlap_count": 0,
+        "overlapping_files": [],
+        "is_disjoint": true
+      },
+      "itw_cal_vs_dev": {
+        "split_1": "itw_cal",
+        "split_2": "dev",
+        "files_1_count": 10,
+        "files_2_count": 100,
+        "overlap_count": 0,
+        "overlapping_files": [],
+        "is_disjoint": true
+      },
+      "itw_cal_vs_eval": {
+        "split_1": "itw_cal",
+        "split_2": "eval",
+        "files_1_count": 10,
+        "files_2_count": 100,
+        "overlap_count": 0,
+        "overlapping_files": [],
+        "is_disjoint": true
+      },
+      "train_vs_itw_test": {
+        "split_1": "train",
+        "split_2": "itw_test",
+        "files_1_count": 200,
+        "files_2_count": 40,
+        "overlap_count": 0,
+        "overlapping_files": [],
+        "is_disjoint": true
+      },
+      "train_vs_dev": {
+        "split_1": "train",
+        "split_2": "dev",
+        "files_1_count": 200,
+        "files_2_count": 100,
+        "overlap_count": 0,
+        "overlapping_files": [],
+        "is_disjoint": true
+      },
+      "train_vs_eval": {
+        "split_1": "train",
+        "split_2": "eval",
+        "files_1_count": 200,
+        "files_2_count": 100,
+        "overlap_count": 0,
+        "overlapping_files": [],
+        "is_disjoint": true
+      },
+      "itw_test_vs_dev": {
+        "split_1": "itw_test",
+        "split_2": "dev",
+        "files_1_count": 40,
+        "files_2_count": 100,
+        "overlap_count": 0,
+        "overlapping_files": [],
+        "is_disjoint": true
+      },
+      "itw_test_vs_eval": {
+        "split_1": "itw_test",
+        "split_2": "eval",
+        "files_1_count": 40,
+        "files_2_count": 100,
+        "overlap_count": 0,
+        "overlapping_files": [],
+        "is_disjoint": true
+      },
+      "dev_vs_eval": {
+        "split_1": "dev",
+        "split_2": "eval",
+        "files_1_count": 100,
+        "files_2_count": 100,
+        "overlap_count": 0,
+        "overlapping_files": [],
+        "is_disjoint": true
+      }
+    },
+    "violations": []
+  },
+  "content_hash_audit": {
+    "passed": true,
+    "hashes_checked": 450,
+    "collisions": []
+  },
+  "vctk_warnings": [
+    "DATASET CARD NOTE: ASVspoof 2019 LA bona fide utterances originate from 107 VCTK speakers. Verified: No raw VCTK speaker conflicts detected in active manifests."
+  ],
+  "splits_audited": {
+    "itw_cal": 10,
+    "train": 200,
+    "itw_test": 40,
+    "dev": 100,
+    "eval": 100
+  }
+}

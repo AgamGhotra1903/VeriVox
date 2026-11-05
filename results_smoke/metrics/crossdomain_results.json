@@ -1,0 +1,31 @@
+{
+  "dataset": "In-the-Wild Deepfake Audio (M\u00fcller et al., 2022)",
+  "num_evaluated_clips": 50,
+  "bonafide_count": 17,
+  "spoof_count": 33,
+  "multi_crop_inference": true,
+  "optimal_threshold_metrics": {
+    "itw_optimal_eer": 0.0,
+    "itw_optimal_eer_ci_95": [
+      0.0,
+      0.0
+    ],
+    "itw_optimal_threshold": 5.228846788406372,
+    "roc_auc": 1.0
+  },
+  "dev_threshold_metrics": {
+    "asvspoof_dev_threshold": 5.228361129760742,
+    "accuracy": 1.0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "confusion_matrix": {
+      "tp": 17,
+      "fp": 0,
+      "tn": 33,
+      "fn": 0
+    }
+  },
+  "domain_shift_analysis": "At its own optimal threshold (5.2288), the model achieves 0.00% EER on real-world clips. When using the threshold calibrated on ASVspoof dev (5.2284), accuracy is 100.00%. This difference exposes the distribution shift between studio speech and unconstrained acoustic environments.",
+  "min_tdcf_note": "min-tDCF is undefined on In-The-Wild as the corpus lacks paired ASV speaker verification trials."
+}

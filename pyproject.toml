@@ -25,6 +25,11 @@ dependencies = [
     "matplotlib>=3.8.0",
     "seaborn>=0.13.0",
     "plotly>=5.18.0",
+    "fastapi>=0.110.0",
+    "uvicorn>=0.28.0",
+    "sse-starlette>=2.0.0",
+    "python-multipart>=0.0.9",
+    "httpx>=0.27.0",
     "streamlit>=1.32.0",
     "pyyaml>=6.0.1",
     "tqdm>=4.66.0",
@@ -36,6 +41,7 @@ dependencies = [
 dev = [
     "pytest>=8.0.0",
     "pytest-cov>=4.1.0",
+    "httpx>=0.27.0",
 ]
 
 [tool.setuptools.packages.find]
@@ -43,9 +49,11 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["src"]
+pythonpath = ["src", "."]
 addopts = "-v --durations=10"
 filterwarnings = [
     "ignore::DeprecationWarning",
     "ignore::UserWarning",
+    "ignore::RuntimeWarning",
+    "ignore::FutureWarning",
 ]

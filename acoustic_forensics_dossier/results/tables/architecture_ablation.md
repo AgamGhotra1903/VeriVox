@@ -1,0 +1,5 @@
+| Architecture Variant           | Description                                                |   Dev EER (%) |   Eval EER (%) |   Eval ROC-AUC |   Eval min-tDCF |
+|:-------------------------------|:-----------------------------------------------------------|--------------:|---------------:|---------------:|----------------:|
+| CNN Only                       | 4 ConvBlocks -> Linear Head                                |             0 |              0 |              1 |               0 |
+| CNN + BiGRU                    | 4 ConvBlocks -> 2-layer BiGRU -> Mean Pooling              |             0 |              0 |              1 |               0 |
+| CNN + BiGRU + Attention (Full) | 4 ConvBlocks -> 2-layer BiGRU -> Multi-Head Self-Attention |             0 |              0 |              1 |               0 |

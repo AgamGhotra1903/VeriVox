@@ -1,0 +1,8 @@
+[
+  "CRNN-LFCC",
+  "CRNN-LogMel",
+  "GMM",
+  "SVM",
+  "Random Forest",
+  "Logistic Regression"
+]

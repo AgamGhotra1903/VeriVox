@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Optional
 import csv
 import numpy as np
+import scipy.signal
 import soundfile as sf
 import torch
 import torchaudio
@@ -26,9 +27,8 @@ logger = get_logger(__name__)
 
 @dataclass
 class AudioValidationResult:
-    """Result container for audio loading and verification."""
     is_valid: bool
-    waveform: Optional[torch.Tensor] = None  # 1D tensor shape (samples,)
+    waveform: Optional[torch.Tensor] = None
     sample_rate: int = SAMPLE_RATE
     duration_sec: float = 0.0
     error_reason: Optional[str] = None
@@ -38,6 +38,9 @@ class AudioValidationResult:
     bitrate_kbps: Optional[float] = None
     peak_level_db: float = 0.0
     snr_estimate_db: float = 30.0
+    is_lossy_compressed: bool = False
+    spectral_cutoff_hz: float = 8000.0
+    codec_compression_hint: Optional[str] = None
 
 
 def log_rejected_file(
@@ -133,6 +136,36 @@ def normalize_audio(
         return waveform
 
 
+def detect_lossy_compression_spectral(
+    data: np.ndarray,
+    sr: int,
+) -> tuple[bool, float, Optional[str], Optional[float]]:
+    if len(data) < 512:
+        return False, float(sr / 2.0), None, None
+    nperseg = min(1024, len(data))
+    freqs, psd = scipy.signal.welch(data, fs=sr, nperseg=nperseg)
+    psd_db = 10.0 * np.log10(np.maximum(psd, 1e-15))
+    peak_db = float(np.max(psd_db))
+    thresh_db = max(peak_db - 40.0, -95.0)
+    above = np.where(psd_db >= thresh_db)[0]
+    cutoff_hz = float(freqs[above[-1]]) if len(above) > 0 else float(sr / 2.0)
+    nyquist = float(sr / 2.0)
+    is_lossy = cutoff_hz < (0.90 * nyquist)
+    if cutoff_hz < 4500.0:
+        hint = "telephony_or_mp3_16k"
+        est_kbps = 16.0
+    elif cutoff_hz < 6500.0:
+        hint = "lossy_codec_24_32k"
+        est_kbps = 32.0
+    elif cutoff_hz < 7400.0:
+        hint = "lossy_codec_48_64k"
+        est_kbps = 64.0
+    else:
+        hint = "uncompressed_or_high_bitrate"
+        est_kbps = 256.0
+    return is_lossy, cutoff_hz, hint, est_kbps
+
+
 def load_and_validate_audio(
     file_path: Path | str,
     target_sr: int = SAMPLE_RATE,
@@ -200,8 +233,13 @@ def load_and_validate_audio(
             try:
                 import io
                 import subprocess
-                cmd = ["ffmpeg", "-v", "error", "-i", str(path), "-f", "wav", "-acodec", "pcm_s16le", "-"]
-                proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+                cmd = [
+                    "ffmpeg", "-nostdin", "-nostats", "-hide_banner",
+                    "-protocol_whitelist", "file,pipe",
+                    "-v", "error", "-i", str(path),
+                    "-f", "wav", "-acodec", "pcm_s16le", "-"
+                ]
+                proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True, timeout=15.0)
                 data, sr = sf.read(io.BytesIO(proc.stdout), dtype="float32")
             except Exception as ffmpeg_err:
                 if log_rejections:
@@ -262,10 +300,12 @@ def load_and_validate_audio(
     else:
         snr_val = 30.0
 
-    # Convert to torch tensor
+    is_lossy, cutoff_hz, codec_hint, est_kbps = detect_lossy_compression_spectral(data, sr)
+    if is_lossy or bitrate_kbps_val is None:
+        bitrate_kbps_val = est_kbps
+
     waveform = torch.from_numpy(data.astype(np.float32))
 
-    # 5. Resample if necessary
     orig_sr = sr
     if sr != target_sr:
         try:
@@ -281,7 +321,6 @@ def load_and_validate_audio(
 
     duration_sec = len(waveform) / target_sr
 
-    # 6. Minimum duration check
     if duration_sec < min_duration_sec:
         if log_rejections:
             log_rejected_file(path, "duration_under_minimum", duration_sec, rejected_log_path)
@@ -291,7 +330,6 @@ def load_and_validate_audio(
             error_reason=f"Duration ({duration_sec:.2f}s) is shorter than minimum allowed ({min_duration_sec:.2f}s).",
         )
 
-    # 7. Normalization
     waveform = normalize_audio(waveform, method=normalization_method)
 
     return AudioValidationResult(
@@ -306,4 +344,7 @@ def load_and_validate_audio(
         bitrate_kbps=bitrate_kbps_val,
         peak_level_db=peak_level_db,
         snr_estimate_db=snr_val,
+        is_lossy_compressed=is_lossy,
+        spectral_cutoff_hz=cutoff_hz,
+        codec_compression_hint=codec_hint,
     )

@@ -71,10 +71,11 @@ def audit_speaker_disjointness(
         col = speaker_col if speaker_col in df.columns else ("speaker_id" if "speaker_id" in df.columns else None)
         if col and len(df) > 0:
             speakers = set(df[col].astype(str).unique())
-            # Exclude generic 'unknown' or empty markers from collision checks
             speakers.discard("unknown")
             speakers.discard("-")
             speakers.discard("")
+            speakers.discard("nan")
+            speakers.discard("None")
             split_speakers[name] = speakers
         else:
             split_speakers[name] = set()
@@ -87,7 +88,6 @@ def audit_speaker_disjointness(
         check_key = f"{s1}_vs_{s2}"
         is_disjoint = len(overlap) == 0
 
-        # Define which pairs are strictly required to be disjoint
         strict_pairs = [
             ("train", "dev"),
             ("train", "eval"),
@@ -110,7 +110,12 @@ def audit_speaker_disjointness(
             "is_strict_requirement": is_strict,
         }
 
-        if is_strict and not is_disjoint:
+        if is_strict and (len(spk1) == 0 or len(spk2) == 0):
+            results["passed"] = False
+            msg = f"CRITICAL LEAKAGE: Strict speaker disjointness cannot be verified between '{s1}' ({len(spk1)} speakers) and '{s2}' ({len(spk2)} speakers) due to missing real speaker metadata."
+            results["violations"].append(msg)
+            logger.error(msg)
+        elif is_strict and not is_disjoint:
             results["passed"] = False
             msg = f"CRITICAL LEAKAGE: Strict speaker overlap between '{s1}' and '{s2}': {sorted(list(overlap))[:5]}"
             results["violations"].append(msg)

@@ -1,0 +1,2 @@
+file_id,speaker_id,attack_id,label,score,error_type
+LA_E_1000060,LA_EV_1000,-,1,5.22796630859375,False Negative (Genuine Called Synthetic)

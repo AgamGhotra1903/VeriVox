@@ -1,0 +1,11 @@
+| Degradation Condition   |   CRNN Degraded EER (%) |   CRNN Degradation (pts) |   CRNN Acc @ Thresh (%) |   Ensemble Degraded EER (%) |   Ensemble Degradation (pts) |   Ensemble Acc @ Thresh (%) |
+|:------------------------|------------------------:|-------------------------:|------------------------:|----------------------------:|-----------------------------:|----------------------------:|
+| telephony_8k_alaw       |                       0 |                        0 |                       0 |                           0 |                            0 |                           0 |
+| telephony_8k_mulaw      |                       0 |                        0 |                       0 |                           0 |                            0 |                           0 |
+| noise_snr_20db          |                       0 |                        0 |                       0 |                           0 |                            0 |                           0 |
+| noise_snr_10db          |                       0 |                        0 |                       0 |                           0 |                            0 |                           0 |
+| noise_snr_0db           |                       0 |                        0 |                       0 |                           0 |                            0 |                           0 |
+| reverb_rt60_0.3s        |                       0 |                        0 |                       0 |                           0 |                            0 |                           0 |
+| packet_loss_5pct        |                       0 |                        0 |                       0 |                           0 |                            0 |                           0 |
+| packet_loss_10pct       |                       0 |                        0 |                       0 |                           0 |                            0 |                           0 |
+| packet_loss_20pct       |                       0 |                        0 |                       0 |                           0 |                            0 |                           0 |

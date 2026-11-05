@@ -1,0 +1,9 @@
+\begin{tabular}{lllllllllll}
+\toprule
+Execution Target & Threads & Mean ± Std (ms) & p50 (ms) & p95 (ms) & p99 (ms) & I/O (ms) & Feat (ms) & Inference (ms) & RTF & Clips / sec \\
+\midrule
+CPU (Apple M4 Pro, 1 thread) & 1 & 12.74 ± 1.32 & 12.44 & 14.78 & 17.79 & 2.24 & 0.56 & 9.93 & 0.00318 & 78.5 \\
+CPU (Apple M4 Pro, 4 threads) & 4 & 10.78 ± 1.97 & 10.51 & 11.9 & 13.84 & 2.34 & 1.17 & 7.27 & 0.00269 & 92.8 \\
+Apple Silicon GPU (MPS) & N/A & 32.21 ± 1.68 & 31.8 & 35.01 & 37.31 & 2.33 & 1.14 & 28.74 & 0.00805 & 31.0 \\
+\bottomrule
+\end{tabular}

@@ -1,0 +1,176 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Neutral background & surface (Light mode by default) */
+  --bg-chassis: #f8fafc;        /* Off-white canvas */
+  --bg-surface: #ffffff;        /* Pure card, slightly lifted */
+  --bg-elevated: #f1f5f9;       /* Secondary card / input bg */
+  --bg-inset: #f8fafc;          /* Inset well */
+
+  /* Borders: soft border (rgba slate 10-15%) */
+  --border-subtle: rgba(148, 163, 184, 0.22);
+  --border-strong: rgba(100, 116, 139, 0.32);
+
+  /* One muted accent color: Indigo */
+  --accent-primary: #4f46e5;    /* Indigo 600 */
+  --accent-hover: #4338ca;      /* Indigo 700 */
+  --accent-subtle: rgba(79, 70, 229, 0.08);
+  --accent-ring: rgba(79, 70, 229, 0.35);
+
+  /* Semantic status colors (calm, non-flashy) */
+  --status-genuine: #059669;    /* Emerald 600 */
+  --status-genuine-bg: #ecfdf5; /* Emerald 50 */
+  --status-genuine-border: #a7f3d0;
+  --status-spoof: #e11d48;      /* Rose 600 */
+  --status-spoof-bg: #fff1f2;   /* Rose 50 */
+  --status-spoof-border: #fecdd3;
+  --status-uncertain: #d97706;  /* Amber 600 */
+  --status-uncertain-bg: #fffbeb;/* Amber 50 */
+  --status-uncertain-border: #fde68a;
+
+  /* Typography: never pure black on pure white */
+  --text-primary: #0f172a;      /* Slate 900 */
+  --text-secondary: #64748b;    /* Slate 500 */
+  --text-muted: #94a3b8;        /* Slate 400 */
+
+  /* Radius scale */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 9999px;
+
+  /* Elevation shadow: very light (0 1px 3px rgba(0,0,0,.06)) */
+  --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.06);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+
+  /* Transitions */
+  --transition-base: 150ms ease;
+}
+
+/* Dark mode: automatically via prefers-color-scheme or .dark class */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-chassis: #0f172a;        /* Slate 900 neutral */
+    --bg-surface: #1e293b;        /* Slate 800 lifted card */
+    --bg-elevated: #334155;       /* Slate 700 elevated */
+    --bg-inset: #0b1120;          /* Inset recessed */
+
+    --border-subtle: rgba(148, 163, 184, 0.14);
+    --border-strong: rgba(148, 163, 184, 0.25);
+
+    --accent-primary: #6366f1;    /* Indigo 500 */
+    --accent-hover: #818cf8;      /* Indigo 400 */
+    --accent-subtle: rgba(99, 102, 241, 0.15);
+    --accent-ring: rgba(99, 102, 241, 0.4);
+
+    --status-genuine: #10b981;    /* Emerald 500 */
+    --status-genuine-bg: rgba(16, 185, 129, 0.12);
+    --status-genuine-border: rgba(16, 185, 129, 0.25);
+    --status-spoof: #f43f5e;      /* Rose 500 */
+    --status-spoof-bg: rgba(244, 63, 94, 0.12);
+    --status-spoof-border: rgba(244, 63, 94, 0.25);
+    --status-uncertain: #f59e0b;  /* Amber 500 */
+    --status-uncertain-bg: rgba(245, 158, 11, 0.12);
+    --status-uncertain-border: rgba(245, 158, 11, 0.25);
+
+    --text-primary: #f8fafc;      /* Slate 50 */
+    --text-secondary: #94a3b8;    /* Slate 400 */
+    --text-muted: #64748b;        /* Slate 500 */
+
+    --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.28), 0 1px 2px -1px rgba(0, 0, 0, 0.2);
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+  }
+}
+
+.dark {
+  --bg-chassis: #0f172a;
+  --bg-surface: #1e293b;
+  --bg-elevated: #334155;
+  --bg-inset: #0b1120;
+
+  --border-subtle: rgba(148, 163, 184, 0.14);
+  --border-strong: rgba(148, 163, 184, 0.25);
+
+  --accent-primary: #6366f1;
+  --accent-hover: #818cf8;
+  --accent-subtle: rgba(99, 102, 241, 0.15);
+  --accent-ring: rgba(99, 102, 241, 0.4);
+
+  --status-genuine: #10b981;
+  --status-genuine-bg: rgba(16, 185, 129, 0.12);
+  --status-genuine-border: rgba(16, 185, 129, 0.25);
+  --status-spoof: #f43f5e;
+  --status-spoof-bg: rgba(244, 63, 94, 0.12);
+  --status-spoof-border: rgba(244, 63, 94, 0.25);
+  --status-uncertain: #f59e0b;
+  --status-uncertain-bg: rgba(245, 158, 11, 0.12);
+  --status-uncertain-border: rgba(245, 158, 11, 0.25);
+
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+
+  --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.28), 0 1px 2px -1px rgba(0, 0, 0, 0.2);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg-chassis);
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Subtle minimal scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.4);
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Motion: fade and subtle translate-up (4-6px) on mount */
+@keyframes cardFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-card-mount {
+  animation: cardFadeUp 180ms ease-out both;
+}
+
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .animate-card-mount {
+    animation: none !important;
+  }
+}

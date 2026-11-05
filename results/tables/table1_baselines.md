@@ -1,11 +1,10 @@
-| Model               | Features   |   Dev EER (%) |   Eval EER (%) |   Eval ROC-AUC |   Eval min-tDCF |   Applied Threshold |
-|:--------------------|:-----------|--------------:|---------------:|---------------:|----------------:|--------------------:|
-| Logistic Regression | LFCC       |             0 |              0 |              1 |               0 |              1.9027 |
-| Logistic Regression | LOGMEL     |             0 |              0 |              1 |               0 |              2.7433 |
-| Logistic Regression | COMBINED   |             0 |              0 |              1 |               0 |              3.1649 |
-| RBF-SVM             | LFCC       |             0 |              0 |              1 |               0 |              0.9437 |
-| RBF-SVM             | LOGMEL     |             0 |              0 |              1 |               0 |              0.9585 |
-| RBF-SVM             | COMBINED   |             0 |              0 |              1 |               0 |              0.9733 |
-| Random Forest       | LFCC       |             0 |              0 |              1 |               0 |              0.97   |
-| Random Forest       | LOGMEL     |             0 |              0 |              1 |               0 |              1      |
-| Random Forest       | COMBINED   |             0 |              0 |              1 |               0 |              0.99   |
+| Model              | Features   |   Dev EER (%) |   Eval EER (%) |   Eval ROC-AUC |   Eval min-tDCF |   Applied Threshold |
+|:-------------------|:-----------|--------------:|---------------:|---------------:|----------------:|--------------------:|
+| GMM                | LFCC       |          8.07 |          11.46 |         0.9544 |          0.3572 |              0.5711 |
+| GMM                | LOGMEL     |         30.31 |          49.46 |         0.5237 |          0.9969 |              2.6538 |
+| LogisticRegression | LFCC       |         20.77 |          23.94 |         0.8459 |          0.6284 |              0.4507 |
+| LogisticRegression | LOGMEL     |         23.12 |          29.2  |         0.7798 |          0.7861 |              0.4888 |
+| SVM                | LFCC       |         11.97 |          19.64 |         0.8932 |          0.5119 |              0.0504 |
+| SVM                | LOGMEL     |         18.01 |          27.27 |         0.7933 |          0.7962 |              0.093  |
+| RandomForest       | LFCC       |         10.09 |          17.52 |         0.8977 |          0.4695 |              0.1285 |
+| RandomForest       | LOGMEL     |         13.92 |          23.26 |         0.8199 |          0.7184 |              0.1284 |

@@ -1,4 +1,4 @@
-"""Unit tests for CRNN model architecture, ablation toggles, and tensor dimensions.
+"""Unit tests for CRNN model architecture, ablation toggles, tensor dimensions, and initialization.
 
 Author: Agam Ghotra (IIT2024226)
 """
@@ -6,6 +6,7 @@ Author: Agam Ghotra (IIT2024226)
 import pytest
 import torch
 
+from acforensics.constants import BONAFIDE, SPOOF
 from acforensics.models.crnn import CRNNForensics
 
 
@@ -16,9 +17,40 @@ def test_crnn_default_forward():
     logits, attn_weights = model(x)
 
     assert logits.shape == (4, 2)
-    assert attn_weights.shape[0] == 4
+    assert attn_weights.shape == (4, 100)
     # Attention weights should sum to 1.0 along the time dimension
     assert torch.allclose(attn_weights.sum(dim=1), torch.ones(4), atol=1e-4)
+
+
+def test_crnn_logmel_variant_forward():
+    # Batch size 4, 1 channel, 80 Log-Mel channels, 400 time frames
+    x = torch.randn(4, 1, 80, 400)
+    model = CRNNForensics(in_channels=1, in_freq_dim=80, features="logmel")
+    logits, attn_weights = model(x)
+
+    assert logits.shape == (4, 2)
+    assert attn_weights.shape == (4, 100)  # After 4 pools: T' = 400 // 4 = 100
+    assert torch.allclose(attn_weights.sum(dim=1), torch.ones(4), atol=1e-4)
+
+
+def test_crnn_predict_score():
+    x = torch.randn(3, 1, 60, 400)
+    model = CRNNForensics(in_channels=1, in_freq_dim=60, features="lfcc")
+    model.eval()
+    with torch.no_grad():
+        scores = model.predict_score(x)
+        assert scores.shape == (3,)
+        logits, _ = model(x)
+        expected_scores = logits[:, BONAFIDE] - logits[:, SPOOF]
+        assert torch.allclose(scores, expected_scores)
+
+
+def test_crnn_shape_assertions():
+    model = CRNNForensics(in_channels=1, in_freq_dim=60, features="lfcc")
+    # Invalid 5D input should raise AssertionError
+    with pytest.raises(AssertionError):
+        invalid_5d = torch.randn(2, 1, 1, 60, 400)
+        _ = model(invalid_5d)
 
 
 def test_crnn_cnn_only_ablation():
@@ -41,3 +73,17 @@ def test_crnn_combined_two_branch():
     model = CRNNForensics(features="combined")
     logits, attn = model(x_lfcc, x_aux=x_logmel)
     assert logits.shape == (2, 2)
+
+
+def test_crnn_custom_dropout_and_init():
+    model = CRNNForensics(
+        in_channels=1,
+        in_freq_dim=60,
+        conv_dropout=0.2,
+        gru_dropout=0.4,
+        classifier_dropout=0.5,
+        init_weights=True,
+    )
+    assert model.conv_dropout == 0.2
+    assert model.gru_dropout == 0.4
+    assert model.classifier_dropout == 0.5

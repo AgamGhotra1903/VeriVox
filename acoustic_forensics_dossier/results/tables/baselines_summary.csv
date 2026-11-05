@@ -1,0 +1,8 @@
+Model,Features,Feature Dim,Dev EER (%),Eval EER (%),Eval ROC-AUC,Eval min-tDCF,Applied Threshold
+GMM (Baseline),LFCC,60 (Frames),0.00,0.00,1.0000,0.0000,268.5717 (from Dev)
+Logistic Regression,LFCC,120 -> PCA(40),0.00,0.00,1.0000,0.0000,1.0370 (from Dev)
+Logistic Regression,LOGMEL,160 -> PCA(41),0.00,0.00,1.0000,0.0000,1.7399 (from Dev)
+RBF-SVM,LFCC,120 -> PCA(40),0.00,0.00,1.0000,0.0000,0.6752 (from Dev)
+RBF-SVM,LOGMEL,160 -> PCA(41),0.00,0.00,1.0000,0.0000,0.3732 (from Dev)
+Random Forest,LFCC,120 -> PCA(40),0.00,0.00,1.0000,0.0000,0.3640 (from Dev)
+Random Forest,LOGMEL,160 -> PCA(41),0.00,0.00,1.0000,0.0000,0.2737 (from Dev)

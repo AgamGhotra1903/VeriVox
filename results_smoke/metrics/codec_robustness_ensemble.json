@@ -1,0 +1,86 @@
+{
+  "model": "Stacked Forensic Ensemble (Frozen)",
+  "clean_baseline_eer": 0.0,
+  "results_by_codec": {
+    "mp3": {
+      "16": 12.5,
+      "32": 0.0,
+      "64": 0.0
+    },
+    "aac": {
+      "16": 31.25,
+      "32": 12.5,
+      "64": 18.75
+    },
+    "opus": {
+      "16": 0.0,
+      "32": 0.0,
+      "64": 0.0
+    }
+  },
+  "table": [
+    {
+      "Codec": "MP3",
+      "Bitrate (kbps)": 16,
+      "Clean Ensemble EER (%)": "0.00",
+      "Compressed Ensemble EER (%)": "12.50",
+      "Degradation (pts)": "+12.50"
+    },
+    {
+      "Codec": "MP3",
+      "Bitrate (kbps)": 32,
+      "Clean Ensemble EER (%)": "0.00",
+      "Compressed Ensemble EER (%)": "0.00",
+      "Degradation (pts)": "+0.00"
+    },
+    {
+      "Codec": "MP3",
+      "Bitrate (kbps)": 64,
+      "Clean Ensemble EER (%)": "0.00",
+      "Compressed Ensemble EER (%)": "0.00",
+      "Degradation (pts)": "+0.00"
+    },
+    {
+      "Codec": "AAC",
+      "Bitrate (kbps)": 16,
+      "Clean Ensemble EER (%)": "0.00",
+      "Compressed Ensemble EER (%)": "31.25",
+      "Degradation (pts)": "+31.25"
+    },
+    {
+      "Codec": "AAC",
+      "Bitrate (kbps)": 32,
+      "Clean Ensemble EER (%)": "0.00",
+      "Compressed Ensemble EER (%)": "12.50",
+      "Degradation (pts)": "+12.50"
+    },
+    {
+      "Codec": "AAC",
+      "Bitrate (kbps)": 64,
+      "Clean Ensemble EER (%)": "0.00",
+      "Compressed Ensemble EER (%)": "18.75",
+      "Degradation (pts)": "+18.75"
+    },
+    {
+      "Codec": "OPUS",
+      "Bitrate (kbps)": 16,
+      "Clean Ensemble EER (%)": "0.00",
+      "Compressed Ensemble EER (%)": "0.00",
+      "Degradation (pts)": "+0.00"
+    },
+    {
+      "Codec": "OPUS",
+      "Bitrate (kbps)": 32,
+      "Clean Ensemble EER (%)": "0.00",
+      "Compressed Ensemble EER (%)": "0.00",
+      "Degradation (pts)": "+0.00"
+    },
+    {
+      "Codec": "OPUS",
+      "Bitrate (kbps)": 64,
+      "Clean Ensemble EER (%)": "0.00",
+      "Compressed Ensemble EER (%)": "0.00",
+      "Degradation (pts)": "+0.00"
+    }
+  ]
+}
