@@ -217,4 +217,11 @@ class GMMForensics:
     @classmethod
     def load(cls, model_path: Path | str) -> "GMMForensics":
         """Loads serialized GMMForensics model from disk."""
-        return joblib.load(str(model_path))
+        obj = joblib.load(str(model_path))
+        if isinstance(obj, dict) and "gmm_bf" in obj and "gmm_sp" in obj:
+            instance = cls(n_components=getattr(obj["gmm_bf"], "n_components", 64))
+            instance.gmm_bonafide = obj["gmm_bf"]
+            instance.gmm_spoof = obj["gmm_sp"]
+            instance.is_fitted = True
+            return instance
+        return obj

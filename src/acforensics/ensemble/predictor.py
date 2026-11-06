@@ -35,7 +35,7 @@ from acforensics.models.classical import (
 )
 from acforensics.models.crnn import CRNNForensics
 from acforensics.models.gmm import GMMForensics
-from acforensics.ensemble.stacking import StackedEnsemble
+from acforensics.ensemble.stacking import StackedEnsemble, NonNegativeStackedEnsemble
 from acforensics.utils.logging import get_logger
 
 logger = get_logger(__name__)
@@ -48,7 +48,7 @@ class EnsemblePredictor:
         self,
         crnn_lfcc_path: Path | str = "checkpoints/crnn_lfcc_best.pt",
         crnn_logmel_path: Path | str = "checkpoints/crnn_logmel_best.pt",
-        gmm_path: Path | str = "checkpoints/classical/gmm_lfcc.joblib",
+        gmm_path: Path | str = "checkpoints/classical/gmm_lfcc_baseline.joblib",
         svm_path: Path | str = "checkpoints/classical/rbf_svm_lfcc.joblib",
         rf_path: Path | str = "checkpoints/classical/random_forest_lfcc.joblib",
         lr_path: Path | str = "checkpoints/classical/logistic_regression_lfcc.joblib",
@@ -56,7 +56,7 @@ class EnsemblePredictor:
         device: Optional[torch.device] = None,
     ):
         if device is None:
-            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            self.device = torch.device("mps" if hasattr(torch.backends, "mps") and torch.backends.mps.is_available() else "cpu")
         else:
             self.device = device
 
@@ -77,13 +77,8 @@ class EnsemblePredictor:
             n_mels=80,
         )
 
-        norm_lfcc_file = Path("checkpoints/normalization_stats_lfcc.json")
-        if not norm_lfcc_file.exists():
-            norm_lfcc_file = Path("checkpoints/normalization_stats.json")
-        self.norm_lfcc = FeatureNormalizer().load(norm_lfcc_file) if norm_lfcc_file.exists() else FeatureNormalizer()
-
-        norm_logmel_file = Path("checkpoints/normalization_stats_logmel.json")
-        self.norm_logmel = FeatureNormalizer().load(norm_logmel_file) if norm_logmel_file.exists() else FeatureNormalizer()
+        self.norm_lfcc = FeatureNormalizer()
+        self.norm_logmel = FeatureNormalizer()
 
         # 2. Base Models
         # CRNN-LFCC
@@ -102,18 +97,27 @@ class EnsemblePredictor:
 
         # CRNN-LogMel
         p_logmel = Path(crnn_logmel_path)
+        if not p_logmel.exists():
+            p_logmel = Path("checkpoints/crnn_best.pt")
         ckpt_logmel = torch.load(str(p_logmel), map_location=self.device, weights_only=False)
         self.crnn_logmel = CRNNForensics(
             in_channels=1,
-            in_freq_dim=LOGMEL_DEFAULT_DIM,
+            in_freq_dim=LOGMEL_DEFAULT_DIM if "in_freq_dim" not in ckpt_logmel else ckpt_logmel["model_state_dict"]["cnn.b1.block.0.weight"].shape[1],
             features="logmel",
         )
-        self.crnn_logmel.load_state_dict(ckpt_logmel["model_state_dict"])
+        try:
+            self.crnn_logmel.load_state_dict(ckpt_logmel["model_state_dict"])
+        except Exception:
+            self.crnn_logmel = CRNNForensics(in_channels=1, in_freq_dim=80, features="logmel")
+            self.crnn_logmel.load_state_dict(ckpt_logmel["model_state_dict"])
         self.crnn_logmel.to(self.device)
         self.crnn_logmel.eval()
 
         # GMM
-        self.gmm = GMMForensics.load(Path(gmm_path))
+        p_gmm = Path(gmm_path)
+        if not p_gmm.exists():
+            p_gmm = Path("checkpoints/classical/gmm_lfcc.joblib")
+        self.gmm = GMMForensics.load(p_gmm)
 
         # Classical Sklearn Pipelines
         self.svm = joblib.load(str(svm_path))
@@ -121,7 +125,7 @@ class EnsemblePredictor:
         self.lr = joblib.load(str(lr_path))
 
         # Meta-learner Stacked Ensemble
-        self.stacker = StackedEnsemble.load(Path(ensemble_path))
+        self.stacker = joblib.load(str(ensemble_path))
         self.base_model_names = self.stacker.model_names
 
     def predict_waveform(self, waveform: torch.Tensor) -> dict[str, Any]:
@@ -143,23 +147,19 @@ class EnsemblePredictor:
 
         with torch.no_grad():
             # 1. Feature representations
-            # Raw LFCC frames for classical models
-            raw_lfcc = self.lfcc_ext(wave)  # (F=60, T)
-            raw_lfcc_t = raw_lfcc.T.detach().cpu().numpy().astype(np.float64)  # (T, F=60)
+            raw_lfcc = self.lfcc_ext(wave)
+            raw_lfcc_t = raw_lfcc.T.detach().cpu().numpy().astype(np.float64)
 
-            # Normalized LFCC & LogMel for CRNNs
-            feat_lfcc = self.norm_lfcc(raw_lfcc) if (self.norm_lfcc.is_fitted and getattr(self.norm_lfcc.mean, "shape", [0])[0] == 60) else per_utterance_cmvn(raw_lfcc)
+            # Standardized Per-Utterance CMVN for CRNNs
+            feat_lfcc = per_utterance_cmvn(raw_lfcc)
             raw_logmel = self.logmel_ext(wave)
-            feat_logmel = self.norm_logmel(raw_logmel) if (self.norm_logmel.is_fitted and getattr(self.norm_logmel.mean, "shape", [0])[0] == 80) else per_utterance_cmvn(raw_logmel)
+            feat_logmel = per_utterance_cmvn(raw_logmel)
 
             # 2. Base model evaluations
-            # CRNN-LFCC
             s_crnn_lfcc = self.crnn_lfcc.predict_score(feat_lfcc.to(self.device))
-            # CRNN-LogMel
             s_crnn_logmel = self.crnn_logmel.predict_score(feat_logmel.to(self.device))
-            # GMM
             s_gmm = self.gmm.predict_score(raw_lfcc_t)
-            # Classical feature vector (mean & std across frames)
+
             mean_std = extract_mean_std_features(raw_lfcc_t)
             s_svm = predict_classical_score(self.svm, mean_std)[0]
             s_rf = predict_classical_score(self.rf, mean_std)[0]

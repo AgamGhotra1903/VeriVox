@@ -8,6 +8,7 @@ from acforensics.constants import BONAFIDE, SPOOF, SAMPLE_RATE, TARGET_SAMPLES
 from acforensics.data.protocols import load_in_the_wild_protocol
 from acforensics.data.audio_io import load_and_validate_audio
 from acforensics.data.segmentation import generate_multi_crop_windows, repeat_pad
+from acforensics.features.normalization import per_utterance_cmvn
 from acforensics.evaluation.metrics import (
     compute_eer,
     compute_roc_auc,
@@ -89,8 +90,9 @@ def evaluate_in_the_wild(
         else:
             with torch.no_grad():
                 if feature_extractor is not None:
-                    feats = [feature_extractor(w["waveform"]) for w in windows]
-                    batch_feats = torch.stack(feats)
+                    raw_feats = [feature_extractor(w["waveform"]) for w in windows]
+                    norm_feats = [per_utterance_cmvn(f) for f in raw_feats]
+                    batch_feats = torch.stack(norm_feats)
                     if batch_feats.dim() == 3:
                         batch_feats = batch_feats.unsqueeze(1)
                     batch_feats = batch_feats.to(device)

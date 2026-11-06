@@ -1,0 +1,183 @@
+{
+  "dataset_name": "in_the_wild_evaluation",
+  "manifest_sha256": "17dff71b1c840d90cd06594c03517aa77877af934907d4a6205449f98fd663ca",
+  "git_commit": "f02eeda4ce93371da9f141220c699ba4c9c503e0",
+  "seed": 42,
+  "timestamp": "2026-11-06T07:09:34.673415+00:00",
+  "eval_split": "itw_test",
+  "num_clips_tested": 25587,
+  "aggregations": {
+    "crnn_mean": {
+      "num_evaluated_clips": 25587,
+      "bonafide_count": 15401,
+      "spoof_count": 10186,
+      "optimal_threshold_metrics": {
+        "itw_optimal_eer": 31.38621637541724,
+        "itw_optimal_eer_ci_95": [
+          30.82772198062491,
+          31.97220773652802
+        ],
+        "itw_optimal_threshold": -1.2185379382238262,
+        "roc_auc": 0.7098152086916105
+      },
+      "dev_threshold_metrics": {
+        "asvspoof_dev_threshold": -0.1428,
+        "accuracy": 67.27244303747997,
+        "precision": 0.8205455706596113,
+        "recall": 0.5839880527238491,
+        "f1": 0.6823458007738411
+      },
+      "abstain_analysis": {
+        "abstain_margin": 0.05,
+        "abstain_count": 942,
+        "coverage_pct": 96.31844295931528,
+        "non_abstained_eer": 31.581611988659375,
+        "non_abstained_accuracy": 67.82308784743356
+      },
+      "clip_length_breakdown": {
+        "short": {
+          "count": 831,
+          "eer": 52.77777777777778,
+          "roc_auc": 0.5118962280252602
+        },
+        "long": {
+          "count": 10194,
+          "eer": 28.966861598440545,
+          "roc_auc": 0.76430743019564
+        }
+      },
+      "min_tdcf_note": "min-tDCF is undefined on In-The-Wild as the corpus lacks paired ASV speaker verification trials.",
+      "aggregation_strategy": "mean",
+      "dataset": "In-the-Wild Deepfake Audio (M\u00fcller et al., 2022)"
+    },
+    "crnn_max": {
+      "num_evaluated_clips": 25587,
+      "bonafide_count": 15401,
+      "spoof_count": 10186,
+      "optimal_threshold_metrics": {
+        "itw_optimal_eer": 32.79657165115736,
+        "itw_optimal_eer_ci_95": [
+          32.123293750095335,
+          33.31836740045737
+        ],
+        "itw_optimal_threshold": -1.5772819354615903,
+        "roc_auc": 0.7000621152236858
+      },
+      "dev_threshold_metrics": {
+        "asvspoof_dev_threshold": -0.1428,
+        "accuracy": 66.90897721499198,
+        "precision": 0.8131887985546522,
+        "recall": 0.5845074995130186,
+        "f1": 0.6801405311472932
+      },
+      "abstain_analysis": {
+        "abstain_margin": 0.05,
+        "abstain_count": 466,
+        "coverage_pct": 98.17876265290968,
+        "non_abstained_eer": 33.05793350587298,
+        "non_abstained_accuracy": 67.13108554595757
+      },
+      "clip_length_breakdown": {
+        "short": {
+          "count": 831,
+          "eer": 52.77777777777778,
+          "roc_auc": 0.5118962280252602
+        },
+        "long": {
+          "count": 10194,
+          "eer": 35.95971563978377,
+          "roc_auc": 0.7096299337293559
+        }
+      },
+      "min_tdcf_note": "min-tDCF is undefined on In-The-Wild as the corpus lacks paired ASV speaker verification trials.",
+      "aggregation_strategy": "max",
+      "dataset": "In-the-Wild Deepfake Audio (M\u00fcller et al., 2022)"
+    },
+    "crnn_top_k": {
+      "num_evaluated_clips": 25587,
+      "bonafide_count": 15401,
+      "spoof_count": 10186,
+      "optimal_threshold_metrics": {
+        "itw_optimal_eer": 33.909287257019436,
+        "itw_optimal_eer_ci_95": [
+          33.3027739454547,
+          34.44120389559401
+        ],
+        "itw_optimal_threshold": -1.7248709322808216,
+        "roc_auc": 0.7010591314006719
+      },
+      "dev_threshold_metrics": {
+        "asvspoof_dev_threshold": -0.1428,
+        "accuracy": 63.87618712627506,
+        "precision": 0.8340928819444444,
+        "recall": 0.49912343354327643,
+        "f1": 0.6245277653653979
+      },
+      "abstain_analysis": {
+        "abstain_margin": 0.05,
+        "abstain_count": 730,
+        "coverage_pct": 97.14698870520186,
+        "non_abstained_eer": 34.37352564526882,
+        "non_abstained_accuracy": 64.14289737297341
+      },
+      "clip_length_breakdown": {
+        "short": {
+          "count": 831,
+          "eer": 52.77777777777778,
+          "roc_auc": 0.5118962280252602
+        },
+        "long": {
+          "count": 10194,
+          "eer": 37.62183235867446,
+          "roc_auc": 0.7134077184359882
+        }
+      },
+      "min_tdcf_note": "min-tDCF is undefined on In-The-Wild as the corpus lacks paired ASV speaker verification trials.",
+      "aggregation_strategy": "top_k",
+      "dataset": "In-the-Wild Deepfake Audio (M\u00fcller et al., 2022)"
+    },
+    "ensemble_mean": {
+      "num_evaluated_clips": 2500,
+      "bonafide_count": 1495,
+      "spoof_count": 1005,
+      "optimal_threshold_metrics": {
+        "itw_optimal_eer": 78.90547263681592,
+        "itw_optimal_eer_ci_95": [
+          77.20143922898099,
+          80.6061908483112
+        ],
+        "itw_optimal_threshold": 1.705223577664764,
+        "roc_auc": 0.12016772325662656
+      },
+      "dev_threshold_metrics": {
+        "asvspoof_dev_threshold": -1.9367,
+        "accuracy": 59.31999999999999,
+        "precision": 0.5960610932475884,
+        "recall": 0.9919732441471572,
+        "f1": 0.7446648255084107
+      },
+      "abstain_analysis": {
+        "abstain_margin": 0.05,
+        "abstain_count": 0,
+        "coverage_pct": 100.0,
+        "non_abstained_eer": 78.90547263681592,
+        "non_abstained_accuracy": 59.31999999999999
+      },
+      "clip_length_breakdown": {
+        "short": {
+          "count": 74,
+          "eer": 80.0,
+          "roc_auc": 0.125
+        },
+        "long": {
+          "count": 1008,
+          "eer": 78.10077519379846,
+          "roc_auc": 0.14135469843070522
+        }
+      },
+      "min_tdcf_note": "min-tDCF is undefined on In-The-Wild as the corpus lacks paired ASV speaker verification trials.",
+      "aggregation_strategy": "mean",
+      "dataset": "In-the-Wild Deepfake Audio (M\u00fcller et al., 2022)"
+    }
+  }
+}
