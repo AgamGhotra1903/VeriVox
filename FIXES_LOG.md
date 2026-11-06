@@ -158,3 +158,42 @@ All numbers below are generated directly by code and recorded in `results/metric
 - **Codec Resilience**: Opus exhibits superior compression resilience compared to MP3 and AAC, preserving $\sim 10\%$ EER down to 24 kbps before degrading to 13.73% at 16 kbps.
 - **Table 9 Key Fix Verified**: All acoustic degradation metrics render with high-fidelity speaker bootstrap CIs, resolving the all-zeros rendering defect.
 
+---
+
+## Phase 3: Log-Mel Retraining & Architectural Re-Evaluation
+
+### 1. Symptoms & Prior Flawed Claims
+- Prior evaluation report claimed that CRNN-LogMel completely failed to converge (Dev EER = 50.00%, Eval EER = 50.00%, min-tDCF = 1.0000, ROC-AUC = 0.5000).
+- The prior author attributed this failure to an inherent theoretical flaw: *"Mel filterbank intrinsically fails because 4-8 kHz non-linear compression destroys high-frequency synthetic artifacts."*
+
+### 2. Root Cause Investigation
+- Investigation revealed that the previous 50% random guessing performance was an artifact of training without per-utterance CMVN normalization. The 80-channel filterbank dynamic range caused gradient vanishing/explosion in early epochs.
+- Re-training CRNN-LogMel with `per_utterance_cmvn` applied per batch immediately restored gradient flow and convergence.
+
+### 3. Training Protocol & Verification
+- **Architecture**: `CRNNForensics` (1,472,546 parameters, 80 input frequency bins, 2-layer BiGRU, multi-head self-attention, attention pooling).
+- **Optimization**: AdamW ($\text{lr}=10^{-3}$, weight decay $10^{-4}$), ReduceLROnPlateau ($\text{patience}=2$, factor $0.5$), SpecAugment temporal/spectral masking.
+- **Strict Leakage Guard**: Model selection strictly based on lowest Dev EER; Platt scaling calibrator fitted exclusively on Dev scores; final evaluation evaluated strictly once on frozen ASVspoof 2019 LA Eval (71,237 trials).
+
+### 4. Empirical Before vs After Metrics
+All numbers below are extracted directly from `results/metrics/crnn_logmel_results.json`:
+
+| Metric | Before (Without CMVN) | After (Per-Utterance CMVN) |
+|---|---|---|
+| **Best Dev Epoch** | Epoch 1 (stuck) | **Epoch 15** |
+| **Dev EER (%)** | 50.00% | **2.37%** (95% CI: [2.01, 2.66]%) |
+| **Dev min-tDCF** | 1.0000 | **0.1293** (95% CI: [0.1162, 0.1382]) |
+| **Dev ROC-AUC** | 0.5000 | **0.9970** |
+| **Eval EER (%)** | 50.00% | **10.28%** (95% CI: [10.04, 10.56]%) |
+| **Eval min-tDCF** | 1.0000 | **0.2691** (95% CI: [0.2617, 0.2757]) |
+| **Eval ROC-AUC** | 0.5000 | **0.9554** |
+| **Eval Accuracy @ Dev Thresh** | 50.00% | **83.10%** (Precision: 0.378, Recall: 0.986) |
+
+### 5. Architectural Findings & Scientific Revision
+- **Disproving the Failure Myth**: The claim that Mel filterbanks intrinsically fail for synthetic speech detection is conclusively disproven. CRNN-LogMel achieves **10.28% Eval EER** and **0.9554 ROC-AUC**.
+- **Fair Feature Comparison**:
+  - `CRNN-LFCC`: Eval EER = **8.39%**, min-tDCF = **0.2133**, ROC-AUC = **0.9707**.
+  - `CRNN-LOGMEL`: Eval EER = **10.28%**, min-tDCF = **0.2691**, ROC-AUC = **0.9554**.
+  - Linear frequency spacing in LFCC provides a +1.89 percentage point advantage over Mel scaling on ASVspoof 2019 LA. This demonstrates that preserving linear spectral resolution in the 4–8 kHz band is advantageous for acoustic forensics, but Log-Mel is a fully functional, competitive representations when properly normalized.
+
+
