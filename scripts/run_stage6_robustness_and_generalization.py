@@ -49,21 +49,16 @@ def evaluate_waveform_batch_crnn(
     extractor: LFCCExtractor,
     normalizer: FeatureNormalizer,
     device: torch.device,
+    batch_size: int = 128,
 ) -> list[float]:
-    feats = []
-    for w in waveforms:
-        cw = fixed_length_crop_or_pad(w, target_samples=TARGET_SAMPLES, mode="center")
-        f = extractor(cw)
-        if normalizer.is_fitted:
-            f = normalizer(f)
-        feats.append(f)
-    batch = torch.stack(feats)
-    if batch.dim() == 3:
-        batch = batch.unsqueeze(1)
-    batch = batch.to(device)
+    feats = [per_utterance_cmvn(extractor(fixed_length_crop_or_pad(w, target_samples=TARGET_SAMPLES, mode="center"))) for w in waveforms]
+    scores = []
     with torch.no_grad():
-        logits, _ = model(batch)
-        scores = (logits[:, BONAFIDE] - logits[:, SPOOF]).cpu().numpy()
+        for i in range(0, len(feats), batch_size):
+            batch = torch.stack(feats[i:i+batch_size]).unsqueeze(1).to(device)
+            logits, _ = model(batch)
+            s = (logits[:, BONAFIDE] - logits[:, SPOOF]).cpu().numpy()
+            scores.extend(s)
     return [float(s) for s in scores]
 
 def score_waveform_ensemble(
@@ -82,8 +77,8 @@ def evaluate_waveform_batch_ensemble(
     with torch.no_grad():
         raw_lfccs = [predictor.lfcc_ext(w) for w in cropped]
         raw_logmels = [predictor.logmel_ext(w) for w in cropped]
-        norm_lfccs = [predictor.norm_lfcc(f) if (predictor.norm_lfcc.is_fitted and getattr(predictor.norm_lfcc.mean, "shape", [0])[0] == 60) else per_utterance_cmvn(f) for f in raw_lfccs]
-        norm_logmels = [predictor.norm_logmel(f) if (predictor.norm_logmel.is_fitted and getattr(predictor.norm_logmel.mean, "shape", [0])[0] == 80) else per_utterance_cmvn(f) for f in raw_logmels]
+        norm_lfccs = [per_utterance_cmvn(f) for f in raw_lfccs]
+        norm_logmels = [per_utterance_cmvn(f) for f in raw_logmels]
         s_crnn_lfcc_list = []
         s_crnn_logmel_list = []
         for i in range(0, len(waveforms), batch_size):
@@ -121,6 +116,29 @@ def evaluate_waveform_batch_ensemble(
     mat = np.column_stack(cols)
     fused = predictor.stacker.predict_score(mat)
     return [float(x) for x in fused]
+
+def compute_speaker_bootstrap_ci(
+    speakers: np.ndarray,
+    labels: np.ndarray,
+    scores: np.ndarray,
+    n_bootstraps: int = 1000,
+    seed: int = 42,
+) -> tuple[float, float]:
+    rng = np.random.RandomState(seed)
+    unique_speakers = np.unique(speakers)
+    speaker_indices = {spk: np.where(speakers == spk)[0] for spk in unique_speakers}
+    eers = []
+    for _ in range(n_bootstraps):
+        boot_speakers = rng.choice(unique_speakers, size=len(unique_speakers), replace=True)
+        indices = np.concatenate([speaker_indices[spk] for spk in boot_speakers])
+        boot_y = labels[indices]
+        boot_s = scores[indices]
+        if len(np.unique(boot_y)) >= 2:
+            e, _ = compute_eer(boot_y, boot_s)
+            eers.append(e)
+    if not eers:
+        return 0.0, 0.0
+    return float(np.percentile(eers, 2.5)), float(np.percentile(eers, 97.5))
 
 def compute_detailed_crossdomain_metrics(
     labels_arr: np.ndarray,
@@ -266,9 +284,7 @@ def main():
         for wave, label, cat in itw_valid:
             windows = generate_multi_crop_windows(wave, window_samples=TARGET_SAMPLES, hop_ratio=0.5)
             with torch.no_grad():
-                feats = [extractor(w["waveform"]) for w in windows]
-                if normalizer.is_fitted:
-                    feats = [normalizer(f) for f in feats]
+                feats = [per_utterance_cmvn(extractor(w["waveform"])) for w in windows]
                 b_feats = torch.stack(feats)
                 if b_feats.dim() == 3:
                     b_feats = b_feats.unsqueeze(1)
@@ -345,24 +361,34 @@ def main():
     codecs = ["mp3", "aac", "opus"]
     bitrates = [16, 24, 32, 48, 64]
 
-    rng_init = np.random.RandomState(42)
-    bona_pool = eval_df[eval_df["label"] == BONAFIDE]
-    spoof_pool = eval_df[eval_df["label"] == SPOOF]
-    idx_bona = rng_init.choice(bona_pool.index, size=500, replace=False)
-    idx_spoof = rng_init.choice(spoof_pool.index, size=700, replace=False)
-    eval_sample_df = eval_df.loc[np.concatenate([idx_bona, idx_spoof])].copy()
-    logger.info("Selected balanced evaluation sample of %d trials (500 bona fide, 700 spoof)", len(eval_sample_df))
+    sample_size = 6000
+    sample_dfs = []
+    for (att, lbl), group in eval_df.groupby(["attack_id", "label"]):
+        n_sample = max(1, int(round(len(group) / len(eval_df) * sample_size)))
+        sample_dfs.append(group.sample(n=min(n_sample, len(group)), random_state=42))
+    eval_sample_df = pd.concat(sample_dfs)
+    if len(eval_sample_df) < sample_size:
+        rem = eval_df.loc[~eval_df.index.isin(eval_sample_df.index)]
+        eval_sample_df = pd.concat([eval_sample_df, rem.sample(n=sample_size - len(eval_sample_df), random_state=42)])
+    elif len(eval_sample_df) > sample_size:
+        eval_sample_df = eval_sample_df.sample(n=sample_size, random_state=42)
+    eval_sample_df = eval_sample_df.reset_index(drop=True)
+    logger.info("Selected stratified evaluation sample of %d trials (bona fide: %d, spoof: %d)",
+                len(eval_sample_df), int((eval_sample_df["label"] == BONAFIDE).sum()), int((eval_sample_df["label"] == SPOOF).sum()))
 
     clean_waves = []
     clean_labels = []
     clean_paths = []
+    clean_speakers = []
     for _, row in eval_sample_df.iterrows():
         res = load_and_validate_audio(row["path"], target_sr=SAMPLE_RATE)
         if res.is_valid and res.waveform is not None:
             clean_waves.append(res.waveform)
             clean_labels.append(row["label"])
             clean_paths.append(row["path"])
+            clean_speakers.append(row["speaker"])
     clean_labels_arr = np.array(clean_labels, dtype=np.int64)
+    clean_speakers_arr = np.array(clean_speakers)
 
     clean_crnn_scores = evaluate_waveform_batch_crnn(clean_waves, crnn_model, extractor, normalizer, device)
     clean_crnn_eer, _ = compute_eer(clean_labels_arr, np.array(clean_crnn_scores))
@@ -370,6 +396,11 @@ def main():
     clean_ens_eer, _ = compute_eer(clean_labels_arr, np.array(clean_ens_scores))
 
     logger.info("Clean Evaluation Sample (N=%d) -> CRNN EER: %.2f%%, Ensemble EER: %.2f%%", len(clean_labels), clean_crnn_eer, clean_ens_eer)
+
+    full_eval_eer = 8.39
+    assert abs(clean_crnn_eer - full_eval_eer) <= 3.0, (
+        f"Clean CRNN EER ({clean_crnn_eer:.2f}%) on 6,000 subset deviates by >3.0 points from full eval ({full_eval_eer:.2f}%)!"
+    )
 
     codec_cache_root = Path("data/temp_codecs")
     codec_cache_root.mkdir(parents=True, exist_ok=True)
@@ -396,11 +427,6 @@ def main():
         except Exception:
             pass
 
-    sub_sample_indices = []
-    for s in [42, 43, 44]:
-        r = np.random.RandomState(s)
-        sub_sample_indices.append(r.choice(len(clean_waves), size=800, replace=False))
-
     for codec in codecs:
         for kbps in bitrates:
             cond_key = f"{codec}_{kbps}k"
@@ -416,9 +442,10 @@ def main():
                 in_p = Path(p)
                 out_p = cond_dir / f"{idx}_{in_p.stem}.wav"
                 if not out_p.exists():
-                    compress_and_decompress_audio(in_p, out_p, codec=codec, bitrate_kbps=kbps, compensate_delay=True)
+                    compress_and_decompress_audio(in_p, out_p, codec=codec, bitrate_kbps=kbps, compensate_delay=False)
                 if out_p.exists():
                     res = load_and_validate_audio(out_p, target_sr=SAMPLE_RATE)
+                    out_p.unlink(missing_ok=True)
                     if res.is_valid and res.waveform is not None:
                         return idx, res.waveform
                 return idx, clean_waves[idx]
@@ -435,55 +462,31 @@ def main():
             crnn_comp_scores_arr = np.array(crnn_comp_scores)
             ens_comp_scores_arr = np.array(ens_comp_scores)
 
-            crnn_eers_seeds = []
-            crnn_accs_seeds = []
-            ens_eers_seeds = []
-            ens_accs_seeds = []
+            crnn_eer_cond, _ = compute_eer(clean_labels_arr, crnn_comp_scores_arr)
+            crnn_acc_cond = compute_metrics_at_threshold(clean_labels_arr, crnn_comp_scores_arr, crnn_dev_th)["accuracy"] * 100.0
+            ci_crnn = compute_speaker_bootstrap_ci(clean_speakers_arr, clean_labels_arr, crnn_comp_scores_arr)
 
-            for sub_idx in sub_sample_indices:
-                sub_y = clean_labels_arr[sub_idx]
-                sub_sc_c = crnn_comp_scores_arr[sub_idx]
-                sub_sc_e = ens_comp_scores_arr[sub_idx]
+            ens_eer_cond, _ = compute_eer(clean_labels_arr, ens_comp_scores_arr)
+            ens_acc_cond = compute_metrics_at_threshold(clean_labels_arr, ens_comp_scores_arr, ens_dev_th)["accuracy"] * 100.0
+            ci_ens = compute_speaker_bootstrap_ci(clean_speakers_arr, clean_labels_arr, ens_comp_scores_arr)
 
-                e_c, _ = compute_eer(sub_y, sub_sc_c)
-                a_c = compute_metrics_at_threshold(sub_y, sub_sc_c, crnn_dev_th)["accuracy"] * 100.0
-                crnn_eers_seeds.append(e_c)
-                crnn_accs_seeds.append(a_c)
-
-                e_e, _ = compute_eer(sub_y, sub_sc_e)
-                a_e = compute_metrics_at_threshold(sub_y, sub_sc_e, ens_dev_th)["accuracy"] * 100.0
-                ens_eers_seeds.append(e_e)
-                ens_accs_seeds.append(a_e)
-
-            mean_crnn_eer = float(np.mean(crnn_eers_seeds))
-            std_crnn_eer = float(np.std(crnn_eers_seeds))
-            mean_crnn_acc = float(np.mean(crnn_accs_seeds))
-            ci_crnn = [float(np.percentile(crnn_eers_seeds, 2.5)), float(np.percentile(crnn_eers_seeds, 97.5))]
-
-            mean_ens_eer = float(np.mean(ens_eers_seeds))
-            std_ens_eer = float(np.std(ens_eers_seeds))
-            mean_ens_acc = float(np.mean(ens_accs_seeds))
-            ci_ens = [float(np.percentile(ens_eers_seeds, 2.5)), float(np.percentile(ens_eers_seeds, 97.5))]
-
-            crnn_codec_eer_map[codec][kbps] = mean_crnn_eer
-            ens_codec_eer_map[codec][kbps] = mean_ens_eer
+            crnn_codec_eer_map[codec][kbps] = crnn_eer_cond
+            ens_codec_eer_map[codec][kbps] = ens_eer_cond
 
             codec_results[cond_key] = {
                 "codec": codec,
                 "bitrate_kbps": kbps,
                 "crnn": {
-                    "mean_eer": mean_crnn_eer,
-                    "std_eer": std_crnn_eer,
-                    "ci_95": ci_crnn,
-                    "accuracy_dev_th": mean_crnn_acc,
-                    "deg_abs": mean_crnn_eer - clean_crnn_eer,
+                    "eer": float(crnn_eer_cond),
+                    "ci_95": [float(ci_crnn[0]), float(ci_crnn[1])],
+                    "accuracy_dev_th": float(crnn_acc_cond),
+                    "deg_abs": float(crnn_eer_cond - clean_crnn_eer),
                 },
                 "ensemble": {
-                    "mean_eer": mean_ens_eer,
-                    "std_eer": std_ens_eer,
-                    "ci_95": ci_ens,
-                    "accuracy_dev_th": mean_ens_acc,
-                    "deg_abs": mean_ens_eer - clean_ens_eer,
+                    "eer": float(ens_eer_cond),
+                    "ci_95": [float(ci_ens[0]), float(ci_ens[1])],
+                    "accuracy_dev_th": float(ens_acc_cond),
+                    "deg_abs": float(ens_eer_cond - clean_ens_eer),
                 },
             }
 
@@ -491,12 +494,15 @@ def main():
                 "Codec": codec.upper(),
                 "Bitrate (kbps)": kbps,
                 "Clean CRNN EER (%)": f"{clean_crnn_eer:.2f}",
-                "CRNN EER (Mean±Std %)": f"{mean_crnn_eer:.2f} ± {std_crnn_eer:.2f}",
-                "CRNN 95% CI (%)": f"[{ci_crnn[0]:.2f}, {ci_crnn[1]:.2f}]",
-                "CRNN Acc @ Thresh (%)": f"{mean_crnn_acc:.2f}",
+                "CRNN Degraded EER (%)": f"{crnn_eer_cond:.2f}",
+                "CRNN 95% Speaker CI (%)": f"[{ci_crnn[0]:.2f}, {ci_crnn[1]:.2f}]",
+                "CRNN Degradation (pts)": f"{crnn_eer_cond - clean_crnn_eer:+.2f}",
+                "CRNN Acc @ Thresh (%)": f"{crnn_acc_cond:.2f}",
                 "Clean Ensemble EER (%)": f"{clean_ens_eer:.2f}",
-                "Ensemble EER (Mean±Std %)": f"{mean_ens_eer:.2f} ± {std_ens_eer:.2f}",
-                "Ensemble Acc @ Thresh (%)": f"{mean_ens_acc:.2f}",
+                "Ensemble Degraded EER (%)": f"{ens_eer_cond:.2f}",
+                "Ensemble 95% Speaker CI (%)": f"[{ci_ens[0]:.2f}, {ci_ens[1]:.2f}]",
+                "Ensemble Degradation (pts)": f"{ens_eer_cond - clean_ens_eer:+.2f}",
+                "Ensemble Acc @ Thresh (%)": f"{ens_acc_cond:.2f}",
             })
             with open(codec_ckpt_file, "w") as f:
                 json.dump({"conditions": codec_results, "table_rows": codec_table_rows}, f, indent=2)
@@ -553,24 +559,40 @@ def main():
         sc_crnn = evaluate_waveform_batch_crnn(dist_waves, crnn_model, extractor, normalizer, device)
         eer_crnn, _ = compute_eer(labels, np.array(sc_crnn))
         acc_crnn = compute_metrics_at_threshold(labels, np.array(sc_crnn), crnn_dev_th)["accuracy"] * 100.0
+        ci_crnn = compute_speaker_bootstrap_ci(clean_speakers_arr, labels, np.array(sc_crnn))
 
         sc_ens = evaluate_waveform_batch_ensemble(dist_waves, ensemble_predictor)
         eer_ens, _ = compute_eer(labels, np.array(sc_ens))
         acc_ens = compute_metrics_at_threshold(labels, np.array(sc_ens), ens_dev_th)["accuracy"] * 100.0
+        ci_ens = compute_speaker_bootstrap_ci(clean_speakers_arr, labels, np.array(sc_ens))
 
         deg_table_rows.append({
             "Degradation Condition": cond_name,
+            "Clean CRNN EER (%)": f"{clean_crnn_eer:.2f}",
             "CRNN Degraded EER (%)": f"{eer_crnn:.2f}",
+            "CRNN 95% Speaker CI (%)": f"[{ci_crnn[0]:.2f}, {ci_crnn[1]:.2f}]",
             "CRNN Degradation (pts)": f"{eer_crnn - clean_crnn_eer:+.2f}",
             "CRNN Acc @ Thresh (%)": f"{acc_crnn:.2f}",
+            "Clean Ensemble EER (%)": f"{clean_ens_eer:.2f}",
             "Ensemble Degraded EER (%)": f"{eer_ens:.2f}",
+            "Ensemble 95% Speaker CI (%)": f"[{ci_ens[0]:.2f}, {ci_ens[1]:.2f}]",
             "Ensemble Degradation (pts)": f"{eer_ens - clean_ens_eer:+.2f}",
             "Ensemble Acc @ Thresh (%)": f"{acc_ens:.2f}",
         })
         res_dict = {
             "condition": cond_name,
-            "crnn": {"eer": eer_crnn, "acc_thresh": acc_crnn, "delta_eer": eer_crnn - clean_crnn_eer},
-            "ensemble": {"eer": eer_ens, "acc_thresh": acc_ens, "delta_eer": eer_ens - clean_ens_eer},
+            "crnn": {
+                "eer": float(eer_crnn),
+                "ci_95": [float(ci_crnn[0]), float(ci_crnn[1])],
+                "acc_thresh": float(acc_crnn),
+                "delta_eer": float(eer_crnn - clean_crnn_eer),
+            },
+            "ensemble": {
+                "eer": float(eer_ens),
+                "ci_95": [float(ci_ens[0]), float(ci_ens[1])],
+                "acc_thresh": float(acc_ens),
+                "delta_eer": float(eer_ens - clean_ens_eer),
+            },
         }
         with open(deg_ckpt_file, "w") as f:
             json.dump({"conditions": deg_results, "table_rows": deg_table_rows}, f, indent=2)

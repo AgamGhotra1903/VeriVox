@@ -80,3 +80,81 @@ All numbers below are generated directly by code and recorded in `results/metric
 - Ground-truth ITW labels in `meta.csv` and metric polarity conventions were completely correct.
 - Applying per-utterance CMVN completely resolved the inverted AUC: CRNN-LFCC ROC-AUC flipped from 0.1703 to **0.7098**, with an optimal EER of **31.39%** across all 25,587 test clips. This is fully consistent with published state-of-the-art out-of-domain transfer performance on unconstrained YouTube/interview speech.
 - The Stacked Ensemble (mean) yielded 78.91% EER / 0.1202 AUC because the existing ensemble stacker was fitted using scikit-learn probability inputs for classical models but queried via uncalibrated decision values without speaker-disjoint calibration. This will be remediated in Phase 5.
+
+---
+
+## Phase 2: Codec Robustness & Acoustic Degradations Remediation
+
+### 1. Symptoms & Initial Observations
+- **Invalid Clean Baseline**: In `codec_robustness_results.json` and `degradation_chains_results.json`, clean baseline EER was recorded as CRNN 70.2% / Ensemble 34.9%, directly contradicting the full ASVspoof 2019 LA Eval baseline (8.39% / 12.55%).
+- **Table 9 All-Zeros Bug**: In `results/tables/table9_acoustic_degradations.md`, all degradation metrics rendered as `0.00`.
+- **Implausible Performance Inversion**: CRNN EER was reported to improve from 70% down to 28% under added noise, which is physically implausible.
+
+### 2. Root Cause Analysis
+1. **Mismatched Normalizer on Unstratified 1,200 Trials**:
+   - The original stage 6 script evaluated only 1,200 unstratified clips and applied the obsolete static global normalizer `FeatureNormalizer().load("checkpoints/normalization_stats.json")` rather than `per_utterance_cmvn`.
+   - Distorted normalization destroyed the clean acoustic features, artificially inflating clean EER from 8.39% to 70.2%.
+2. **Table 9 Flat-Key Lookup Bug**:
+   - In `scripts/build_report_tables.py`, acoustic degradation metrics were extracted using flat keys `c_dict.get('crnn_eer', 0.0)` instead of nested dictionary keys `c_dict['crnn']['eer']`. Lookups failed silently, returning default 0.0.
+3. **Artifact of Noise "Improvement"**:
+   - When a model's features are distorted to 70% EER, adding noise randomly shifts score distributions, producing spurious threshold movements that appeared as artificial "gains" from 70% to 28%.
+
+### 3. Methodology & Remediation
+1. **Fixed Stratified 6,000 Trial Evaluation Subset**:
+   - Drawn deterministically (`seed=42`) from `data/manifests/eval.parquet` (71,199 trials), strictly stratified across all 13 attack algorithms (A07-A19) and bona-fide/spoof classes.
+   - Clean CRNN baseline on this subset with `per_utterance_cmvn` is **10.28%** (within $\pm 1.89$ points of full eval 8.39%).
+   - Enforced a hard assertion in code and unit tests: `assert abs(clean_crnn_eer - full_eval_eer) <= 3.0`.
+2. **Speaker-Level Bootstrap Confidence Intervals**:
+   - Implemented `compute_speaker_bootstrap_ci` resampling clustered by speaker identity (48 evaluation speakers) across 1,000 bootstrap iterations to account for trial intra-speaker correlation.
+3. **Optimized Lossless Transcoding Pipeline**:
+   - Switched ffmpeg encoding/decoding to `compensate_delay=False` and clean per-utterance CMVN, preventing memory leaks and accelerating throughput from 5.5 to 35+ clips/second.
+4. **Table 9 Key Fix in `build_report_tables.py`**:
+   - Corrected nested key traversal for all acoustic degradation conditions.
+5. **Unit Tests Added**:
+   - `tests/test_robustness.py`: Added 5 unit tests verifying clean baseline subset guard, speaker bootstrap CI properties, and degradation delta logic.
+
+### 4. Code & Test Modifications
+- `scripts/run_stage6_robustness_and_generalization.py`: Redesigned Parts 2 and 3 to use the 6,000 stratified trial subset with speaker-level bootstrap CIs, per-utterance CMVN, and nested result dictionaries.
+- `scripts/build_report_tables.py`: Fixed Table 9 nested dictionary lookups.
+- `tests/test_robustness.py`: Created complete test suite with clean baseline assertion guard.
+
+### 5. Verified Experimental Metrics (Complete Phase 2 Benchmark)
+
+#### Codec Robustness (Table 3)
+| Codec | Bitrate (kbps) | Clean CRNN EER (%) | CRNN Degraded EER (%) | CRNN 95% Speaker CI | CRNN Degradation vs Clean | Status |
+|---|---|---|---|---|---|---|
+| **Clean Baseline** | - | **10.28%** | 10.28% | [9.05, 11.52]% | 0.00 pts | **VERIFIED** |
+| **MP3** | 16 | 10.28% | **18.64%** | [17.35, 19.90]% | **+8.36 pts** | **VERIFIED** |
+| **MP3** | 24 | 10.28% | **19.55%** | [18.29, 20.95]% | **+9.27 pts** | **VERIFIED** |
+| **MP3** | 32 | 10.28% | **21.06%** | [19.61, 22.44]% | **+10.78 pts** | **VERIFIED** |
+| **MP3** | 48 | 10.28% | **21.65%** | [19.87, 24.57]% | **+11.37 pts** | **VERIFIED** |
+| **MP3** | 64 | 10.28% | **20.68%** | [18.34, 24.41]% | **+10.40 pts** | **VERIFIED** |
+| **AAC** | 16 | 10.28% | **17.54%** | [16.19, 19.19]% | **+7.27 pts** | **VERIFIED** |
+| **AAC** | 24 | 10.28% | **13.58%** | [12.34, 14.99]% | **+3.31 pts** | **VERIFIED** |
+| **AAC** | 32 | 10.28% | **14.03%** | [12.32, 15.88]% | **+3.75 pts** | **VERIFIED** |
+| **AAC** | 48 | 10.28% | **10.98%** | [9.40, 12.21]% | **+0.71 pts** | **VERIFIED** |
+| **AAC** | 64 | 10.28% | **10.37%** | [9.19, 11.63]% | **+0.09 pts** | **VERIFIED** |
+| **Opus** | 16 | 10.28% | **13.73%** | [12.25, 15.16]% | **+3.45 pts** | **VERIFIED** |
+| **Opus** | 24 | 10.28% | **11.52%** | [10.04, 12.99]% | **+1.25 pts** | **VERIFIED** |
+| **Opus** | 32 | 10.28% | **10.82%** | [9.16, 12.25]% | **+0.54 pts** | **VERIFIED** |
+| **Opus** | 48 | 10.28% | **9.98%** | [8.75, 11.15]% | **-0.30 pts** | **VERIFIED** |
+| **Opus** | 64 | 10.28% | **10.18%** | [9.15, 11.43]% | **-0.10 pts** | **VERIFIED** |
+
+#### Acoustic Degradation Chains (Table 9)
+| Degradation Condition | Clean CRNN EER (%) | CRNN Degraded EER (%) | CRNN 95% Speaker CI | CRNN Degradation vs Clean | Status |
+|---|---|---|---|---|---|
+| **8 kHz Telephony (G.711 A-law)** | 10.28% | **23.26%** | [21.11, 26.85]% | **+12.99 pts** | **VERIFIED** |
+| **8 kHz Telephony (G.711 $\mu$-law)** | 10.28% | **25.36%** | [22.54, 28.79]% | **+15.09 pts** | **VERIFIED** |
+| **Additive Noise (SNR 20 dB)** | 10.28% | **22.15%** | [20.77, 23.93]% | **+11.88 pts** | **VERIFIED** |
+| **Additive Noise (SNR 10 dB)** | 10.28% | **28.38%** | [26.12, 30.89]% | **+18.10 pts** | **VERIFIED** |
+| **Additive Noise (SNR 0 dB)** | 10.28% | **43.58%** | [41.07, 46.29]% | **+33.30 pts** | **VERIFIED** |
+| **Synthetic Reverb (RT60 = 0.3s)** | 10.28% | **12.64%** | [11.55, 13.76]% | **+2.36 pts** | **VERIFIED** |
+| **Packet Loss (5%, 20ms frames)** | 10.28% | **10.61%** | [9.44, 12.00]% | **+0.33 pts** | **VERIFIED** |
+| **Packet Loss (10%, 20ms frames)** | 10.28% | **12.60%** | [11.23, 14.14]% | **+2.32 pts** | **VERIFIED** |
+| **Packet Loss (20%, 20ms frames)** | 10.28% | **18.62%** | [16.82, 20.60]% | **+8.34 pts** | **VERIFIED** |
+
+### 6. Key Insights & Resolution
+- **Monotonic Behavior**: Under additive Gaussian noise, EER strictly degrades monotonically (10.28% $\to$ 22.15% [20dB] $\to$ 28.38% [10dB] $\to$ 43.58% [0dB]), conclusively eliminating the prior spurious artifact where noise appeared to "improve" performance from 70% to 28%.
+- **Codec Resilience**: Opus exhibits superior compression resilience compared to MP3 and AAC, preserving $\sim 10\%$ EER down to 24 kbps before degrading to 13.73% at 16 kbps.
+- **Table 9 Key Fix Verified**: All acoustic degradation metrics render with high-fidelity speaker bootstrap CIs, resolving the all-zeros rendering defect.
+

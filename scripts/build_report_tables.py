@@ -295,14 +295,23 @@ def build_tables(
         deg_data = load_json(deg_file)
         deg_rows = []
         for cond_name, c_dict in deg_data.get("conditions", {}).items():
+            label = c_dict.get("condition", cond_name)
+            crnn_dict = c_dict.get("crnn", {})
+            ens_dict = c_dict.get("ensemble", {})
+            crnn_eer = crnn_dict.get("eer", c_dict.get("crnn_eer", 0.0))
+            crnn_deg = crnn_dict.get("delta_eer", c_dict.get("crnn_degradation_pts", 0.0))
+            crnn_acc = crnn_dict.get("acc_thresh", c_dict.get("crnn_accuracy_at_dev_th", 0.0))
+            ens_eer = ens_dict.get("eer", c_dict.get("ensemble_eer", 0.0))
+            ens_deg = ens_dict.get("delta_eer", c_dict.get("ensemble_degradation_pts", 0.0))
+            ens_acc = ens_dict.get("acc_thresh", c_dict.get("ensemble_accuracy_at_dev_th", 0.0))
             deg_rows.append({
-                "Degradation Condition": cond_name,
-                "CRNN Degraded EER (%)": f"{c_dict.get('crnn_eer', 0.0):.2f}",
-                "CRNN Degradation (pts)": f"{c_dict.get('crnn_degradation_pts', 0.0):+.2f}",
-                "CRNN Acc @ Thresh (%)": f"{c_dict.get('crnn_accuracy_at_dev_th', 0.0):.2f}",
-                "Ensemble Degraded EER (%)": f"{c_dict.get('ensemble_eer', 0.0):.2f}",
-                "Ensemble Degradation (pts)": f"{c_dict.get('ensemble_degradation_pts', 0.0):+.2f}",
-                "Ensemble Acc @ Thresh (%)": f"{c_dict.get('ensemble_accuracy_at_dev_th', 0.0):.2f}",
+                "Degradation Condition": label,
+                "CRNN Degraded EER (%)": f"{crnn_eer:.2f}",
+                "CRNN Degradation (pts)": f"{crnn_deg:+.2f}",
+                "CRNN Acc @ Thresh (%)": f"{crnn_acc:.2f}",
+                "Ensemble Degraded EER (%)": f"{ens_eer:.2f}",
+                "Ensemble Degradation (pts)": f"{ens_deg:+.2f}",
+                "Ensemble Acc @ Thresh (%)": f"{ens_acc:.2f}",
             })
         if deg_rows:
             df_deg = pd.DataFrame(deg_rows)
