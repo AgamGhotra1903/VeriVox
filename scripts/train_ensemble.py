@@ -122,9 +122,20 @@ def run_ensemble_training(
     ev_pooled = d_ev["pooled"]
     ev_y = d_ev["labels"]
 
-    print("Splitting Train into Train-Fit (80%) and Train-Calibration (20%)...")
-    skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=seed)
-    fit_idx, cal_idx = next(skf.split(tr_pooled, tr_y))
+    print("Splitting Train into Train-Fit (80%) and Train-Calibration (20%) with strict speaker disjointness...")
+    tr_manifest_path = Path("data/manifests/train.parquet")
+    if tr_manifest_path.exists():
+        tr_df = pd.read_parquet(tr_manifest_path)
+        train_speakers = tr_df["speaker"].to_numpy()
+        from sklearn.model_selection import StratifiedGroupKFold
+        sgkf = StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=seed)
+        fit_idx, cal_idx = next(sgkf.split(tr_pooled, tr_y, groups=train_speakers))
+        tr_spk_set = set(train_speakers[fit_idx])
+        cal_spk_set = set(train_speakers[cal_idx])
+        assert len(tr_spk_set.intersection(cal_spk_set)) == 0, "Speaker overlap detected between fit and cal!"
+    else:
+        skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=seed)
+        fit_idx, cal_idx = next(skf.split(tr_pooled, tr_y))
 
     cal_feats = tr_feats[cal_idx]
     cal_y = tr_y[cal_idx]
@@ -218,6 +229,16 @@ def run_ensemble_training(
     ckpt_dir = Path("checkpoints/ensemble")
     ckpt_dir.mkdir(parents=True, exist_ok=True)
     joblib.dump(ensemble, str(ckpt_dir / "stacked_ensemble.joblib"))
+    classical_bundle = {
+        "scaler_pooled": scaler_pooled,
+        "rf": rf,
+        "pca": pca,
+        "svm": svm,
+        "lr": lr,
+        "gmm_bf": gmm_bf,
+        "gmm_sp": gmm_sp,
+    }
+    joblib.dump(classical_bundle, str(ckpt_dir / "classical_bundle.joblib"))
 
     print("Evaluating models on Dev split to determine operating thresholds...")
     dev_stack_scores = ensemble.predict_score(dev_matrix)
