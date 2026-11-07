@@ -3,10 +3,11 @@
 Audit Check & Observed Metric & Criterion & Status \\
 \midrule
 Silence Duration Classifier & EER = 22.78%, AUC = 0.8509 & EER >= 35.0%, AUC <= 0.65 & FAIL \\
-VAD-Trimmed vs Untrimmed Audio & Untrimmed: 7.91%, Trimmed: 39.13%, Delta: 31.22 pts & |Delta EER| <= 5.0 pts & FAIL \\
-Silence-Swap Score Stability & Pearson r = 0.5604, Prediction Flip Rate = 21.7% & r >= 0.80, Flip Rate <= 10.0% & FAIL \\
-Duration Control & CRNN r = +0.0000, Ensemble r = +0.0000 & |r| <= 0.20 & PASS \\
-Loudness Control (RMS dBFS) & CRNN r = +0.0000, Ensemble r = +0.0000 & |r| <= 0.20 & FAIL \\
-Bandwidth Control (95% Rolloff) & CRNN r = +0.0000, Ensemble r = +0.0000 & |r| <= 0.35 & PASS \\
+VAD-Trimmed vs Untrimmed Audio & Untrimmed: 8.47%, Trimmed: 10.17%, Delta: 1.69 pts & |Delta EER| <= 5.0 pts & PASS \\
+Silence-Swap Score Stability & Pearson r = 0.5438, Prediction Flip Rate = 26.1% & r >= 0.80, Flip Rate <= 10.0% & FAIL \\
+Duration Control & CRNN r = +0.1551, Ensemble r = +0.0700 & |r| <= 0.20 & PASS \\
+Loudness Control (RMS dBFS) & CRNN r = -0.4797, Ensemble r = -0.4857 & |r| <= 0.20 & FAIL \\
+Bandwidth Control (95% Rolloff) & CRNN r = +0.0153, Ensemble r = +0.0000 & |r| <= 0.35 & PASS \\
 \bottomrule
 \end{tabular}
+

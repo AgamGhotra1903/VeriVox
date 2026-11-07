@@ -466,4 +466,6 @@ if __name__ == "__main__":
         guard_results_and_provenance(summary_payload)
         with open(f"results/metrics/crnn_{args.features}_multiseed_summary.json", "w", encoding="utf-8") as f:
             json.dump(summary_payload, f, indent=2)
-        print(f"\nMulti-seed summary saved to results/metrics/crnn_{args.features}_multiseed_summary.json")
+        with open("results/metrics/crnn_multiseed_results.json", "w", encoding="utf-8") as f:
+            json.dump(summary_payload, f, indent=2)
+        print(f"\nMulti-seed summary saved to results/metrics/crnn_{args.features}_multiseed_summary.json and crnn_multiseed_results.json")

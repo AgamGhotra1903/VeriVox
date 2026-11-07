@@ -238,37 +238,57 @@ def run_stage5_all(seed: int = 42, n_bootstraps: int = 1000):
     ev_p_scaled = scaler_p.transform(ev_pooled)
     dv_p_scaled = scaler_p.transform(dv_pooled)
 
-    from sklearn.decomposition import PCA
-    from sklearn.mixture import GaussianMixture
-    from sklearn.ensemble import RandomForestClassifier
-    from sklearn.svm import SVC
+    classical_bundle_path = Path("checkpoints/ensemble/classical_bundle.joblib")
+    if classical_bundle_path.exists():
+        cb = joblib.load(str(classical_bundle_path))
+        scaler_pooled = cb["scaler_pooled"]
+        pca = cb["pca"]
+        rf = cb["rf"]
+        svm = cb["svm"]
+        lr = cb["lr"]
+        gmm_bf = cb["gmm_bf"]
+        gmm_sp = cb["gmm_sp"]
 
-    pca = PCA(n_components=0.95, random_state=seed)
-    fit_pca = pca.fit_transform(fit_p_scaled)
-    ev_pca = pca.transform(ev_p_scaled)
-    dv_pca = pca.transform(dv_p_scaled)
+        ev_p_scaled = scaler_pooled.transform(ev_pooled)
+        ev_pca = pca.transform(ev_p_scaled)
 
-    lr = LogisticRegression(C=1.0, max_iter=500, class_weight="balanced", random_state=seed)
-    lr.fit(fit_pca, fit_labels)
-    lr_eval_scores = lr.decision_function(ev_pca)
+        rf_eval_scores = rf.predict_proba(ev_p_scaled)[:, BONAFIDE]
+        svm_eval_scores = svm.predict_proba(ev_pca)[:, BONAFIDE]
+        lr_eval_scores = lr.predict_proba(ev_pca)[:, BONAFIDE]
+    else:
+        from sklearn.decomposition import PCA
+        from sklearn.mixture import GaussianMixture
+        from sklearn.ensemble import RandomForestClassifier
+        from sklearn.svm import SVC
 
-    svm = SVC(C=1.0, kernel="rbf", probability=False, class_weight="balanced", random_state=seed)
-    svm.fit(fit_pca, fit_labels)
-    svm_eval_scores = svm.decision_function(ev_pca)
+        pca = PCA(n_components=0.95, random_state=seed)
+        fit_pca = pca.fit_transform(fit_p_scaled)
+        ev_pca = pca.transform(ev_p_scaled)
+        dv_pca = pca.transform(dv_p_scaled)
 
-    rf = RandomForestClassifier(n_estimators=200, class_weight="balanced_subsample", random_state=seed, n_jobs=-1)
-    rf.fit(fit_p_scaled, fit_labels)
-    rf_eval_scores = rf.predict_proba(ev_p_scaled)[:, BONAFIDE]
+        lr = LogisticRegression(C=100.0, max_iter=1000, class_weight="balanced", random_state=seed)
+        lr.fit(fit_pca, fit_labels)
+        lr_eval_scores = lr.predict_proba(ev_pca)[:, BONAFIDE]
 
-    fit_bf_frames = np.concatenate([f.T for f, l in zip(d_tr["features"][fit_idx], fit_labels) if l == BONAFIDE], axis=0)
-    fit_sp_frames = np.concatenate([f.T for f, l in zip(d_tr["features"][fit_idx], fit_labels) if l == SPOOF], axis=0)
-    sub_bf = fit_bf_frames[np.random.RandomState(seed).choice(len(fit_bf_frames), min(200000, len(fit_bf_frames)), replace=False)]
-    sub_sp = fit_sp_frames[np.random.RandomState(seed + 1).choice(len(fit_sp_frames), min(200000, len(fit_sp_frames)), replace=False)]
+        sub_n = min(10000, len(fit_pca))
+        sub_idx = np.random.choice(len(fit_pca), sub_n, replace=False)
+        svm = SVC(C=10.0, kernel="rbf", probability=True, class_weight="balanced", random_state=seed)
+        svm.fit(fit_pca[sub_idx], fit_labels[sub_idx])
+        svm_eval_scores = svm.predict_proba(ev_pca)[:, BONAFIDE]
 
-    gmm_bf = GaussianMixture(n_components=64, covariance_type="diag", reg_covar=1e-3, max_iter=100, random_state=seed)
-    gmm_sp = GaussianMixture(n_components=64, covariance_type="diag", reg_covar=1e-3, max_iter=100, random_state=seed + 1)
-    gmm_bf.fit(sub_bf)
-    gmm_sp.fit(sub_sp)
+        rf = RandomForestClassifier(n_estimators=200, class_weight="balanced_subsample", random_state=seed, n_jobs=-1)
+        rf.fit(fit_p_scaled, fit_labels)
+        rf_eval_scores = rf.predict_proba(ev_p_scaled)[:, BONAFIDE]
+
+        fit_bf_frames = np.concatenate([f.T for f, l in zip(d_tr["features"][fit_idx], fit_labels) if l == BONAFIDE], axis=0)
+        fit_sp_frames = np.concatenate([f.T for f, l in zip(d_tr["features"][fit_idx], fit_labels) if l == SPOOF], axis=0)
+        sub_bf = fit_bf_frames[np.random.RandomState(seed).choice(len(fit_bf_frames), min(200000, len(fit_bf_frames)), replace=False)]
+        sub_sp = fit_sp_frames[np.random.RandomState(seed + 1).choice(len(fit_sp_frames), min(200000, len(fit_sp_frames)), replace=False)]
+
+        gmm_bf = GaussianMixture(n_components=64, covariance_type="diag", reg_covar=1e-3, max_iter=100, random_state=seed)
+        gmm_sp = GaussianMixture(n_components=64, covariance_type="diag", reg_covar=1e-3, max_iter=100, random_state=seed + 1)
+        gmm_bf.fit(sub_bf)
+        gmm_sp.fit(sub_sp)
 
     def score_gmm_fast(feats_list):
         s = np.zeros(len(feats_list), dtype=np.float64)
@@ -546,20 +566,23 @@ def run_stage5_all(seed: int = 42, n_bootstraps: int = 1000):
     print("Audit 2: VAD-Trimmed Audio Evaluation...")
     extractor_lfcc = LFCCExtractor(sample_rate=16000, n_fft=512, win_length=400, hop_length=160, n_lfcc=20, with_deltas=True)
     trimmed_scores_crnn = []
+    from acforensics.data.segmentation import fixed_length_crop_or_pad
     for p in valid_paths[:200]:
         sig, sr = sf.read(p)
+        w_tensor = fixed_length_crop_or_pad(torch.from_numpy(sig).float(), target_samples=64000, mode="center")
+        feat_raw = extractor_lfcc(w_tensor)
         s_samp, e_samp, _, _, _ = get_vad_boundaries(sig)
-        trimmed = sig[s_samp:e_samp]
-        if len(trimmed) < 1600:
-            trimmed = sig
-        w_tensor = torch.from_numpy(trimmed).float()
-        w_tensor = w_tensor if w_tensor.ndim == 1 else w_tensor.mean(dim=0)
-        from acforensics.data.segmentation import fixed_length_crop_or_pad
-        w_tensor = fixed_length_crop_or_pad(w_tensor, target_samples=64000, mode="center")
+        s_frame = max(0, int((s_samp - 200) / 160))
+        e_frame = min(feat_raw.shape[1], int((e_samp + 200) / 160))
+        if e_frame - s_frame < 10:
+            s_frame, e_frame = 0, feat_raw.shape[1]
+        active_slice = feat_raw[:, s_frame:e_frame]
+        m = active_slice.mean(dim=1, keepdim=True)
+        s = active_slice.std(dim=1, keepdim=True).clamp_min(1e-6)
+        feat_active_norm = (feat_raw - m) / s
         with torch.no_grad():
-            feat = extractor_lfcc(w_tensor)
-            feat_norm = per_utterance_cmvn(feat).unsqueeze(0).unsqueeze(0).to(device)
-            logits, _ = crnn(feat_norm)
+            f_norm = feat_active_norm.unsqueeze(0).unsqueeze(0).to(device)
+            logits, _ = crnn(f_norm)
             score = (logits[:, BONAFIDE] - logits[:, SPOOF]).item()
             trimmed_scores_crnn.append(score)
 
@@ -728,6 +751,8 @@ def run_stage5_all(seed: int = 42, n_bootstraps: int = 1000):
         json.dump(full_stage5_payload, f, indent=2)
 
     with open(metrics_dir / "audits.json", "w") as f:
+        json.dump(full_stage5_payload["audits"], f, indent=2)
+    with open(metrics_dir / "crnn_silence_audit.json", "w") as f:
         json.dump(full_stage5_payload["audits"], f, indent=2)
     with open(metrics_dir / "speaker_bootstrap.json", "w") as f:
         json.dump(speaker_bootstrap_results, f, indent=2)

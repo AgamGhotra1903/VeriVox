@@ -598,6 +598,7 @@ def main():
             json.dump({"conditions": deg_results, "table_rows": deg_table_rows}, f, indent=2)
         return res_dict
 
+
     logger.info("Running Telephony Chains...")
     tel_temp = Path("data/temp_telephony")
     tel_temp.mkdir(parents=True, exist_ok=True)
@@ -612,6 +613,7 @@ def main():
             raw_p.unlink(missing_ok=True)
             out_p.unlink(missing_ok=True)
             return i, (res.waveform if res.is_valid and res.waveform is not None else w)
+
 
         with ThreadPoolExecutor(max_workers=8) as ex:
             t_items = list(ex.map(process_tel, enumerate(clean_waves)))
