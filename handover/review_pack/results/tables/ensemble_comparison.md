@@ -1,0 +1,3 @@
+| Model Configuration                                 |   Dev EER (%) |   Eval EER (%) | Eval EER 95% CI   |   Eval min-tDCF |   Eval ROC-AUC |   Dev Threshold Accuracy (%) |   Dev Threshold Recall (%) |
+|:----------------------------------------------------|--------------:|---------------:|:------------------|----------------:|---------------:|-----------------------------:|---------------------------:|
+| Stacked Ensemble (Non-Negative Logistic Regression) |          2.59 |          10.74 | [10.45, 11.03]    |          0.2754 |         0.9572 |                        79.93 |                      99.24 |

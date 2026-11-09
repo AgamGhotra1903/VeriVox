@@ -1,0 +1,39 @@
+{
+  "dataset_name": "ASVspoof 2019 LA",
+  "manifest_sha256": "91a3907b6445c6ab0c1e4283ef548bbbcc332f463ce4199e2abec4014d1cf656",
+  "git_commit": "348ce41d60604e9fe08fcf0615afd156ab3fec40",
+  "seed": 42,
+  "timestamp": "2026-11-05T09:08:32.030934+00:00",
+  "applied_threshold": -0.14275532919625977,
+  "total_trials": 71237,
+  "false_positive_count": 8414,
+  "false_negative_count": 267,
+  "per_attack_eer": {
+    "A11": 0.25832766822231135,
+    "A14": 1.060503059054752,
+    "A16": 3.622303622303622,
+    "A09": 0.4477004477004477,
+    "A13": 1.6723317470286472,
+    "A12": 3.6165873555123587,
+    "A18": 27.573079537723544,
+    "A15": 0.6308506308506309,
+    "A08": 1.9986403806147246,
+    "A17": 19.428959891204364,
+    "A10": 1.8925518925518925,
+    "A07": 1.9986403806147246,
+    "A19": 6.308633582497499
+  },
+  "most_vulnerable_attack": "A18",
+  "most_vulnerable_eer": 27.573079537723544,
+  "least_vulnerable_attack": "A11",
+  "least_vulnerable_eer": 0.25832766822231135,
+  "known_variants_mean_eer": 4.96546860240056,
+  "unseen_attacks_mean_eer": 5.5071066355525815,
+  "plain_language_findings": [
+    "Audited 71237 evaluation trials at dev-calibrated threshold -0.1428.",
+    "Detected 8414 False Positives (13.17% spoof miss rate) and 267 False Negatives (3.63% genuine false alarm rate).",
+    "Highest vulnerability observed on attack A18 (27.57% EER); lowest on A11 (0.26% EER).",
+    "Known attack variants (A16, A19) achieved mean EER 4.97%, compared to 5.51% across unseen generation algorithms (delta: +0.54 pts).",
+    "Worst-case false alarms and missed detections logged to worst_case_errors.csv for inspection."
+  ]
+}

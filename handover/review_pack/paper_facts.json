@@ -1,0 +1,615 @@
+{
+  "dataset_name": "frozen_paper_facts",
+  "manifest_sha256": "91a3907b6445c6ab0c1e4283ef548bbbcc332f463ce4199e2abec4014d1cf656",
+  "git_commit": "e003341a3aec9f7cb057edf1f89fc90381079b59",
+  "git_dirty": true,
+  "diff_hash": "c24e1de39b80d5ddd2ccad80143bd0237ee1fd886d8c472a0135041af9d9e5a4",
+  "seed": 42,
+  "timestamp": "2026-11-09T07:13:05.479874+00:00",
+  "n_facts": 8,
+  "facts": {
+    "primary_model_crnn_lfcc": {
+      "parameters": {
+        "val": 1439778,
+        "source": "results/metrics/crnn_results.json",
+        "key": "parameters"
+      },
+      "dev_3seed_mean_eer": {
+        "val": 1.1284122270949721,
+        "source": "results/metrics/crnn_multiseed_results.json",
+        "key": "metrics.dev_eer_mean"
+      },
+      "dev_3seed_std_eer": {
+        "val": 0.08132278929266949,
+        "source": "results/metrics/crnn_multiseed_results.json",
+        "key": "metrics.dev_eer_std"
+      },
+      "eval_3seed_mean_eer": {
+        "val": 7.0953737620404285,
+        "source": "results/metrics/crnn_multiseed_results.json",
+        "key": "metrics.eval_eer_mean",
+        "n": 71237
+      },
+      "eval_3seed_std_eer": {
+        "val": 0.38312078362869045,
+        "source": "results/metrics/crnn_multiseed_results.json",
+        "key": "metrics.eval_eer_std",
+        "n": 71237
+      },
+      "seed_42": {
+        "dev_eer": {
+          "val": 1.1481880157875852,
+          "source": "results/metrics/crnn_multiseed_results.json",
+          "key": "individual_runs.0.dev.eer"
+        },
+        "eval_eer": {
+          "val": 6.696722081337465,
+          "source": "results/metrics/crnn_multiseed_results.json",
+          "key": "individual_runs.0.eval.eer",
+          "n": 71237,
+          "ci_95": [
+            6.476130961622823,
+            6.901733907268064
+          ]
+        },
+        "eval_roc_auc": {
+          "val": 0.9800110038880108,
+          "source": "results/metrics/crnn_multiseed_results.json",
+          "key": "individual_runs.0.eval.roc_auc",
+          "n": 71237
+        },
+        "eval_min_tdcf": {
+          "val": 0.21434372664850607,
+          "source": "results/metrics/crnn_multiseed_results.json",
+          "key": "individual_runs.0.eval.min_tdcf",
+          "n": 71237,
+          "ci_95": [
+            0.20608115945237926,
+            0.2199631983455097
+          ]
+        }
+      },
+      "seed_43": {
+        "dev_eer": {
+          "val": 1.0204081632163264,
+          "source": "results/metrics/crnn_multiseed_results.json",
+          "key": "individual_runs.1.dev.eer"
+        },
+        "eval_eer": {
+          "val": 7.612472997088382,
+          "source": "results/metrics/crnn_multiseed_results.json",
+          "key": "individual_runs.1.eval.eer",
+          "n": 71237,
+          "ci_95": [
+            7.41148227633535,
+            7.889502654825187
+          ]
+        },
+        "eval_roc_auc": {
+          "val": 0.9784092466882823,
+          "source": "results/metrics/crnn_multiseed_results.json",
+          "key": "individual_runs.1.eval.roc_auc",
+          "n": 71237
+        },
+        "eval_min_tdcf": {
+          "val": 0.21769344703470586,
+          "source": "results/metrics/crnn_multiseed_results.json",
+          "key": "individual_runs.1.eval.min_tdcf",
+          "n": 71237,
+          "ci_95": [
+            0.21127747686004486,
+            0.2238088892395584
+          ]
+        }
+      },
+      "seed_44": {
+        "dev_eer": {
+          "val": 1.2166405022810047,
+          "source": "results/metrics/crnn_multiseed_results.json",
+          "key": "individual_runs.2.dev.eer"
+        },
+        "eval_eer": {
+          "val": 6.976926207695438,
+          "source": "results/metrics/crnn_multiseed_results.json",
+          "key": "individual_runs.2.eval.eer",
+          "n": 71237,
+          "ci_95": [
+            6.7384334097506065,
+            7.238829040101284
+          ]
+        },
+        "eval_roc_auc": {
+          "val": 0.9816527396248151,
+          "source": "results/metrics/crnn_multiseed_results.json",
+          "key": "individual_runs.2.eval.roc_auc",
+          "n": 71237
+        },
+        "eval_min_tdcf": {
+          "val": 0.21783077409194926,
+          "source": "results/metrics/crnn_multiseed_results.json",
+          "key": "individual_runs.2.eval.min_tdcf",
+          "n": 71237,
+          "ci_95": [
+            0.209931964006632,
+            0.22495211945676663
+          ]
+        }
+      },
+      "speaker_bootstrap": {
+        "eer": {
+          "val": 7.612472997088382,
+          "source": "results/metrics/speaker_bootstrap.json",
+          "key": "Best Single Model (CRNN-LFCC).eer",
+          "n": 71237,
+          "ci_95": [
+            6.962047807799587,
+            8.24853057364062
+          ]
+        },
+        "min_tdcf": {
+          "val": 0.21769344703470586,
+          "source": "results/metrics/speaker_bootstrap.json",
+          "key": "Best Single Model (CRNN-LFCC).min_tdcf",
+          "n": 71237,
+          "ci_95": [
+            0.2072395516260755,
+            0.22880048735463482
+          ]
+        }
+      },
+      "eval_metrics_at_dev_threshold": {
+        "accuracy": {
+          "val": 0.8848351278127939,
+          "source": "results/metrics/crnn_results.json",
+          "key": "eval.metrics_at_dev_threshold.accuracy",
+          "n": 71237
+        },
+        "precision": {
+          "val": 0.4723290528648719,
+          "source": "results/metrics/crnn_results.json",
+          "key": "eval.metrics_at_dev_threshold.precision",
+          "n": 71237
+        },
+        "recall": {
+          "val": 0.9851801495581237,
+          "source": "results/metrics/crnn_results.json",
+          "key": "eval.metrics_at_dev_threshold.recall",
+          "n": 71237
+        },
+        "f1": {
+          "val": 0.6385266126189637,
+          "source": "results/metrics/crnn_results.json",
+          "key": "eval.metrics_at_dev_threshold.f1",
+          "n": 71237
+        },
+        "tp": {
+          "val": 7246,
+          "source": "results/metrics/crnn_results.json",
+          "key": "eval.metrics_at_dev_threshold.tp",
+          "n": 71237
+        },
+        "fp": {
+          "val": 8095,
+          "source": "results/metrics/crnn_results.json",
+          "key": "eval.metrics_at_dev_threshold.fp",
+          "n": 71237
+        },
+        "tn": {
+          "val": 55787,
+          "source": "results/metrics/crnn_results.json",
+          "key": "eval.metrics_at_dev_threshold.tn",
+          "n": 71237
+        },
+        "fn": {
+          "val": 109,
+          "source": "results/metrics/crnn_results.json",
+          "key": "eval.metrics_at_dev_threshold.fn",
+          "n": 71237
+        }
+      }
+    },
+    "baselines": {
+      "gmm_lfcc": {
+        "dev_eer": {
+          "val": 8.068711876569788,
+          "source": "results/metrics/baselines_results.json",
+          "key": "GMM.lfcc.dev.eer"
+        },
+        "eval_eer": {
+          "val": 11.460192229422999,
+          "source": "results/metrics/baselines_results.json",
+          "key": "GMM.lfcc.eval.eer",
+          "n": 71237,
+          "ci_95": [
+            11.010096759996033,
+            11.798388430155107
+          ]
+        },
+        "eval_min_tdcf": {
+          "val": 0.3572495992154648,
+          "source": "results/metrics/baselines_results.json",
+          "key": "GMM.lfcc.eval.min_tdcf",
+          "n": 71237,
+          "ci_95": [
+            0.3459141627622828,
+            0.3668567872645725
+          ]
+        },
+        "eval_roc_auc": {
+          "val": 0.9544052106097809,
+          "source": "results/metrics/baselines_results.json",
+          "key": "GMM.lfcc.eval.roc_auc",
+          "n": 71237
+        }
+      },
+      "random_forest_lfcc": {
+        "eval_eer": {
+          "val": 17.518515609860465,
+          "source": "results/metrics/baselines_results.json",
+          "key": "RandomForest.lfcc.eval.eer",
+          "n": 71237
+        },
+        "eval_roc_auc": {
+          "val": 0.897664001125801,
+          "source": "results/metrics/baselines_results.json",
+          "key": "RandomForest.lfcc.eval.roc_auc",
+          "n": 71237
+        }
+      },
+      "svm_lfcc": {
+        "eval_eer": {
+          "val": 19.63933502395041,
+          "source": "results/metrics/baselines_results.json",
+          "key": "SVM.lfcc.eval.eer",
+          "n": 71237
+        },
+        "eval_roc_auc": {
+          "val": 0.8932379233116565,
+          "source": "results/metrics/baselines_results.json",
+          "key": "SVM.lfcc.eval.roc_auc",
+          "n": 71237
+        }
+      },
+      "logistic_regression_lfcc": {
+        "eval_eer": {
+          "val": 23.944147021070098,
+          "source": "results/metrics/baselines_results.json",
+          "key": "LogisticRegression.lfcc.eval.eer",
+          "n": 71237
+        },
+        "eval_roc_auc": {
+          "val": 0.8458818222610515,
+          "source": "results/metrics/baselines_results.json",
+          "key": "LogisticRegression.lfcc.eval.roc_auc",
+          "n": 71237
+        }
+      },
+      "crnn_logmel": {
+        "eval_eer": {
+          "val": 10.275194890579506,
+          "source": "results/metrics/crnn_logmel_results.json",
+          "key": "eval.eer",
+          "n": 71237,
+          "ci_95": [
+            10.042379240225374,
+            10.556193393701813
+          ]
+        },
+        "overfit_check_loss": {
+          "val": 0.0954098254442215,
+          "source": "results/metrics/logmel_overfit_check.json",
+          "key": "overfit_experiment.final_loss",
+          "n": 64
+        },
+        "overfit_check_accuracy": {
+          "val": 98.4375,
+          "source": "results/metrics/logmel_overfit_check.json",
+          "key": "overfit_experiment.final_accuracy_pct",
+          "n": 64
+        }
+      }
+    },
+    "stacked_ensemble_ablation": {
+      "dev_eer": {
+        "val": 2.590266875933752,
+        "source": "results/metrics/ensemble_results.json",
+        "key": "stacked_ensemble.dev.eer"
+      },
+      "eval_eer": {
+        "val": 10.738549200087661,
+        "source": "results/metrics/ensemble_results.json",
+        "key": "stacked_ensemble.eval.eer",
+        "n": 71237,
+        "ci_95": [
+          10.454911498241454,
+          11.034645971382929
+        ]
+      },
+      "eval_min_tdcf": {
+        "val": 0.27537679546145377,
+        "source": "results/metrics/ensemble_results.json",
+        "key": "stacked_ensemble.eval.min_tdcf",
+        "n": 71237,
+        "ci_95": [
+          0.267042305132358,
+          0.2809839938977464
+        ]
+      },
+      "eval_roc_auc": {
+        "val": 0.9571730666485674,
+        "source": "results/metrics/ensemble_results.json",
+        "key": "stacked_ensemble.eval.roc_auc",
+        "n": 71237
+      },
+      "mean_fusion_eval_eer": {
+        "val": 11.472715318869165,
+        "source": "results/metrics/ensemble_results.json",
+        "key": "mean_baseline_fusion.eval.eer",
+        "n": 71237
+      }
+    },
+    "robustness_fixed_raw_audio": {
+      "clean_baseline_eer": {
+        "val": 7.83625730994152,
+        "source": "results/metrics/codec_robustness_results.json",
+        "key": "clean_baseline.crnn_lfcc_eer",
+        "n": 5000,
+        "ci_95": [
+          7.025689615101159,
+          8.625641222692757
+        ]
+      },
+      "mp3_16k_eer": {
+        "val": 14.923976608187134,
+        "source": "results/metrics/codec_robustness_results.json",
+        "key": "conditions.mp3_16k.crnn.eer",
+        "n": 5000
+      },
+      "mp3_32k_eer": {
+        "val": 30.269005847953217,
+        "source": "results/metrics/codec_robustness_results.json",
+        "key": "conditions.mp3_32k.crnn.eer",
+        "n": 5000
+      },
+      "mp3_64k_eer": {
+        "val": 18.068965517186207,
+        "source": "results/metrics/codec_robustness_results.json",
+        "key": "conditions.mp3_64k.crnn.eer",
+        "n": 5000
+      },
+      "aac_16k_eer": {
+        "val": 15.929824561403509,
+        "source": "results/metrics/codec_robustness_results.json",
+        "key": "conditions.aac_16k.crnn.eer",
+        "n": 5000
+      },
+      "aac_32k_eer": {
+        "val": 9.380116959064328,
+        "source": "results/metrics/codec_robustness_results.json",
+        "key": "conditions.aac_32k.crnn.eer",
+        "n": 5000
+      },
+      "aac_64k_eer": {
+        "val": 6.923976608187135,
+        "source": "results/metrics/codec_robustness_results.json",
+        "key": "conditions.aac_64k.crnn.eer",
+        "n": 5000
+      },
+      "opus_16k_eer": {
+        "val": 10.456140350877192,
+        "source": "results/metrics/codec_robustness_results.json",
+        "key": "conditions.opus_16k.crnn.eer",
+        "n": 5000
+      },
+      "opus_32k_eer": {
+        "val": 8.701754385964913,
+        "source": "results/metrics/codec_robustness_results.json",
+        "key": "conditions.opus_32k.crnn.eer",
+        "n": 5000
+      },
+      "opus_64k_eer": {
+        "val": 7.415204678362573,
+        "source": "results/metrics/codec_robustness_results.json",
+        "key": "conditions.opus_64k.crnn.eer",
+        "n": 5000
+      },
+      "telephony_a_law_eer": {
+        "val": 17.37931034482414,
+        "source": "results/metrics/degradation_chains_results.json",
+        "key": "conditions.telephony_8k_alaw.crnn.eer",
+        "n": 5000
+      },
+      "telephony_mu_law_eer": {
+        "val": 17.241379310251727,
+        "source": "results/metrics/degradation_chains_results.json",
+        "key": "conditions.telephony_8k_mulaw.crnn.eer",
+        "n": 5000
+      },
+      "noise_0db_eer": {
+        "val": 48.600389863547754,
+        "source": "results/metrics/degradation_chains_results.json",
+        "key": "conditions.noise_snr_0db.crnn.eer",
+        "n": 5000
+      },
+      "noise_10db_eer": {
+        "val": 41.626134301255476,
+        "source": "results/metrics/degradation_chains_results.json",
+        "key": "conditions.noise_snr_10db.crnn.eer",
+        "n": 5000
+      },
+      "noise_20db_eer": {
+        "val": 35.657995563592955,
+        "source": "results/metrics/degradation_chains_results.json",
+        "key": "conditions.noise_snr_20db.crnn.eer",
+        "n": 5000
+      },
+      "reverb_rt60_03s_eer": {
+        "val": 13.267997580144646,
+        "source": "results/metrics/degradation_chains_results.json",
+        "key": "conditions.reverb_rt60_0.3s.crnn.eer",
+        "n": 5000
+      }
+    },
+    "in_the_wild_cross_domain": {
+      "total_clips": {
+        "val": 25589,
+        "source": "results/metrics/in_the_wild_results.json",
+        "key": "sample_size",
+        "n": 25589
+      },
+      "bonafide_count": {
+        "val": 15403,
+        "source": "results/metrics/in_the_wild_results.json",
+        "key": "bonafide_count",
+        "n": 25589
+      },
+      "spoof_count": {
+        "val": 10186,
+        "source": "results/metrics/in_the_wild_results.json",
+        "key": "spoof_count",
+        "n": 25589
+      },
+      "crnn_mean_optimal_eer": {
+        "val": 44.73154580270122,
+        "source": "results/metrics/in_the_wild_results.json",
+        "key": "aggregations.crnn_mean.optimal_threshold_metrics.itw_optimal_eer",
+        "n": 25589,
+        "ci_95": [
+          44.09419856828428,
+          45.32321322591152
+        ]
+      },
+      "crnn_mean_roc_auc": {
+        "val": 0.5637921105151129,
+        "source": "results/metrics/in_the_wild_results.json",
+        "key": "aggregations.crnn_mean.optimal_threshold_metrics.roc_auc",
+        "n": 25589
+      },
+      "crnn_mean_accuracy_dev_th": {
+        "val": 56.60244636367189,
+        "source": "results/metrics/in_the_wild_results.json",
+        "key": "aggregations.crnn_mean.dev_threshold_metrics.accuracy",
+        "n": 25589
+      },
+      "polarity_inverted_diagnostic_auc": {
+        "val": 0.43620788948488703,
+        "source": "results/metrics/in_the_wild_results.json",
+        "key": "aggregations.crnn_mean.polarity_inverted_diagnostic.inverted_roc_auc",
+        "n": 25589
+      }
+    },
+    "forensic_audits": {
+      "silence_duration_classifier_eer": {
+        "val": 18.358920679227726,
+        "source": "results/metrics/crnn_silence_audit.json",
+        "key": "silence_duration_classifier.eer",
+        "n": 20000,
+        "ci_95": [
+          17.790965140982024,
+          18.85421098560059
+        ]
+      },
+      "silence_duration_classifier_auc": {
+        "val": 0.8871551921805125,
+        "source": "results/metrics/crnn_silence_audit.json",
+        "key": "silence_duration_classifier.roc_auc",
+        "n": 20000
+      },
+      "vad_untrimmed_eer": {
+        "val": 9.141660851360783,
+        "source": "results/metrics/crnn_silence_audit.json",
+        "key": "vad_trimming.untrimmed_eer",
+        "n": 20000
+      },
+      "vad_trimmed_eer": {
+        "val": 30.68736915561758,
+        "source": "results/metrics/crnn_silence_audit.json",
+        "key": "vad_trimming.trimmed_eer",
+        "n": 20000,
+        "ci_95": [
+          29.93216702642776,
+          31.494904988828193
+        ]
+      },
+      "vad_delta_eer": {
+        "val": 21.5457083042568,
+        "source": "results/metrics/crnn_silence_audit.json",
+        "key": "vad_trimming.delta_eer",
+        "n": 20000
+      },
+      "silence_swap_pearson_r": {
+        "val": 0.703558623790741,
+        "source": "results/metrics/crnn_silence_audit.json",
+        "key": "silence_swap.pearson_r",
+        "n": 4000
+      },
+      "silence_swap_flip_rate": {
+        "val": 34.849999999999994,
+        "source": "results/metrics/crnn_silence_audit.json",
+        "key": "silence_swap.flip_rate_pct",
+        "n": 4000
+      }
+    },
+    "preprocessing_parity": {
+      "cached_eer": {
+        "val": 7.863849765258216,
+        "source": "results/metrics/parity_check.json",
+        "key": "cached_path_eer",
+        "n": 2000,
+        "ci_95": [
+          6.710882893961834,
+          9.218639677737505
+        ]
+      },
+      "raw_eer": {
+        "val": 7.863849765258216,
+        "source": "results/metrics/parity_check.json",
+        "key": "raw_audio_path_eer",
+        "n": 2000,
+        "ci_95": [
+          6.710882893961834,
+          9.218639677737505
+        ]
+      },
+      "delta_eer": {
+        "val": 0.0,
+        "source": "results/metrics/parity_check.json",
+        "key": "eer_difference_pts",
+        "n": 2000
+      },
+      "max_abs_score_diff": {
+        "val": 0.0037288665771484375,
+        "source": "results/metrics/parity_check.json",
+        "key": "max_absolute_score_difference",
+        "n": 2000
+      }
+    },
+    "latency_and_throughput": {
+      "crnn_cpu_1thread_ms": {
+        "val": 12.72,
+        "source": "results/metrics/latency.json",
+        "key": "benchmarks.crnn_cpu_single_thread.latency_ms.mean"
+      },
+      "crnn_cpu_4threads_ms": {
+        "val": 10.28,
+        "source": "results/metrics/latency.json",
+        "key": "benchmarks.crnn_cpu_multi_thread.latency_ms.mean"
+      },
+      "crnn_mps_ms": {
+        "val": 33.08,
+        "source": "results/metrics/latency.json",
+        "key": "benchmarks.crnn_apple_silicon_mps.latency_ms.mean"
+      },
+      "ensemble_cpu_4threads_ms": {
+        "val": 35.43,
+        "source": "results/metrics/latency.json",
+        "key": "benchmarks.ensemble_cpu_multi_thread.latency_ms.mean"
+      },
+      "ensemble_mps_ms": {
+        "val": 82.17,
+        "source": "results/metrics/latency.json",
+        "key": "benchmarks.ensemble_apple_silicon_mps.latency_ms.mean"
+      }
+    }
+  }
+}

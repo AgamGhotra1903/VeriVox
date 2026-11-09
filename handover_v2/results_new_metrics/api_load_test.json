@@ -1,0 +1,67 @@
+{
+  "dataset_name": "fastapi_service_load_test",
+  "manifest_sha256": "91a3907b6445c6ab0c1e4283ef548bbbcc332f463ce4199e2abec4014d1cf656",
+  "git_commit": "348ce41d60604e9fe08fcf0615afd156ab3fec40",
+  "seed": 42,
+  "timestamp": "2026-11-05T18:09:04.227446+00:00",
+  "endpoint": "/api/analyze",
+  "audio_duration_sec": 1.0,
+  "results_by_concurrency": {
+    "concurrency_1": {
+      "concurrency": 1,
+      "total_requests": 20,
+      "successes": 20,
+      "failures": 0,
+      "success_rate_pct": 100.0,
+      "wall_time_sec": 0.015830583999559167,
+      "rps": 1263.377270260967,
+      "latency_p50_ms": 0.7340000001931912,
+      "latency_p95_ms": 0.9145392499704033,
+      "latency_p99_ms": 1.1988742501489464,
+      "latency_mean_ms": 0.7816666000053374,
+      "latency_std_ms": 0.12988544954895978
+    },
+    "concurrency_5": {
+      "concurrency": 5,
+      "total_requests": 40,
+      "successes": 40,
+      "failures": 0,
+      "success_rate_pct": 100.0,
+      "wall_time_sec": 0.025378083999385126,
+      "rps": 1576.1631177897095,
+      "latency_p50_ms": 3.09427100000903,
+      "latency_p95_ms": 3.927509800223561,
+      "latency_p99_ms": 4.5328413701281525,
+      "latency_mean_ms": 3.058544800137497,
+      "latency_std_ms": 0.5948422829676576
+    },
+    "concurrency_10": {
+      "concurrency": 10,
+      "total_requests": 40,
+      "successes": 40,
+      "failures": 0,
+      "success_rate_pct": 100.0,
+      "wall_time_sec": 0.024685584000508243,
+      "rps": 1620.378922336877,
+      "latency_p50_ms": 5.715563000194379,
+      "latency_p95_ms": 7.855403849498543,
+      "latency_p99_ms": 8.21980249965236,
+      "latency_mean_ms": 5.801471949939696,
+      "latency_std_ms": 1.158817542079345
+    },
+    "concurrency_20": {
+      "concurrency": 20,
+      "total_requests": 40,
+      "successes": 40,
+      "failures": 0,
+      "success_rate_pct": 100.0,
+      "wall_time_sec": 0.026194625000243832,
+      "rps": 1527.030831692672,
+      "latency_p50_ms": 11.158291500578343,
+      "latency_p95_ms": 15.2284024000437,
+      "latency_p99_ms": 18.271505010552573,
+      "latency_mean_ms": 11.174604174971137,
+      "latency_std_ms": 2.7380891591708165
+    }
+  }
+}

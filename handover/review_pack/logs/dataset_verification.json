@@ -1,0 +1,59 @@
+{
+  "status": "PASS",
+  "dataset_name": "asvspoof2019_la_and_itw",
+  "manifest_sha256": "84fce576efff092269a0a6ad247d2e9f2f7b4d4e25a4545efb2518da92708036",
+  "git_commit": "e003341a3aec9f7cb057edf1f89fc90381079b59",
+  "git_dirty": true,
+  "diff_hash": "1d0ef31df8dc1a98ccf7e8a0b435e6b30889f58586e25a26033cae5aaaf82577",
+  "seed": 42,
+  "timestamp": "2026-11-09T07:15:24.121911+00:00",
+  "disk_free_gb": 74.3,
+  "disk_threshold_gb": 25.0,
+  "disk_check_passed": true,
+  "protocols": {
+    "train": {
+      "exists": true,
+      "trials": 25380,
+      "sha256": "65a289e4009400b42bb4f1e47ac60938d93f7f595452d1f220d35defc3de8ab8"
+    },
+    "dev": {
+      "exists": true,
+      "trials": 24844,
+      "sha256": "2fedaebf1ba3ae1a9bb7d3ec916804ac237b4eee063a27fa92e6549f03d129c7"
+    },
+    "eval": {
+      "exists": true,
+      "trials": 71237,
+      "sha256": "84fce576efff092269a0a6ad247d2e9f2f7b4d4e25a4545efb2518da92708036"
+    }
+  },
+  "asv_scores": {
+    "dev": {
+      "exists": true,
+      "target": 1484,
+      "nontarget": 5768,
+      "spoof": 22296,
+      "sha256": "fe8114cf608c3062c141df5979892eba9664aa37a8c99e97157f129d679d3389"
+    },
+    "eval": {
+      "exists": true,
+      "target": 5370,
+      "nontarget": 33327,
+      "spoof": 63882,
+      "sha256": "e049f322fef221a7e549dc973bb4cf508e9de221eed27dd09a25d46dee595a33"
+    }
+  },
+  "audio_files": {
+    "train": 25380,
+    "dev": 24844,
+    "eval": 71237
+  },
+  "in_the_wild": {
+    "meta_exists": true,
+    "meta_trials": 31779,
+    "audio_files": 31779
+  },
+  "protocols_match_expected": true,
+  "asv_scores_valid": true,
+  "audio_present": true
+}

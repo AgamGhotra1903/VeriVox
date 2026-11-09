@@ -1,0 +1,50 @@
+{
+  "model": "CRNN",
+  "parameters": 1439778,
+  "training_time_sec": 21.180477207992226,
+  "inference_latency_ms": {
+    "cpu": 7.828688320005313,
+    "accelerator": 7.828688320005313,
+    "device": "cpu"
+  },
+  "dev": {
+    "eer": 0.0,
+    "threshold": 5.228361129760742
+  },
+  "eval": {
+    "eer": 0.0,
+    "eer_threshold": 5.227965831756592,
+    "applied_threshold": 5.228361129760742,
+    "threshold_source": "dev",
+    "roc_auc": 1.0,
+    "min_tdcf": 0.0,
+    "at_applied_threshold": {
+      "accuracy": 0.99,
+      "precision": 1.0,
+      "recall": 0.95,
+      "f1": 0.9743589743589743,
+      "tp": 19,
+      "fp": 0,
+      "tn": 80,
+      "fn": 1
+    },
+    "at_threshold_0_5": {
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "tp": 20,
+      "fp": 0,
+      "tn": 80,
+      "fn": 0
+    },
+    "eer_ci_95": [
+      0.0,
+      0.0
+    ],
+    "auc_ci_95": [
+      0.9999999999999999,
+      1.0
+    ]
+  }
+}

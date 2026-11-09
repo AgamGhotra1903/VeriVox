@@ -1,0 +1,45 @@
+{
+  "checkpoint": "checkpoints/crnn_lfcc_seed43.pt",
+  "n_samples": 500,
+  "clean_eer": 10.267857142857142,
+  "conditions": {
+    "mp3_16k_delay_comp_on": {
+      "bitrate_kbps": 16,
+      "compensate_delay": true,
+      "eer": 13.839285714285715,
+      "mean_absolute_score_diff_vs_clean": 5.041784796692431,
+      "eer_delta_vs_clean": 3.571428571428573
+    },
+    "mp3_16k_delay_comp_off": {
+      "bitrate_kbps": 16,
+      "compensate_delay": false,
+      "eer": 13.839285714285715,
+      "mean_absolute_score_diff_vs_clean": 5.041784796692431,
+      "eer_delta_vs_clean": 3.571428571428573
+    },
+    "mp3_64k_delay_comp_on": {
+      "bitrate_kbps": 64,
+      "compensate_delay": true,
+      "eer": 21.15384615382308,
+      "mean_absolute_score_diff_vs_clean": 4.332904588729143,
+      "eer_delta_vs_clean": 10.885989010965936
+    },
+    "mp3_64k_delay_comp_off": {
+      "bitrate_kbps": 64,
+      "compensate_delay": false,
+      "eer": 21.15384615382308,
+      "mean_absolute_score_diff_vs_clean": 4.332904588729143,
+      "eer_delta_vs_clean": 10.885989010965936
+    }
+  },
+  "summary_delta_16k_off_minus_on": 0.0,
+  "summary_delta_64k_off_minus_on": 0.0,
+  "dataset_name": "ASVspoof 2019 LA",
+  "manifest_sha256": "0671ad1da8f7b453490c937d08cb0fde9e81864a089ff3860a9a65c0f47bb01b",
+  "git_commit": "e003341a3aec9f7cb057edf1f89fc90381079b59",
+  "seed": 42,
+  "timestamp": "2026-11-08T10:31:15.022184+00:00",
+  "subset": true,
+  "subset_flag": true,
+  "subset_reason": "Stratified 500-clip evaluation subset for MP3 delay compensation check"
+}

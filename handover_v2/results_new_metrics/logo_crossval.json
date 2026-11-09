@@ -1,0 +1,48 @@
+{
+  "mean_logo_eer": 28.491794995691773,
+  "folds": {
+    "A01": {
+      "name": "Neural TTS (WaveNet)",
+      "eer": 4.788069073775824,
+      "roc_auc": 0.9925018757192369,
+      "status": "PASS"
+    },
+    "A02": {
+      "name": "Neural TTS (WORLD)",
+      "eer": 9.391819160387513,
+      "roc_auc": 0.9638704368060049,
+      "status": "PASS"
+    },
+    "A03": {
+      "name": "Vocoder TTS (Traditional)",
+      "eer": 25.645855758880515,
+      "roc_auc": 0.8265697953438227,
+      "status": "PASS"
+    },
+    "A04": {
+      "name": "Waveform Concatenation TTS",
+      "eer": 42.54574811625403,
+      "roc_auc": 0.598942975177982,
+      "status": "FAIL"
+    },
+    "A05": {
+      "name": "Voice Conversion (Traditional)",
+      "eer": 31.08320251167912,
+      "roc_auc": 0.7579733909793114,
+      "status": "PASS"
+    },
+    "A06": {
+      "name": "Voice Conversion (WORLD)",
+      "eer": 57.49607535317362,
+      "roc_auc": 0.3978192440344524,
+      "status": "FAIL"
+    }
+  },
+  "provenance": {
+    "dataset_name": "ASVspoof 2019 LA",
+    "manifest_sha256": "91a3907b6445c6ab0c1e4283ef548bbbcc332f463ce4199e2abec4014d1cf656",
+    "git_commit": "7be55f74d917b5e49198bd5c60a00eea7a200f5d",
+    "seed": 42,
+    "timestamp": "2026-11-07T13:22:34.142993+00:00"
+  }
+}

@@ -1,0 +1,102 @@
+{
+  "dataset_name": "forensic_audits_large_scale",
+  "manifest_sha256": "91a3907b6445c6ab0c1e4283ef548bbbcc332f463ce4199e2abec4014d1cf656",
+  "git_commit": "e003341a3aec9f7cb057edf1f89fc90381079b59",
+  "git_dirty": true,
+  "diff_hash": "ee381c028405d3f179814432806cd8d7c5306f40e4bbbf083eca8384e330ddcc",
+  "seed": 42,
+  "timestamp": "2026-11-09T06:50:10.924153+00:00",
+  "checkpoint_path": "checkpoints/crnn_lfcc_best.pt",
+  "checkpoint_sha256": "e09c93f4bdfa961cebf964ec6f40c26baf3dd05818b11315ff9a7786f006f565",
+  "n_samples": 20000,
+  "subset": true,
+  "subset_flag": true,
+  "silence_duration_classifier": {
+    "n_train_samples": 10000,
+    "n_eval_samples": 20000,
+    "eer": 18.358920679227726,
+    "ci_95": [
+      17.790965140982024,
+      18.85421098560059
+    ],
+    "roc_auc": 0.8871551921805125,
+    "threshold": -0.0744285804444029,
+    "status": "FAIL"
+  },
+  "vad_trimming": {
+    "n_eval_samples": 20000,
+    "untrimmed_eer": 9.141660851360783,
+    "trimmed_eer": 30.68736915561758,
+    "ci_95": [
+      29.93216702642776,
+      31.494904988828193
+    ],
+    "delta_eer": 21.5457083042568,
+    "status": "FAIL"
+  },
+  "silence_swap": {
+    "n_pairs": 2000,
+    "n_trials": 4000,
+    "pearson_r": 0.703558623790741,
+    "flip_rate_pct": 34.849999999999994,
+    "status": "FAIL"
+  },
+  "loudness_controls": {
+    "low_loudness": {
+      "n_samples": 6660,
+      "eer": 18.024439918533606,
+      "ci_95": [
+        16.97223756538616,
+        18.87328897505416
+      ],
+      "roc_auc": 0.8987963340122199
+    },
+    "mid_loudness": {
+      "n_samples": 6680,
+      "eer": 6.788959369106806,
+      "ci_95": [
+        6.138362321672855,
+        7.449711837892312
+      ],
+      "roc_auc": 0.9676386297803626
+    },
+    "high_loudness": {
+      "n_samples": 6660,
+      "eer": 2.898550724542029,
+      "ci_95": [
+        1.591542144081797,
+        3.9009848296266587
+      ],
+      "roc_auc": 0.9899421382856793
+    }
+  },
+  "bandwidth_controls": {
+    "narrowband_centroid": {
+      "n_samples": 6660,
+      "eer": 6.6849974222374975,
+      "ci_95": [
+        6.024207402965755,
+        7.373373863184103
+      ],
+      "roc_auc": 0.9685365849173002
+    },
+    "standard_centroid": {
+      "n_samples": 6680,
+      "eer": 8.589923023093073,
+      "ci_95": [
+        7.840261981527587,
+        9.23899137867346
+      ],
+      "roc_auc": 0.9578699522923207
+    },
+    "wideband_centroid": {
+      "n_samples": 6660,
+      "eer": 12.11211211207878,
+      "ci_95": [
+        11.358508354762073,
+        13.075998084378691
+      ],
+      "roc_auc": 0.9387523011441048
+    }
+  }
+}

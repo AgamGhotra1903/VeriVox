@@ -1,0 +1,230 @@
+{
+  "A07": {
+    "description": "Neural TTS (LSTM-RNN + WORLD + GAN)",
+    "is_known_variant": false,
+    "spoof_trials": 4914,
+    "crnn_lfcc": {
+      "eer": 1.0469068660219987,
+      "min_tdcf": 0.09420896358589673,
+      "roc_auc": 0.9984964226296653,
+      "accuracy_at_dev_th": 98.99747330670796
+    },
+    "stacked_ensemble": {
+      "eer": 1.9986403806147246,
+      "min_tdcf": 0.11686532568985931,
+      "roc_auc": 0.9980293820538552,
+      "accuracy_at_dev_th": 97.76672915478034
+    }
+  },
+  "A08": {
+    "description": "Neural TTS (AR LSTM-RNN + neural source-filter)",
+    "is_known_variant": false,
+    "spoof_trials": 4914,
+    "crnn_lfcc": {
+      "eer": 1.427600271839089,
+      "min_tdcf": 0.10078135307962338,
+      "roc_auc": 0.9990097799071287,
+      "accuracy_at_dev_th": 98.64699649523189
+    },
+    "stacked_ensemble": {
+      "eer": 0.4486743710808566,
+      "min_tdcf": 0.07695760869309594,
+      "roc_auc": 0.9998352630575609,
+      "accuracy_at_dev_th": 99.42945635341104
+    }
+  },
+  "A09": {
+    "description": "Neural TTS (LSTM-RNN + Vocaine)",
+    "is_known_variant": false,
+    "spoof_trials": 4914,
+    "crnn_lfcc": {
+      "eer": 0.14245014245014245,
+      "min_tdcf": 0.06678639162702037,
+      "roc_auc": 0.9999721380414786,
+      "accuracy_at_dev_th": 99.36425136522944
+    },
+    "stacked_ensemble": {
+      "eer": 0.01359619303275323,
+      "min_tdcf": 0.06303947520973706,
+      "roc_auc": 0.9999998339903167,
+      "accuracy_at_dev_th": 99.54356508272882
+    }
+  },
+  "A10": {
+    "description": "Neural TTS (seq2seq + WaveRNN)",
+    "is_known_variant": false,
+    "spoof_trials": 4914,
+    "crnn_lfcc": {
+      "eer": 1.196464989782284,
+      "min_tdcf": 0.10031956071401495,
+      "roc_auc": 0.9976555282469625,
+      "accuracy_at_dev_th": 98.63069524818648
+    },
+    "stacked_ensemble": {
+      "eer": 5.927940176680408,
+      "min_tdcf": 0.20718203672880497,
+      "roc_auc": 0.987312737618652,
+      "accuracy_at_dev_th": 92.87635504116065
+    }
+  },
+  "A11": {
+    "description": "Neural TTS (seq2seq + Griffin-Lim)",
+    "is_known_variant": false,
+    "spoof_trials": 4914,
+    "crnn_lfcc": {
+      "eer": 0.26455026455026454,
+      "min_tdcf": 0.07077213945188232,
+      "roc_auc": 0.9999317700201452,
+      "accuracy_at_dev_th": 99.36425136522944
+    },
+    "stacked_ensemble": {
+      "eer": 0.5901505901505901,
+      "min_tdcf": 0.0787633023227884,
+      "roc_auc": 0.9998362867839414,
+      "accuracy_at_dev_th": 99.35610074170674
+    }
+  },
+  "A12": {
+    "description": "Neural TTS (WaveNet vocoder)",
+    "is_known_variant": false,
+    "spoof_trials": 4914,
+    "crnn_lfcc": {
+      "eer": 1.5873015873015872,
+      "min_tdcf": 0.11305940760902948,
+      "roc_auc": 0.9975942153372472,
+      "accuracy_at_dev_th": 97.98679598989322
+    },
+    "stacked_ensemble": {
+      "eer": 7.87219578516412,
+      "min_tdcf": 0.2671829381534818,
+      "roc_auc": 0.9791986823258066,
+      "accuracy_at_dev_th": 89.17597196185508
+    }
+  },
+  "A13": {
+    "description": "TTS-VC (Moment matching NN + waveform filtering)",
+    "is_known_variant": false,
+    "spoof_trials": 4914,
+    "crnn_lfcc": {
+      "eer": 0.9789259006582327,
+      "min_tdcf": 0.09027131311880178,
+      "roc_auc": 0.9990068194011089,
+      "accuracy_at_dev_th": 99.20123889477544
+    },
+    "stacked_ensemble": {
+      "eer": 0.8954008954008954,
+      "min_tdcf": 0.08917335079644262,
+      "roc_auc": 0.9994910419791453,
+      "accuracy_at_dev_th": 99.11158203602575
+    }
+  },
+  "A14": {
+    "description": "TTS-VC (LSTM-RNN + STRAIGHT)",
+    "is_known_variant": false,
+    "spoof_trials": 4914,
+    "crnn_lfcc": {
+      "eer": 0.9653297076254792,
+      "min_tdcf": 0.09257978893772348,
+      "roc_auc": 0.9985862615366353,
+      "accuracy_at_dev_th": 99.08713016545767
+    },
+    "stacked_ensemble": {
+      "eer": 2.7600271923489057,
+      "min_tdcf": 0.12822738903131523,
+      "roc_auc": 0.9967283088289207,
+      "accuracy_at_dev_th": 97.22063737875948
+    }
+  },
+  "A15": {
+    "description": "TTS-VC (LSTM-RNN + WaveNet)",
+    "is_known_variant": false,
+    "spoof_trials": 4914,
+    "crnn_lfcc": {
+      "eer": 0.5438477226101291,
+      "min_tdcf": 0.07969019781651814,
+      "roc_auc": 0.9996239050623823,
+      "accuracy_at_dev_th": 99.33164887113864
+    },
+    "stacked_ensemble": {
+      "eer": 3.1746031746031744,
+      "min_tdcf": 0.13146986787811282,
+      "roc_auc": 0.9959859965298443,
+      "accuracy_at_dev_th": 97.27769174341837
+    }
+  },
+  "A16": {
+    "description": "Waveform Concatenation TTS (A04 variant)",
+    "is_known_variant": true,
+    "spoof_trials": 4914,
+    "crnn_lfcc": {
+      "eer": 1.481985044170102,
+      "min_tdcf": 0.10984370351756023,
+      "roc_auc": 0.997961373420245,
+      "accuracy_at_dev_th": 97.95419349580243
+    },
+    "stacked_ensemble": {
+      "eer": 4.038069340527709,
+      "min_tdcf": 0.16833294761203643,
+      "roc_auc": 0.9928696627540952,
+      "accuracy_at_dev_th": 94.85695655717662
+    }
+  },
+  "A17": {
+    "description": "Neural VC (VAE + waveform filtering)",
+    "is_known_variant": false,
+    "spoof_trials": 4914,
+    "crnn_lfcc": {
+      "eer": 15.064581916990576,
+      "min_tdcf": 0.5038011396581215,
+      "roc_auc": 0.9227380696449357,
+      "accuracy_at_dev_th": 71.57877577634689
+    },
+    "stacked_ensemble": {
+      "eer": 24.51393609785407,
+      "min_tdcf": 0.6362791272760642,
+      "roc_auc": 0.8445763944744229,
+      "accuracy_at_dev_th": 70.49474284782787
+    }
+  },
+  "A18": {
+    "description": "VC (i-vector / PLDA + MFCC-to-waveform)",
+    "is_known_variant": false,
+    "spoof_trials": 4914,
+    "crnn_lfcc": {
+      "eer": 22.039428959792986,
+      "min_tdcf": 0.7024367791501446,
+      "roc_auc": 0.8603970066240632,
+      "accuracy_at_dev_th": 63.43630287717011
+    },
+    "stacked_ensemble": {
+      "eer": 34.75186947651725,
+      "min_tdcf": 0.9505735010487867,
+      "roc_auc": 0.7136661938157519,
+      "accuracy_at_dev_th": 60.86885646751976
+    }
+  },
+  "A19": {
+    "description": "VC with spectral filtering (A06 variant)",
+    "is_known_variant": true,
+    "spoof_trials": 4914,
+    "crnn_lfcc": {
+      "eer": 4.477004477004478,
+      "min_tdcf": 0.19247915843464056,
+      "roc_auc": 0.9905123252505985,
+      "accuracy_at_dev_th": 92.1183470535496
+    },
+    "stacked_ensemble": {
+      "eer": 14.529914529914532,
+      "min_tdcf": 0.42240774178280616,
+      "roc_auc": 0.9357200822190624,
+      "accuracy_at_dev_th": 80.02282174586355
+    }
+  },
+  "provenance": {
+    "dataset_name": "ASVspoof 2019 LA",
+    "manifest_sha256": "91a3907b6445c6ab0c1e4283ef548bbbcc332f463ce4199e2abec4014d1cf656",
+    "git_commit": "7be55f74d917b5e49198bd5c60a00eea7a200f5d",
+    "seed": 42,
+    "timestamp": "2026-11-07T13:22:34.142993+00:00"
+  }
+}

@@ -1,0 +1,540 @@
+{
+  "GMM": {
+    "lfcc": {
+      "dev": {
+        "eer": 0.0,
+        "eer_threshold": 268.57166008855154,
+        "applied_threshold": 268.57166008855154,
+        "threshold_source": "eval_optimal",
+        "roc_auc": 1.0,
+        "min_tdcf": 0.0,
+        "at_applied_threshold": {
+          "accuracy": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "tp": 20,
+          "fp": 0,
+          "tn": 80,
+          "fn": 0
+        },
+        "at_threshold_0_5": {
+          "accuracy": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "tp": 20,
+          "fp": 0,
+          "tn": 80,
+          "fn": 0
+        },
+        "eer_ci_95": [
+          0.0,
+          0.0
+        ],
+        "auc_ci_95": [
+          0.9999999999999999,
+          1.0
+        ]
+      },
+      "eval": {
+        "eer": 0.0,
+        "eer_threshold": 270.1510097268313,
+        "applied_threshold": 268.57166008855154,
+        "threshold_source": "dev",
+        "roc_auc": 1.0,
+        "min_tdcf": 0.0,
+        "at_applied_threshold": {
+          "accuracy": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "tp": 20,
+          "fp": 0,
+          "tn": 80,
+          "fn": 0
+        },
+        "at_threshold_0_5": {
+          "accuracy": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "tp": 20,
+          "fp": 0,
+          "tn": 80,
+          "fn": 0
+        },
+        "eer_ci_95": [
+          0.0,
+          0.0
+        ],
+        "auc_ci_95": [
+          0.9999999999999999,
+          1.0
+        ]
+      }
+    }
+  },
+  "Logistic Regression": {
+    "lfcc": {
+      "dev": {
+        "eer": 0.0,
+        "eer_threshold": 1.0369695827784549,
+        "applied_threshold": 1.0369695827784549,
+        "threshold_source": "eval_optimal",
+        "roc_auc": 1.0,
+        "min_tdcf": 0.0,
+        "at_applied_threshold": {
+          "accuracy": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "tp": 20,
+          "fp": 0,
+          "tn": 80,
+          "fn": 0
+        },
+        "at_threshold_0_5": {
+          "accuracy": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "tp": 20,
+          "fp": 0,
+          "tn": 80,
+          "fn": 0
+        },
+        "eer_ci_95": [
+          0.0,
+          0.0
+        ],
+        "auc_ci_95": [
+          0.9999999999999999,
+          1.0
+        ]
+      },
+      "eval": {
+        "eer": 0.0,
+        "eer_threshold": 0.9612334483028149,
+        "applied_threshold": 1.0369695827784549,
+        "threshold_source": "dev",
+        "roc_auc": 1.0,
+        "min_tdcf": 0.0,
+        "at_applied_threshold": {
+          "accuracy": 0.99,
+          "precision": 1.0,
+          "recall": 0.95,
+          "f1": 0.9743589743589743,
+          "tp": 19,
+          "fp": 0,
+          "tn": 80,
+          "fn": 1
+        },
+        "at_threshold_0_5": {
+          "accuracy": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "tp": 20,
+          "fp": 0,
+          "tn": 80,
+          "fn": 0
+        },
+        "eer_ci_95": [
+          0.0,
+          0.0
+        ],
+        "auc_ci_95": [
+          0.9999999999999999,
+          1.0
+        ]
+      },
+      "pca_components_kept": 40,
+      "pca_explained_variance": 0.9519884012872405
+    },
+    "logmel": {
+      "dev": {
+        "eer": 0.0,
+        "eer_threshold": 1.739905156124773,
+        "applied_threshold": 1.739905156124773,
+        "threshold_source": "eval_optimal",
+        "roc_auc": 1.0,
+        "min_tdcf": 0.0,
+        "at_applied_threshold": {
+          "accuracy": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "tp": 20,
+          "fp": 0,
+          "tn": 80,
+          "fn": 0
+        },
+        "at_threshold_0_5": {
+          "accuracy": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "tp": 20,
+          "fp": 0,
+          "tn": 80,
+          "fn": 0
+        },
+        "eer_ci_95": [
+          0.0,
+          0.0
+        ],
+        "auc_ci_95": [
+          0.9999999999999999,
+          1.0
+        ]
+      },
+      "eval": {
+        "eer": 0.0,
+        "eer_threshold": 1.870977660915615,
+        "applied_threshold": 1.739905156124773,
+        "threshold_source": "dev",
+        "roc_auc": 1.0,
+        "min_tdcf": 0.0,
+        "at_applied_threshold": {
+          "accuracy": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "tp": 20,
+          "fp": 0,
+          "tn": 80,
+          "fn": 0
+        },
+        "at_threshold_0_5": {
+          "accuracy": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "tp": 20,
+          "fp": 0,
+          "tn": 80,
+          "fn": 0
+        },
+        "eer_ci_95": [
+          0.0,
+          0.0
+        ],
+        "auc_ci_95": [
+          0.9999999999999999,
+          1.0
+        ]
+      },
+      "pca_components_kept": 41,
+      "pca_explained_variance": 0.9514214255966916
+    }
+  },
+  "RBF-SVM": {
+    "lfcc": {
+      "dev": {
+        "eer": 0.0,
+        "eer_threshold": 0.6751701734233004,
+        "applied_threshold": 0.6751701734233004,
+        "threshold_source": "eval_optimal",
+        "roc_auc": 1.0,
+        "min_tdcf": 0.0,
+        "at_applied_threshold": {
+          "accuracy": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "tp": 20,
+          "fp": 0,
+          "tn": 80,
+          "fn": 0
+        },
+        "at_threshold_0_5": {
+          "accuracy": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "tp": 20,
+          "fp": 0,
+          "tn": 80,
+          "fn": 0
+        },
+        "eer_ci_95": [
+          0.0,
+          0.0
+        ],
+        "auc_ci_95": [
+          0.9999999999999999,
+          1.0
+        ]
+      },
+      "eval": {
+        "eer": 0.0,
+        "eer_threshold": 0.6569826505047837,
+        "applied_threshold": 0.6751701734233004,
+        "threshold_source": "dev",
+        "roc_auc": 1.0,
+        "min_tdcf": 0.0,
+        "at_applied_threshold": {
+          "accuracy": 0.98,
+          "precision": 1.0,
+          "recall": 0.9,
+          "f1": 0.9473684210526315,
+          "tp": 18,
+          "fp": 0,
+          "tn": 80,
+          "fn": 2
+        },
+        "at_threshold_0_5": {
+          "accuracy": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "tp": 20,
+          "fp": 0,
+          "tn": 80,
+          "fn": 0
+        },
+        "eer_ci_95": [
+          0.0,
+          0.0
+        ],
+        "auc_ci_95": [
+          0.9999999999999999,
+          1.0
+        ]
+      },
+      "pca_components_kept": 40,
+      "pca_explained_variance": 0.9519884012872405
+    },
+    "logmel": {
+      "dev": {
+        "eer": 0.0,
+        "eer_threshold": 0.37322204306620677,
+        "applied_threshold": 0.37322204306620677,
+        "threshold_source": "eval_optimal",
+        "roc_auc": 1.0,
+        "min_tdcf": 0.0,
+        "at_applied_threshold": {
+          "accuracy": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "tp": 20,
+          "fp": 0,
+          "tn": 80,
+          "fn": 0
+        },
+        "at_threshold_0_5": {
+          "accuracy": 0.99,
+          "precision": 1.0,
+          "recall": 0.95,
+          "f1": 0.9743589743589743,
+          "tp": 19,
+          "fp": 0,
+          "tn": 80,
+          "fn": 1
+        },
+        "eer_ci_95": [
+          0.0,
+          0.0
+        ],
+        "auc_ci_95": [
+          0.9999999999999999,
+          1.0
+        ]
+      },
+      "eval": {
+        "eer": 0.0,
+        "eer_threshold": 0.512018552373472,
+        "applied_threshold": 0.37322204306620677,
+        "threshold_source": "dev",
+        "roc_auc": 1.0,
+        "min_tdcf": 0.0,
+        "at_applied_threshold": {
+          "accuracy": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "tp": 20,
+          "fp": 0,
+          "tn": 80,
+          "fn": 0
+        },
+        "at_threshold_0_5": {
+          "accuracy": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "tp": 20,
+          "fp": 0,
+          "tn": 80,
+          "fn": 0
+        },
+        "eer_ci_95": [
+          0.0,
+          0.0
+        ],
+        "auc_ci_95": [
+          0.9999999999999999,
+          1.0
+        ]
+      },
+      "pca_components_kept": 41,
+      "pca_explained_variance": 0.9514214255966916
+    }
+  },
+  "Random Forest": {
+    "lfcc": {
+      "dev": {
+        "eer": 0.0,
+        "eer_threshold": 0.3639653772014115,
+        "applied_threshold": 0.3639653772014115,
+        "threshold_source": "eval_optimal",
+        "roc_auc": 1.0,
+        "min_tdcf": 0.0,
+        "at_applied_threshold": {
+          "accuracy": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "tp": 20,
+          "fp": 0,
+          "tn": 80,
+          "fn": 0
+        },
+        "at_threshold_0_5": {
+          "accuracy": 0.99,
+          "precision": 1.0,
+          "recall": 0.95,
+          "f1": 0.9743589743589743,
+          "tp": 19,
+          "fp": 0,
+          "tn": 80,
+          "fn": 1
+        },
+        "eer_ci_95": [
+          0.0,
+          0.0
+        ],
+        "auc_ci_95": [
+          0.9999999999999999,
+          1.0
+        ]
+      },
+      "eval": {
+        "eer": 0.0,
+        "eer_threshold": 0.4593486612876305,
+        "applied_threshold": 0.3639653772014115,
+        "threshold_source": "dev",
+        "roc_auc": 1.0,
+        "min_tdcf": 0.0,
+        "at_applied_threshold": {
+          "accuracy": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "tp": 20,
+          "fp": 0,
+          "tn": 80,
+          "fn": 0
+        },
+        "at_threshold_0_5": {
+          "accuracy": 0.96,
+          "precision": 1.0,
+          "recall": 0.8,
+          "f1": 0.8888888888888888,
+          "tp": 16,
+          "fp": 0,
+          "tn": 80,
+          "fn": 4
+        },
+        "eer_ci_95": [
+          0.0,
+          0.0
+        ],
+        "auc_ci_95": [
+          0.9999999999999999,
+          1.0
+        ]
+      },
+      "pca_components_kept": 40,
+      "pca_explained_variance": 0.9519884012872405
+    },
+    "logmel": {
+      "dev": {
+        "eer": 0.0,
+        "eer_threshold": 0.27369583047704077,
+        "applied_threshold": 0.27369583047704077,
+        "threshold_source": "eval_optimal",
+        "roc_auc": 1.0,
+        "min_tdcf": 0.0,
+        "at_applied_threshold": {
+          "accuracy": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "tp": 20,
+          "fp": 0,
+          "tn": 80,
+          "fn": 0
+        },
+        "at_threshold_0_5": {
+          "accuracy": 0.96,
+          "precision": 1.0,
+          "recall": 0.8,
+          "f1": 0.8888888888888888,
+          "tp": 16,
+          "fp": 0,
+          "tn": 80,
+          "fn": 4
+        },
+        "eer_ci_95": [
+          0.0,
+          0.0
+        ],
+        "auc_ci_95": [
+          0.9999999999999999,
+          1.0
+        ]
+      },
+      "eval": {
+        "eer": 0.0,
+        "eer_threshold": 0.07818439117481463,
+        "applied_threshold": 0.27369583047704077,
+        "threshold_source": "dev",
+        "roc_auc": 1.0,
+        "min_tdcf": 0.0,
+        "at_applied_threshold": {
+          "accuracy": 0.96,
+          "precision": 1.0,
+          "recall": 0.8,
+          "f1": 0.8888888888888888,
+          "tp": 16,
+          "fp": 0,
+          "tn": 80,
+          "fn": 4
+        },
+        "at_threshold_0_5": {
+          "accuracy": 0.91,
+          "precision": 1.0,
+          "recall": 0.55,
+          "f1": 0.7096774193548387,
+          "tp": 11,
+          "fp": 0,
+          "tn": 80,
+          "fn": 9
+        },
+        "eer_ci_95": [
+          0.0,
+          0.0
+        ],
+        "auc_ci_95": [
+          0.9999999999999999,
+          1.0
+        ]
+      },
+      "pca_components_kept": 41,
+      "pca_explained_variance": 0.9514214255966916
+    }
+  }
+}

@@ -1,0 +1,8 @@
+Epoch 01/01 (212.6s) | Train Loss: 0.5972 | Dev Loss: 0.2598 | Dev EER: 12.1664% | Dev min-tDCF: 0.3450 | Dev AUC: 0.9515 | LR: 1.00e-03
+Epoch 02/08 (172.5s) | Train Loss: 0.3980 | Dev Loss: 0.1703 | Dev EER: 10.5573% | Dev min-tDCF: 0.3201 | Dev AUC: 0.9608 | LR: 1.00e-03
+Epoch 03/08 (169.6s) | Train Loss: 0.3398 | Dev Loss: 0.1877 | Dev EER: 9.2931% | Dev min-tDCF: 0.2898 | Dev AUC: 0.9688 | LR: 1.00e-03
+Epoch 04/08 (169.9s) | Train Loss: 0.2923 | Dev Loss: 0.4221 | Dev EER: 8.2418% | Dev min-tDCF: 0.2537 | Dev AUC: 0.9767 | LR: 1.00e-03
+Epoch 05/08 (170.8s) | Train Loss: 0.2615 | Dev Loss: 0.2114 | Dev EER: 5.8576% | Dev min-tDCF: 0.2274 | Dev AUC: 0.9848 | LR: 1.00e-03
+Epoch 06/08 (170.3s) | Train Loss: 0.2292 | Dev Loss: 0.2118 | Dev EER: 4.5972% | Dev min-tDCF: 0.1756 | Dev AUC: 0.9879 | LR: 1.00e-03
+Epoch 07/08 (171.9s) | Train Loss: 0.1849 | Dev Loss: 0.0670 | Dev EER: 3.6499% | Dev min-tDCF: 0.1721 | Dev AUC: 0.9938 | LR: 1.00e-03
+Epoch 08/08 (172.3s) | Train Loss: 0.1615 | Dev Loss: 0.0781 | Dev EER: 2.9019% | Dev min-tDCF: 0.1416 | Dev AUC: 0.9960 | LR: 1.00e-03

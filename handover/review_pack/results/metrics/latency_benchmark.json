@@ -1,0 +1,85 @@
+{
+  "dataset_name": "latency_benchmark",
+  "manifest_sha256": "91a3907b6445c6ab0c1e4283ef548bbbcc332f463ce4199e2abec4014d1cf656",
+  "git_commit": "348ce41d60604e9fe08fcf0615afd156ab3fec40",
+  "seed": 42,
+  "timestamp": "2026-11-05T18:06:01.758118+00:00",
+  "hardware_environment": {
+    "cpu_model": "Apple M4 Pro",
+    "total_ram_gb": 24.0,
+    "os": "Darwin 27.2.0",
+    "python_version": "3.13.7",
+    "torch_version": "2.14.1"
+  },
+  "benchmarks": {
+    "cpu_single_thread": {
+      "device": "CPU (Apple M4 Pro, 1 thread)",
+      "threads": 1,
+      "num_warmup": 50,
+      "num_timed_runs": 500,
+      "clip_duration_sec": 4.0,
+      "latency_ms": {
+        "mean": 12.74,
+        "std": 1.32,
+        "p50": 12.44,
+        "p95": 14.78,
+        "p99": 17.79,
+        "min": 11.45,
+        "max": 28.42
+      },
+      "breakdown_ms": {
+        "audio_io_and_resample": 2.24,
+        "feature_extraction": 0.56,
+        "model_forward_pass": 9.93
+      },
+      "real_time_factor": 0.00318,
+      "throughput_clips_per_sec": 78.5
+    },
+    "cpu_multi_thread": {
+      "device": "CPU (Apple M4 Pro, 4 threads)",
+      "threads": 4,
+      "num_warmup": 50,
+      "num_timed_runs": 500,
+      "clip_duration_sec": 4.0,
+      "latency_ms": {
+        "mean": 10.78,
+        "std": 1.97,
+        "p50": 10.51,
+        "p95": 11.9,
+        "p99": 13.84,
+        "min": 9.72,
+        "max": 51.57
+      },
+      "breakdown_ms": {
+        "audio_io_and_resample": 2.34,
+        "feature_extraction": 1.17,
+        "model_forward_pass": 7.27
+      },
+      "real_time_factor": 0.00269,
+      "throughput_clips_per_sec": 92.8
+    },
+    "apple_silicon_mps": {
+      "device": "Apple Silicon GPU (MPS)",
+      "threads": "N/A",
+      "num_warmup": 50,
+      "num_timed_runs": 500,
+      "clip_duration_sec": 4.0,
+      "latency_ms": {
+        "mean": 32.21,
+        "std": 1.68,
+        "p50": 31.8,
+        "p95": 35.01,
+        "p99": 37.31,
+        "min": 29.6,
+        "max": 46.44
+      },
+      "breakdown_ms": {
+        "audio_io_and_resample": 2.33,
+        "feature_extraction": 1.14,
+        "model_forward_pass": 28.74
+      },
+      "real_time_factor": 0.00805,
+      "throughput_clips_per_sec": 31.0
+    }
+  }
+}

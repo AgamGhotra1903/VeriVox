@@ -1,0 +1,80 @@
+{
+  "dataset_name": "model_export_and_quantization",
+  "manifest_sha256": "91a3907b6445c6ab0c1e4283ef548bbbcc332f463ce4199e2abec4014d1cf656",
+  "git_commit": "348ce41d60604e9fe08fcf0615afd156ab3fec40",
+  "seed": 42,
+  "timestamp": "2026-11-05T18:06:43.707632+00:00",
+  "sample_size": 1200,
+  "thread_count": 1,
+  "quantization_engine": "qnnpack",
+  "formats": {
+    "PyTorch FP32": {
+      "file_size_mb": 16.553914070129395,
+      "compression_ratio": 1.0,
+      "eer_pct": 70.19999999994,
+      "eer_delta_pts": 0.0,
+      "roc_auc": 0.25053714285714285,
+      "max_score_diff": 0.0,
+      "latency": {
+        "p50_ms": 11.044187000152306,
+        "p95_ms": 11.822637499517441,
+        "p99_ms": 12.520011760598177,
+        "mean_ms": 11.210567637999702,
+        "std_ms": 1.0168236612516373,
+        "rtf": 0.0028026419094999257,
+        "throughput_fps": 89.2015491356894
+      }
+    },
+    "TorchScript JIT": {
+      "file_size_mb": 5.596635818481445,
+      "compression_ratio": 2.957832992360226,
+      "eer_pct": 70.19999999994,
+      "eer_delta_pts": 0.0,
+      "roc_auc": 0.25053714285714285,
+      "max_score_diff": 5.7220458984375e-06,
+      "latency": {
+        "p50_ms": 10.768416499558953,
+        "p95_ms": 11.351411050100069,
+        "p99_ms": 11.603544080253414,
+        "mean_ms": 10.858604004009976,
+        "std_ms": 0.6668752810210596,
+        "rtf": 0.002714651001002494,
+        "throughput_fps": 92.09286936246222
+      }
+    },
+    "ONNX Runtime": {
+      "file_size_mb": 5.512749671936035,
+      "compression_ratio": 3.00284160450837,
+      "eer_pct": 70.19999999994,
+      "eer_delta_pts": 0.0,
+      "roc_auc": 0.25053714285714285,
+      "max_score_diff": 4.506111145019531e-05,
+      "latency": {
+        "p50_ms": 2.7991665001536603,
+        "p95_ms": 3.2441380992622717,
+        "p99_ms": 5.264865180724866,
+        "mean_ms": 2.9407382080007665,
+        "std_ms": 0.82071720080832,
+        "rtf": 0.0007351845520001916,
+        "throughput_fps": 340.0506707055167
+      }
+    },
+    "PyTorch Dynamic INT8": {
+      "file_size_mb": 5.245175361633301,
+      "compression_ratio": 3.1560268110797067,
+      "eer_pct": 70.0,
+      "eer_delta_pts": -0.1999999999400046,
+      "roc_auc": 0.2505928571428572,
+      "max_score_diff": 0.730377197265625,
+      "latency": {
+        "p50_ms": 11.408479500005342,
+        "p95_ms": 12.188234749601179,
+        "p99_ms": 12.468779580149203,
+        "mean_ms": 11.497754251990045,
+        "std_ms": 0.35447205847087826,
+        "rtf": 0.0028744385629975115,
+        "throughput_fps": 86.97350613724578
+      }
+    }
+  }
+}

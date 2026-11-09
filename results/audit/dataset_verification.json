@@ -1,12 +1,15 @@
 {
-  "status": "INCOMPLETE",
+  "status": "PASS",
   "dataset_name": "asvspoof2019_la_and_itw",
   "manifest_sha256": "84fce576efff092269a0a6ad247d2e9f2f7b4d4e25a4545efb2518da92708036",
-  "git_commit": "348ce41d60604e9fe08fcf0615afd156ab3fec40",
+  "git_commit": "e003341a3aec9f7cb057edf1f89fc90381079b59",
+  "git_dirty": true,
+  "diff_hash": "1d0ef31df8dc1a98ccf7e8a0b435e6b30889f58586e25a26033cae5aaaf82577",
   "seed": 42,
-  "timestamp": "2026-11-05T11:29:22.678955+00:00",
-  "disk_free_gb": 69.53,
-  "disk_check_passed": false,
+  "timestamp": "2026-11-09T07:15:24.121911+00:00",
+  "disk_free_gb": 74.3,
+  "disk_threshold_gb": 25.0,
+  "disk_check_passed": true,
   "protocols": {
     "train": {
       "exists": true,

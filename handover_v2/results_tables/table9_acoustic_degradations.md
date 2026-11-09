@@ -1,0 +1,11 @@
+| Degradation Condition          |   CRNN Degraded EER (%) |   CRNN Degradation (pts) |   CRNN Acc @ Thresh (%) |   Ensemble Degraded EER (%) |   Ensemble Degradation (pts) |   Ensemble Acc @ Thresh (%) |
+|:-------------------------------|------------------------:|-------------------------:|------------------------:|----------------------------:|-----------------------------:|----------------------------:|
+| 8 kHz Telephony (G.711 ALAW)   |                   23.26 |                    12.99 |                   89.75 |                       66.1  |                         5.2  |                       10.3  |
+| 8 kHz Telephony (G.711 MULAW)  |                   25.36 |                    15.09 |                   89.8  |                       64.62 |                         3.72 |                       10.3  |
+| Additive Noise (SNR 20 dB)     |                   22.15 |                    11.88 |                   89.72 |                       56.68 |                        -4.22 |                       10.32 |
+| Additive Noise (SNR 10 dB)     |                   28.38 |                    18.1  |                   89.67 |                       63.17 |                         2.26 |                       13.87 |
+| Additive Noise (SNR 0 dB)      |                   43.58 |                    33.3  |                   89.6  |                       57.67 |                        -3.23 |                       89.28 |
+| Synthetic Reverb (RT60 = 0.3s) |                   12.64 |                     2.36 |                   86.38 |                       53.02 |                        -7.88 |                       10.3  |
+| Packet Loss (5%, 20ms frames)  |                   10.61 |                     0.33 |                   86.07 |                       63.02 |                         2.11 |                       10.32 |
+| Packet Loss (10%, 20ms frames) |                   12.6  |                     2.32 |                   85.83 |                       63.17 |                         2.26 |                       10.32 |
+| Packet Loss (20%, 20ms frames) |                   18.62 |                     8.34 |                   87.27 |                       71.46 |                        10.55 |                       10.32 |

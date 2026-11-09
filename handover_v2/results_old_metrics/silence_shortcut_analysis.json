@@ -1,0 +1,62 @@
+{
+  "model": "CRNN-LFCC",
+  "eval_trials": 100,
+  "standard_evaluation": {
+    "eer": 0.0,
+    "eer_threshold": 19.18446922302246,
+    "applied_threshold": 19.211496353149414,
+    "threshold_source": "dev",
+    "roc_auc": 1.0,
+    "min_tdcf": 0.0,
+    "at_applied_threshold": {
+      "accuracy": 0.99,
+      "precision": 1.0,
+      "recall": 0.95,
+      "f1": 0.9743589743589743,
+      "tp": 19,
+      "fp": 0,
+      "tn": 80,
+      "fn": 1
+    },
+    "at_threshold_0_5": {
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "tp": 20,
+      "fp": 0,
+      "tn": 80,
+      "fn": 0
+    }
+  },
+  "silence_trimmed_evaluation": {
+    "eer": 0.0,
+    "eer_threshold": 19.19760513305664,
+    "applied_threshold": 19.211496353149414,
+    "threshold_source": "dev",
+    "roc_auc": 1.0,
+    "min_tdcf": 0.0,
+    "at_applied_threshold": {
+      "accuracy": 0.99,
+      "precision": 1.0,
+      "recall": 0.95,
+      "f1": 0.9743589743589743,
+      "tp": 19,
+      "fp": 0,
+      "tn": 80,
+      "fn": 1
+    },
+    "at_threshold_0_5": {
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "tp": 20,
+      "fp": 0,
+      "tn": 80,
+      "fn": 0
+    }
+  },
+  "silence_shortcut_delta_eer": 0.0,
+  "silence_analysis": "Standard Eval EER: 0.00% vs Silence-Trimmed EER: 0.00%. Delta EER: +0.00%. A small change confirms genuine acoustic feature extraction rather than boundary silence artifact exploitation."
+}

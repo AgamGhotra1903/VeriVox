@@ -1,0 +1,6 @@
+timestamp,file_path,reason,duration_sec
+2026-11-05T11:37:34.133250+00:00,data/raw/in_the_wild/audio/18531.wav,duration_under_minimum,0.4620
+2026-11-05T11:37:34.435264+00:00,data/raw/in_the_wild/audio/19719.wav,duration_under_minimum,0.4381
+2026-11-08T09:30:09.274272+00:00,data/manifests/eval.parquet,unreadable_codec_Error opening 'data/manifests/eval.parquet': Format not recognised.,0.0000
+2026-11-08T10:32:32.644235+00:00,data/raw/in_the_wild/audio/18531.wav,duration_under_minimum,0.4620
+2026-11-08T10:32:35.935999+00:00,data/raw/in_the_wild/audio/19719.wav,duration_under_minimum,0.4381

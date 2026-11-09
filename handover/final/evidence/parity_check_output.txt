@@ -1,0 +1,6 @@
+Parity check completed on N=2000 clips.
+Max abs score diff: 3.728867e-03
+Cached path EER: 7.86% (95% CI: [6.71%, 9.22%])
+Raw audio path EER: 7.86% (95% CI: [6.71%, 9.22%])
+EER Delta: 0.0000 pts
+PARITY STATUS: PASS

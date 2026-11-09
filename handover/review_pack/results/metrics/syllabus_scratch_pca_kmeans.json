@@ -1,0 +1,27 @@
+{
+  "dataset_name": "ASVspoof 2019 LA Pooled LFCC (N=5000)",
+  "timestamp": "2026-11-08T09:17:46.228706+00:00",
+  "seed": 42,
+  "n_samples": 5000,
+  "pca_svd": {
+    "pc1_explained_variance_ratio": 0.8990727066993713,
+    "pc2_explained_variance_ratio": 0.06543339788913727,
+    "sklearn_pc1_ratio": 0.8990736603736877,
+    "sklearn_pc2_ratio": 0.06543278694152832,
+    "ratio_parity_delta": 9.5367431640625e-07
+  },
+  "kmeans_k2": {
+    "purity": 0.8998,
+    "adjusted_rand_index": 0.0030870395009469837,
+    "initial_inertia": 507023.375,
+    "final_inertia": 434077.40625,
+    "n_iterations": 25,
+    "honest_assessment": "Unsupervised k-means achieves near-zero ARI, demonstrating that forensic deepfake speech detection cannot be solved via naive unsupervised clustering in pooled LFCC space without supervision or discriminative margin modeling."
+  },
+  "theoretical_connection_to_em": {
+    "gmm_relationship": "k-Means represents the limiting hard-clustering case of the Expectation-Maximization (EM) algorithm for Gaussian Mixture Models where component covariances are isotropic spherical matrices and variance approaches zero.",
+    "soft_vs_hard": "In GMM-EM, the E-step computes soft posterior responsibilities gamma_ik, while k-means performs hard argmin quantization. The M-step in GMM updates both component means, diagonal variances, and prior weights, allowing GMM-LFCC to capture multimodal speech formant density."
+  },
+  "manifest_sha256": "91a3907b6445c6ab0c1e4283ef548bbbcc332f463ce4199e2abec4014d1cf656",
+  "git_commit": "e003341a3aec9f7cb057edf1f89fc90381079b59"
+}

@@ -1,0 +1,36 @@
+{
+  "silence_duration_classifier": {
+    "eer": 22.77777777777778,
+    "roc_auc": 0.8509,
+    "status": "FAIL"
+  },
+  "vad_trimming": {
+    "untrimmed_eer": 8.47457627118644,
+    "trimmed_eer": 10.16949152542373,
+    "delta_eer": 1.6949152542372907,
+    "status": "PASS"
+  },
+  "silence_swap": {
+    "pearson_r": 0.5437958067880712,
+    "flip_rate_pct": 26.08695652173913,
+    "status": "FAIL"
+  },
+  "controls": {
+    "duration_r_crnn": 0.15513055257577094,
+    "duration_r_ensemble": 0.0775925212682218,
+    "loudness_r_crnn": -0.4797162186380296,
+    "loudness_r_ensemble": -0.4928982991688763,
+    "bandwidth_r_crnn": 0.01526497269771633,
+    "bandwidth_r_ensemble": 0.0038957137584364233,
+    "duration_status": "PASS",
+    "loudness_status": "FAIL",
+    "bandwidth_status": "PASS"
+  },
+  "provenance": {
+    "dataset_name": "ASVspoof 2019 LA",
+    "manifest_sha256": "91a3907b6445c6ab0c1e4283ef548bbbcc332f463ce4199e2abec4014d1cf656",
+    "git_commit": "7be55f74d917b5e49198bd5c60a00eea7a200f5d",
+    "seed": 42,
+    "timestamp": "2026-11-07T13:22:34.142993+00:00"
+  }
+}

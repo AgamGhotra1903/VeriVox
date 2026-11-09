@@ -1,0 +1,34 @@
+{
+  "dataset_name": "ASVspoof 2019 LA",
+  "manifest_sha256": "91a3907b6445c6ab0c1e4283ef548bbbcc332f463ce4199e2abec4014d1cf656",
+  "git_commit": "348ce41d60604e9fe08fcf0615afd156ab3fec40",
+  "seed": 42,
+  "timestamp": "2026-11-05T09:08:32.030934+00:00",
+  "silence_duration_classifier": {
+    "eer": 22.77777777777778,
+    "roc_auc": 0.8509,
+    "status": "FAIL"
+  },
+  "vad_trimming": {
+    "untrimmed_eer": 7.909604519774012,
+    "trimmed_eer": 39.130434782534785,
+    "delta_eer": 31.22083026276077,
+    "status": "FAIL"
+  },
+  "silence_swap": {
+    "pearson_r": 0.5604244475845679,
+    "flip_rate_pct": 21.73913043478261,
+    "status": "FAIL"
+  },
+  "controls": {
+    "duration_r_crnn": 0.1491444873283113,
+    "duration_r_ensemble": 0.022112270835415688,
+    "loudness_r_crnn": -0.47851684250314136,
+    "loudness_r_ensemble": -0.46909812195689693,
+    "bandwidth_r_crnn": 0.015842909470236147,
+    "bandwidth_r_ensemble": 0.017678386605150177,
+    "duration_status": "PASS",
+    "loudness_status": "FAIL",
+    "bandwidth_status": "PASS"
+  }
+}

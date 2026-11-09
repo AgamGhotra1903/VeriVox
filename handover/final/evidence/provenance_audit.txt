@@ -1,0 +1,31 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.13.7, pytest-9.1.1, pluggy-1.7.0 -- /Users/agamghotra/Desktop/ML/.venv/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /Users/agamghotra/Desktop/ML
+configfile: pytest.ini (WARNING: ignoring pytest config in pyproject.toml!)
+plugins: anyio-4.15.1
+collecting ... collected 10 items
+
+tests/test_provenance.py::test_provenance_compute_sha256_and_git PASSED  [ 10%]
+tests/test_provenance.py::test_validate_provenance_missing_field PASSED  [ 20%]
+tests/test_provenance.py::test_validate_provenance_invalid_values PASSED [ 30%]
+tests/test_provenance.py::test_guard_no_smoke_test PASSED                [ 40%]
+tests/test_provenance.py::test_guard_manifest PASSED                     [ 50%]
+tests/test_provenance.py::test_build_report_tables_fails_on_smoke_manifest PASSED [ 60%]
+tests/test_provenance.py::test_build_report_tables_fails_on_smoke_results_dir PASSED [ 70%]
+tests/test_provenance.py::test_audit_speaker_disjointness_requires_real_speaker_metadata PASSED [ 80%]
+tests/test_provenance.py::test_assert_zero_data_leakage_speaker_checks PASSED [ 90%]
+tests/test_provenance.py::test_all_results_metrics_files_have_provenance_and_sufficient_sample_size PASSED [100%]
+
+============================= slowest 10 durations =============================
+0.10s call     tests/test_provenance.py::test_provenance_compute_sha256_and_git
+0.01s call     tests/test_provenance.py::test_all_results_metrics_files_have_provenance_and_sufficient_sample_size
+0.01s call     tests/test_provenance.py::test_guard_manifest
+0.00s setup    tests/test_provenance.py::test_provenance_compute_sha256_and_git
+0.00s call     tests/test_provenance.py::test_audit_speaker_disjointness_requires_real_speaker_metadata
+0.00s setup    tests/test_provenance.py::test_guard_manifest
+0.00s call     tests/test_provenance.py::test_build_report_tables_fails_on_smoke_manifest
+0.00s setup    tests/test_provenance.py::test_build_report_tables_fails_on_smoke_manifest
+0.00s call     tests/test_provenance.py::test_guard_no_smoke_test
+0.00s teardown tests/test_provenance.py::test_provenance_compute_sha256_and_git
+============================== 10 passed in 1.83s ==============================

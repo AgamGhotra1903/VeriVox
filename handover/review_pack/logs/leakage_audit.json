@@ -1,0 +1,226 @@
+{
+  "status": "PASS",
+  "overall_passed": true,
+  "speaker_audit": {
+    "passed": true,
+    "pairwise_checks": {
+      "itw_cal_vs_train": {
+        "split_1": "itw_cal",
+        "split_2": "train",
+        "speakers_1_count": 8,
+        "speakers_2_count": 20,
+        "overlap_count": 0,
+        "overlapping_speakers": [],
+        "is_disjoint": true,
+        "is_strict_requirement": false
+      },
+      "itw_cal_vs_itw_test": {
+        "split_1": "itw_cal",
+        "split_2": "itw_test",
+        "speakers_1_count": 8,
+        "speakers_2_count": 46,
+        "overlap_count": 0,
+        "overlapping_speakers": [],
+        "is_disjoint": true,
+        "is_strict_requirement": true
+      },
+      "itw_cal_vs_dev": {
+        "split_1": "itw_cal",
+        "split_2": "dev",
+        "speakers_1_count": 8,
+        "speakers_2_count": 20,
+        "overlap_count": 0,
+        "overlapping_speakers": [],
+        "is_disjoint": true,
+        "is_strict_requirement": false
+      },
+      "itw_cal_vs_eval": {
+        "split_1": "itw_cal",
+        "split_2": "eval",
+        "speakers_1_count": 8,
+        "speakers_2_count": 67,
+        "overlap_count": 0,
+        "overlapping_speakers": [],
+        "is_disjoint": true,
+        "is_strict_requirement": false
+      },
+      "train_vs_itw_test": {
+        "split_1": "train",
+        "split_2": "itw_test",
+        "speakers_1_count": 20,
+        "speakers_2_count": 46,
+        "overlap_count": 0,
+        "overlapping_speakers": [],
+        "is_disjoint": true,
+        "is_strict_requirement": false
+      },
+      "train_vs_dev": {
+        "split_1": "train",
+        "split_2": "dev",
+        "speakers_1_count": 20,
+        "speakers_2_count": 20,
+        "overlap_count": 0,
+        "overlapping_speakers": [],
+        "is_disjoint": true,
+        "is_strict_requirement": true
+      },
+      "train_vs_eval": {
+        "split_1": "train",
+        "split_2": "eval",
+        "speakers_1_count": 20,
+        "speakers_2_count": 67,
+        "overlap_count": 0,
+        "overlapping_speakers": [],
+        "is_disjoint": true,
+        "is_strict_requirement": true
+      },
+      "itw_test_vs_dev": {
+        "split_1": "itw_test",
+        "split_2": "dev",
+        "speakers_1_count": 46,
+        "speakers_2_count": 20,
+        "overlap_count": 0,
+        "overlapping_speakers": [],
+        "is_disjoint": true,
+        "is_strict_requirement": false
+      },
+      "itw_test_vs_eval": {
+        "split_1": "itw_test",
+        "split_2": "eval",
+        "speakers_1_count": 46,
+        "speakers_2_count": 67,
+        "overlap_count": 0,
+        "overlapping_speakers": [],
+        "is_disjoint": true,
+        "is_strict_requirement": false
+      },
+      "dev_vs_eval": {
+        "split_1": "dev",
+        "split_2": "eval",
+        "speakers_1_count": 20,
+        "speakers_2_count": 67,
+        "overlap_count": 0,
+        "overlapping_speakers": [],
+        "is_disjoint": true,
+        "is_strict_requirement": true
+      }
+    },
+    "violations": []
+  },
+  "file_id_audit": {
+    "passed": true,
+    "pairwise_checks": {
+      "itw_cal_vs_train": {
+        "split_1": "itw_cal",
+        "split_2": "train",
+        "files_1_count": 6190,
+        "files_2_count": 25380,
+        "overlap_count": 0,
+        "overlapping_files": [],
+        "is_disjoint": true
+      },
+      "itw_cal_vs_itw_test": {
+        "split_1": "itw_cal",
+        "split_2": "itw_test",
+        "files_1_count": 6190,
+        "files_2_count": 25589,
+        "overlap_count": 0,
+        "overlapping_files": [],
+        "is_disjoint": true
+      },
+      "itw_cal_vs_dev": {
+        "split_1": "itw_cal",
+        "split_2": "dev",
+        "files_1_count": 6190,
+        "files_2_count": 24844,
+        "overlap_count": 0,
+        "overlapping_files": [],
+        "is_disjoint": true
+      },
+      "itw_cal_vs_eval": {
+        "split_1": "itw_cal",
+        "split_2": "eval",
+        "files_1_count": 6190,
+        "files_2_count": 71237,
+        "overlap_count": 0,
+        "overlapping_files": [],
+        "is_disjoint": true
+      },
+      "train_vs_itw_test": {
+        "split_1": "train",
+        "split_2": "itw_test",
+        "files_1_count": 25380,
+        "files_2_count": 25589,
+        "overlap_count": 0,
+        "overlapping_files": [],
+        "is_disjoint": true
+      },
+      "train_vs_dev": {
+        "split_1": "train",
+        "split_2": "dev",
+        "files_1_count": 25380,
+        "files_2_count": 24844,
+        "overlap_count": 0,
+        "overlapping_files": [],
+        "is_disjoint": true
+      },
+      "train_vs_eval": {
+        "split_1": "train",
+        "split_2": "eval",
+        "files_1_count": 25380,
+        "files_2_count": 71237,
+        "overlap_count": 0,
+        "overlapping_files": [],
+        "is_disjoint": true
+      },
+      "itw_test_vs_dev": {
+        "split_1": "itw_test",
+        "split_2": "dev",
+        "files_1_count": 25589,
+        "files_2_count": 24844,
+        "overlap_count": 0,
+        "overlapping_files": [],
+        "is_disjoint": true
+      },
+      "itw_test_vs_eval": {
+        "split_1": "itw_test",
+        "split_2": "eval",
+        "files_1_count": 25589,
+        "files_2_count": 71237,
+        "overlap_count": 0,
+        "overlapping_files": [],
+        "is_disjoint": true
+      },
+      "dev_vs_eval": {
+        "split_1": "dev",
+        "split_2": "eval",
+        "files_1_count": 24844,
+        "files_2_count": 71237,
+        "overlap_count": 0,
+        "overlapping_files": [],
+        "is_disjoint": true
+      }
+    },
+    "violations": []
+  },
+  "content_hash_audit": {
+    "passed": true,
+    "hashes_checked": 0,
+    "collisions": []
+  },
+  "vctk_warnings": [
+    "DATASET CARD NOTE: ASVspoof 2019 LA bona fide utterances originate from 107 VCTK speakers. Verified: No raw VCTK speaker conflicts detected in active manifests."
+  ],
+  "splits_audited": {
+    "itw_cal": 6190,
+    "train": 25380,
+    "itw_test": 25589,
+    "dev": 24844,
+    "eval": 71237
+  },
+  "dataset_name": "asvspoof2019_la_and_itw",
+  "manifest_sha256": "a9cc7a80d4f1dee6191b8322718100506e35fc1a605cb702b1974bad503451bf",
+  "git_commit": "348ce41d60604e9fe08fcf0615afd156ab3fec40",
+  "seed": 42,
+  "timestamp": "2026-11-05T05:58:24.944519+00:00"
+}

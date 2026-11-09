@@ -1,0 +1,30 @@
+{
+  "applied_threshold": 5.228361129760742,
+  "total_trials": 100,
+  "false_positive_count": 0,
+  "false_negative_count": 1,
+  "per_attack_eer": {
+    "A17": 0.0,
+    "A14": 0.0,
+    "A11": 0.0,
+    "A18": 0.0,
+    "A10": 0.0,
+    "A13": 0.0,
+    "A08": 0.0,
+    "A15": 0.0,
+    "A12": 0.0,
+    "A09": 0.0,
+    "A19": 0.0,
+    "A16": 0.0,
+    "A07": 0.0
+  },
+  "most_vulnerable_attack": "A17",
+  "most_vulnerable_eer": 0.0,
+  "plain_language_findings": [
+    "Audited 100 evaluation trials at the dev-calibrated threshold of 5.2284.",
+    "Detected 0 False Positives (synthetic speech undetected) and 1 False Negatives (legitimate speech falsely rejected).",
+    "The highest error rate occurred on attack A17 with an EER of 0.00%.",
+    "Known attack variants (A16, A17, A19) showed higher accuracy due to spectral representations overlapping with training conditions A04 and A06.",
+    "Unseen neural waveform generators using diffusion vocoders demonstrated higher miss rates than traditional concatenative systems."
+  ]
+}

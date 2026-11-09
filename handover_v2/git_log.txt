@@ -1,0 +1,6 @@
+e003341 docs(phase6): finalize evaluation report with audited numbers and verify consistency
+d5c0d1d fix(phase5): reconcile ensemble scoring, ensure speaker-disjoint stacker calibration, and align bootstrap CIs
+7be55f7 fix(phase4): retrain CRNN multi-seed models and evaluate silence shortcut remediation
+1d6bb6a fix(phase3): retrain CRNN-LogMel with per-utterance CMVN and update ablation metrics
+e01252d fix(phase2): redo codec and degradation experiments on stratified 6k eval subset with speaker CIs
+18e8c15 fix(phase1): resolve In-The-Wild feature normalization inversion, verify label polarity, and regenerate metrics

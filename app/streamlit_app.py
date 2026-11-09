@@ -32,6 +32,15 @@ import soundfile as sf
 import streamlit as st
 import torch
 
+import hashlib
+
+# Primary Model Provenance Verification
+_primary_ckpt = _repo_root / "checkpoints" / "crnn_lfcc_best.pt"
+_primary_sha256 = "unknown"
+if _primary_ckpt.exists():
+    with open(_primary_ckpt, "rb") as _f:
+        _primary_sha256 = hashlib.sha256(_f.read()).hexdigest()
+
 # Configure page settings
 st.set_page_config(
     page_title="Acoustic Forensics - Deepfake Audio Screener",
@@ -131,16 +140,17 @@ if "active_prediction" not in st.session_state:
 # ══════════════════════════════════════════════════════════════════════════════
 with st.sidebar:
     st.markdown("### ◉ Acoustic Forensics")
-    st.caption("v2.5 · Multi-Model Forensic Audio Screening")
+    st.caption("v2.5 · Forensic Audio Deepfake Screener")
 
     st.markdown("---")
-    st.markdown("#### ⚙️ Runtime Engine")
+    st.markdown("#### ⚙️ Production Engine")
     st.markdown(
         f"<div class='forensic-card-elevated' style='padding:10px 12px;font-size:12px;line-height:1.6;'>"
-        f"<b>Backend:</b> PyTorch (CPU)<br>"
-        f"<b>Primary:</b> Stacked Ensemble (6 Models)<br>"
-        f"<b>Meta-Learner:</b> L2 Logistic Regression (Dev-fitted)<br>"
-        f"<b>Status:</b> {'Calibrated (6-Model Ensemble Active)' if ensemble_predictor is not None else 'CRNN Standalone'}"
+        f"<b>Primary System:</b> CRNN-LFCC<br>"
+        f"<b>Backend:</b> PyTorch (CPU/MPS)<br>"
+        f"<b>Checkpoint:</b> <code>checkpoints/crnn_lfcc_best.pt</code><br>"
+        f"<b>SHA-256:</b> <code style='font-size:10px;'>{_primary_sha256[:16]}...</code><br>"
+        f"<b>Ensemble Status:</b> <i>EXPERIMENTAL ABLATION</i>"
         f"</div>",
         unsafe_allow_html=True,
     )
@@ -168,8 +178,8 @@ with st.sidebar:
 # ══════════════════════════════════════════════════════════════════════════════
 # Top Application Branding Header
 # ══════════════════════════════════════════════════════════════════════════════
-badge_cls = "badge-genuine" if ensemble_predictor is not None else "badge-demo"
-badge_text = "STACKED ENSEMBLE READY" if ensemble_predictor is not None else "CRNN ACTIVE"
+badge_cls = "badge-genuine"
+badge_text = "CRNN-LFCC PRIMARY ACTIVE"
 
 st.markdown(
     f"""
@@ -178,7 +188,7 @@ st.markdown(
             <div class="af-brand-icon">◉</div>
             <div>
                 <h1 class="af-brand-title">Acoustic Forensics</h1>
-                <p class="af-brand-subtitle">Synthetic Speech & Deepfake Audio Detection Screener (ASVspoof 2019 LA & In-the-Wild)</p>
+                <p class="af-brand-subtitle">Synthetic Speech & Deepfake Audio Detection Screener (Primary: CRNN-LFCC)</p>
             </div>
         </div>
         <div>
@@ -188,7 +198,7 @@ st.markdown(
     <div style="background: rgba(34, 229, 117, 0.12); border: 1px solid #22E575; border-radius: 6px; padding: 12px 16px; margin: 12px 0 20px 0; display: flex; align-items: center; justify-content: space-between;">
         <div>
             <span style="color: #22E575; font-weight: 700; font-family: monospace;">⚡ UPGRADED PRECISION WORKSTATION LIVE:</span>
-            <span style="color: #E6EDF5; font-size: 13px; margin-left: 8px;">You are viewing the legacy Streamlit demo on port 8501. The new React + FastAPI Forensic Signal Lab is running at</span>
+            <span style="color: #E6EDF5; font-size: 13px; margin-left: 8px;">Primary model: <b>CRNN-LFCC</b> (SHA: <code>{_primary_sha256[:12]}...</code>). FastAPI Signal Lab running at</span>
             <a href="http://localhost:8000" target="_blank" style="color: #22E575; font-weight: 700; text-decoration: underline; margin-left: 6px;">http://localhost:8000</a>
         </div>
         <a href="http://localhost:8000" target="_blank" style="background: #22E575; color: #0B0F12; padding: 6px 14px; border-radius: 4px; font-weight: 700; font-size: 12px; text-decoration: none; text-transform: uppercase; letter-spacing: 0.05em;">Launch New UI ↗</a>
@@ -270,14 +280,14 @@ with tab_analyze:
             chosen_model = st.selectbox(
                 "Forensic Model",
                 [
-                    "Stacked Ensemble (6-Model Fusion) [Proposed Part C]",
-                    "CRNN (LFCC + Log-Mel) [Dual-Branch]",
-                    "CRNN (LFCC Only) [Part A]",
-                    "CRNN (Log-Mel Only) [Part A]",
-                    "GMM Baseline (64-comp LFCC) [Part B]",
-                    "RBF-SVM Baseline (LFCC + PCA) [Part B]",
-                    "Random Forest Baseline (LFCC + PCA) [Part B]",
-                    "Logistic Regression Baseline (LFCC + PCA) [Part B]",
+                    "CRNN-LFCC (Primary Production Model)",
+                    "CRNN-LogMel (Ablation)",
+                    "CRNN (LFCC + Log-Mel Dual-Branch)",
+                    "GMM Baseline (64-comp LFCC)",
+                    "RBF-SVM Baseline (LFCC + PCA)",
+                    "Random Forest Baseline (LFCC + PCA)",
+                    "Logistic Regression Baseline (LFCC + PCA)",
+                    "Stacked Ensemble [EXPERIMENTAL ABLATION ONLY]",
                 ],
                 index=0,
             )
@@ -346,21 +356,21 @@ with tab_analyze:
                         pred.verdict = "genuine"
                     else:
                         pred.verdict = "inconclusive"
-                    pred.model_version = "Stacked Ensemble (6 Base Models + L2 Meta-Learner)"
+                    pred.model_version = "Stacked Ensemble [EXPERIMENTAL ABLATION ONLY]"
                     pred.explanation = (
                         f"Stacked score = {ens_res['fused_score']:+.3f} (Meta-Learner P(genuine) = {prob_ens*100:.1f}%). "
                         f"Agreement across CRNNs, GMM, SVM, and Random Forest."
                     )
-                elif "LFCC Only" in chosen_model:
+                elif "CRNN-LFCC" in chosen_model or "LFCC Only" in chosen_model:
                     p_val = real_per_model["CRNN-LFCC"]
                     pred.prob_genuine = round(p_val, 4)
                     pred.verdict = "genuine" if p_val >= threshold_val else "synthetic"
-                    pred.model_version = "CRNN-LFCC (60-dim)"
-                elif "Log-Mel Only" in chosen_model:
+                    pred.model_version = f"CRNN-LFCC (Primary Production Model, SHA: {_primary_sha256[:8]})"
+                elif "CRNN-LogMel" in chosen_model or "Log-Mel Only" in chosen_model:
                     p_val = real_per_model["CRNN-LogMel"]
                     pred.prob_genuine = round(p_val, 4)
                     pred.verdict = "genuine" if p_val >= threshold_val else "synthetic"
-                    pred.model_version = "CRNN-LogMel (80-dim)"
+                    pred.model_version = "CRNN-LogMel (Ablation, 80-dim)"
                 elif "GMM" in chosen_model:
                     p_val = real_per_model["GMM (LFCC 64-comp)"]
                     pred.prob_genuine = round(p_val, 4)

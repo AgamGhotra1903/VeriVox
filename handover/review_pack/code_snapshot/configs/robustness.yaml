@@ -1,0 +1,28 @@
+# Robustness and Stress-Testing Configuration (Chunit Bansal)
+codecs:
+  mp3:
+    ffmpeg_encoder: "libmp3lame"
+    bitrates_kbps: [16, 24, 32, 48, 64]
+    file_ext: ".mp3"
+  aac:
+    ffmpeg_encoder: "aac"
+    bitrates_kbps: [16, 24, 32, 48, 64]
+    file_ext: ".m4a"
+  opus:
+    ffmpeg_encoder: "libopus"
+    bitrates_kbps: [16, 24, 32, 48, 64]
+    file_ext: ".opus"
+    # Opus internally processes at 48kHz, so explicit resampling back to 16kHz mono is enforced
+    target_sample_rate: 16000
+
+paths:
+  compressed_cache_dir: "data/compressed"
+  results_file: "results/metrics/robustness_results.json"
+  summary_table: "results/tables/robustness_degradation.csv"
+  plot_file: "results/figures/robustness_eer_vs_bitrate.png"
+
+evaluation:
+  batch_size: 64
+  num_workers: 4
+  compute_ci: true
+  n_bootstraps: 1000

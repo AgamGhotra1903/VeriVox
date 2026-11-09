@@ -1,0 +1,10 @@
+\begin{tabular}{lllllllllll}
+\toprule
+Format & Size (MB) & Compression & Eval EER (%) & EER Delta (pts) & ROC-AUC & Max Score Diff & Latency p50 (ms) & Latency p95 (ms) & RTF & Throughput (fps) \\
+\midrule
+PyTorch FP32 & 16.55 & 1.00x & 70.20 & +0.00 & 0.2505 & 0.00e+00 & 11.04 & 11.82 & 0.0028 & 89.2 \\
+TorchScript JIT & 5.60 & 2.96x & 70.20 & +0.00 & 0.2505 & 5.72e-06 & 10.77 & 11.35 & 0.0027 & 92.1 \\
+ONNX Runtime & 5.51 & 3.00x & 70.20 & +0.00 & 0.2505 & 4.51e-05 & 2.80 & 3.24 & 0.0007 & 340.1 \\
+PyTorch Dynamic INT8 & 5.25 & 3.16x & 70.00 & -0.20 & 0.2506 & 7.30e-01 & 11.41 & 12.19 & 0.0029 & 87.0 \\
+\bottomrule
+\end{tabular}

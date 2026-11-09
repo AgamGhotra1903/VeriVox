@@ -1,0 +1,15 @@
+| Attack ID   | Taxonomy      | Synthesis Description                            |   Trials |   CRNN EER (%) |   CRNN min-tDCF |   Ensemble EER (%) |   Ensemble min-tDCF |
+|:------------|:--------------|:-------------------------------------------------|---------:|---------------:|----------------:|-------------------:|--------------------:|
+| A07         | Unseen Tech   | Neural TTS (LSTM-RNN + WORLD + GAN)              |     4914 |           1.05 |          0.0942 |               2    |              0.1169 |
+| A08         | Unseen Tech   | Neural TTS (AR LSTM-RNN + neural source-filter)  |     4914 |           1.43 |          0.1008 |               0.45 |              0.077  |
+| A09         | Unseen Tech   | Neural TTS (LSTM-RNN + Vocaine)                  |     4914 |           0.14 |          0.0668 |               0.01 |              0.063  |
+| A10         | Unseen Tech   | Neural TTS (seq2seq + WaveRNN)                   |     4914 |           1.2  |          0.1003 |               5.93 |              0.2072 |
+| A11         | Unseen Tech   | Neural TTS (seq2seq + Griffin-Lim)               |     4914 |           0.26 |          0.0708 |               0.59 |              0.0788 |
+| A12         | Unseen Tech   | Neural TTS (WaveNet vocoder)                     |     4914 |           1.59 |          0.1131 |               7.87 |              0.2672 |
+| A13         | Unseen Tech   | TTS-VC (Moment matching NN + waveform filtering) |     4914 |           0.98 |          0.0903 |               0.9  |              0.0892 |
+| A14         | Unseen Tech   | TTS-VC (LSTM-RNN + STRAIGHT)                     |     4914 |           0.97 |          0.0926 |               2.76 |              0.1282 |
+| A15         | Unseen Tech   | TTS-VC (LSTM-RNN + WaveNet)                      |     4914 |           0.54 |          0.0797 |               3.17 |              0.1315 |
+| A16         | Known Variant | Waveform Concatenation TTS (A04 variant)         |     4914 |           1.48 |          0.1098 |               4.04 |              0.1683 |
+| A17         | Unseen Tech   | Neural VC (VAE + waveform filtering)             |     4914 |          15.06 |          0.5038 |              24.51 |              0.6363 |
+| A18         | Unseen Tech   | VC (i-vector / PLDA + MFCC-to-waveform)          |     4914 |          22.04 |          0.7024 |              34.75 |              0.9506 |
+| A19         | Known Variant | VC with spectral filtering (A06 variant)         |     4914 |           4.48 |          0.1925 |              14.53 |              0.4224 |

@@ -1,0 +1,131 @@
+{
+  "dataset_name": "acoustic_degradations_eval",
+  "manifest_sha256": "91a3907b6445c6ab0c1e4283ef548bbbcc332f463ce4199e2abec4014d1cf656",
+  "git_commit": "348ce41d60604e9fe08fcf0615afd156ab3fec40",
+  "seed": 42,
+  "timestamp": "2026-11-05T17:35:45.282618+00:00",
+  "clean_baseline": {
+    "crnn_eer": 70.19999999994,
+    "ensemble_eer": 34.85714285714286
+  },
+  "conditions": {
+    "telephony_8k_alaw": {
+      "condition": "8 kHz Telephony (G.711 ALAW)",
+      "crnn": {
+        "eer": 69.28571428571428,
+        "acc_thresh": 58.333333333333336,
+        "delta_eer": -0.914285714225727
+      },
+      "ensemble": {
+        "eer": 31.142857142857146,
+        "acc_thresh": 41.66666666666667,
+        "delta_eer": -3.7142857142857153
+      }
+    },
+    "telephony_8k_mulaw": {
+      "condition": "8 kHz Telephony (G.711 MULAW)",
+      "crnn": {
+        "eer": 71.0,
+        "acc_thresh": 58.333333333333336,
+        "delta_eer": 0.8000000000599954
+      },
+      "ensemble": {
+        "eer": 29.799999999959997,
+        "acc_thresh": 41.66666666666667,
+        "delta_eer": -5.057142857182864
+      }
+    },
+    "noise_snr_20db": {
+      "condition": "Additive Noise (SNR 20 dB)",
+      "crnn": {
+        "eer": 37.39999999998,
+        "acc_thresh": 58.333333333333336,
+        "delta_eer": -32.79999999996001
+      },
+      "ensemble": {
+        "eer": 36.714285714285715,
+        "acc_thresh": 41.66666666666667,
+        "delta_eer": 1.857142857142854
+      }
+    },
+    "noise_snr_10db": {
+      "condition": "Additive Noise (SNR 10 dB)",
+      "crnn": {
+        "eer": 28.000000000000004,
+        "acc_thresh": 58.333333333333336,
+        "delta_eer": -42.199999999940005
+      },
+      "ensemble": {
+        "eer": 69.85714285714286,
+        "acc_thresh": 41.41666666666667,
+        "delta_eer": 35.0
+      }
+    },
+    "noise_snr_0db": {
+      "condition": "Additive Noise (SNR 0 dB)",
+      "crnn": {
+        "eer": 28.999999999999996,
+        "acc_thresh": 58.333333333333336,
+        "delta_eer": -41.199999999940005
+      },
+      "ensemble": {
+        "eer": 70.0,
+        "acc_thresh": 41.583333333333336,
+        "delta_eer": 35.14285714285714
+      }
+    },
+    "reverb_rt60_0.3s": {
+      "condition": "Synthetic Reverb (RT60 = 0.3s)",
+      "crnn": {
+        "eer": 78.0,
+        "acc_thresh": 42.333333333333336,
+        "delta_eer": 7.800000000059995
+      },
+      "ensemble": {
+        "eer": 20.799999999959997,
+        "acc_thresh": 41.66666666666667,
+        "delta_eer": -14.057142857182864
+      }
+    },
+    "packet_loss_5pct": {
+      "condition": "Packet Loss (5%, 20ms frames)",
+      "crnn": {
+        "eer": 76.14285714285714,
+        "acc_thresh": 40.25,
+        "delta_eer": 5.942857142917134
+      },
+      "ensemble": {
+        "eer": 34.0,
+        "acc_thresh": 41.66666666666667,
+        "delta_eer": -0.8571428571428612
+      }
+    },
+    "packet_loss_10pct": {
+      "condition": "Packet Loss (10%, 20ms frames)",
+      "crnn": {
+        "eer": 75.0,
+        "acc_thresh": 38.58333333333333,
+        "delta_eer": 4.800000000059995
+      },
+      "ensemble": {
+        "eer": 32.0,
+        "acc_thresh": 41.66666666666667,
+        "delta_eer": -2.857142857142861
+      }
+    },
+    "packet_loss_20pct": {
+      "condition": "Packet Loss (20%, 20ms frames)",
+      "crnn": {
+        "eer": 65.57142857142857,
+        "acc_thresh": 36.583333333333336,
+        "delta_eer": -4.628571428511435
+      },
+      "ensemble": {
+        "eer": 55.199999999940005,
+        "acc_thresh": 41.66666666666667,
+        "delta_eer": 20.342857142797143
+      }
+    }
+  },
+  "boundary_statement": "ASVspoof 2021 LA and DF evaluation corpora (~180 GB total) require external storage beyond the local 70 GB disk quota per Rule 6."
+}

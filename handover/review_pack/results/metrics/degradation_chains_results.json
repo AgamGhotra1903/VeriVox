@@ -1,0 +1,172 @@
+{
+  "dataset_name": "acoustic_degradations_eval",
+  "manifest_sha256": "91a3907b6445c6ab0c1e4283ef548bbbcc332f463ce4199e2abec4014d1cf656",
+  "git_commit": "e003341a3aec9f7cb057edf1f89fc90381079b59",
+  "git_dirty": true,
+  "diff_hash": "25e17e468cac4e5f18e915aa621d01a408e0c00210c24df5f0d85726b70fccf9",
+  "seed": 42,
+  "timestamp": "2026-11-09T06:13:01.725049+00:00",
+  "checkpoint_path": "checkpoints/crnn_lfcc_best.pt",
+  "checkpoint_sha256": "e09c93f4bdfa961cebf964ec6f40c26baf3dd05818b11315ff9a7786f006f565",
+  "n_samples": 5000,
+  "subset": true,
+  "subset_flag": true,
+  "clean_baseline": {
+    "crnn_lfcc_eer": 7.83625730994152,
+    "sample_size": 5000,
+    "ci_95": [
+      7.025689615101159,
+      8.625641222692757
+    ]
+  },
+  "conditions": {
+    "telephony_8k_alaw": {
+      "condition": "8 kHz Telephony (G.711 A-law)",
+      "crnn": {
+        "eer": 17.37931034482414,
+        "ci_95": [
+          16.106239919679794,
+          18.716374928729255
+        ],
+        "delta_eer": 9.543053034882622,
+        "acc_thresh": 86.38,
+        "far_thresh": 0.32748538011695905,
+        "frr_thresh": 92.0
+      }
+    },
+    "telephony_8k_mulaw": {
+      "condition": "8 kHz Telephony (G.711 mu-law)",
+      "crnn": {
+        "eer": 17.241379310251727,
+        "ci_95": [
+          16.046002413114966,
+          18.327289994077518
+        ],
+        "delta_eer": 9.405122000310207,
+        "acc_thresh": 86.38,
+        "far_thresh": 0.30409356725146197,
+        "frr_thresh": 92.13793103448276
+      }
+    },
+    "noise_snr_20db": {
+      "condition": "Additive Gaussian Noise (20 dB SNR)",
+      "seeds_evaluated": [
+        42,
+        43,
+        44
+      ],
+      "crnn": {
+        "eer": 35.657995563592955,
+        "eer_std": 0.5918691015683267,
+        "ci_95": [
+          32.79820560790324,
+          36.84949140584669
+        ],
+        "delta_eer": 27.821738253651436,
+        "acc_thresh": 85.5,
+        "far_thresh": 0.0,
+        "frr_thresh": 100.0
+      }
+    },
+    "noise_snr_10db": {
+      "condition": "Additive Gaussian Noise (10 dB SNR)",
+      "seeds_evaluated": [
+        42,
+        43,
+        44
+      ],
+      "crnn": {
+        "eer": 41.626134301255476,
+        "eer_std": 0.6301111543043703,
+        "ci_95": [
+          39.186561594304266,
+          42.85714285708966
+        ],
+        "delta_eer": 33.78987699131395,
+        "acc_thresh": 85.48,
+        "far_thresh": 0.023391812865497078,
+        "frr_thresh": 100.0
+      }
+    },
+    "noise_snr_0db": {
+      "condition": "Additive Gaussian Noise (0 dB SNR)",
+      "seeds_evaluated": [
+        42,
+        43,
+        44
+      ],
+      "crnn": {
+        "eer": 48.600389863547754,
+        "eer_std": 1.6370184211556857,
+        "ci_95": [
+          46.71781040132483,
+          50.19803157292701
+        ],
+        "delta_eer": 40.76413255360623,
+        "acc_thresh": 85.5,
+        "far_thresh": 0.0,
+        "frr_thresh": 100.0
+      }
+    },
+    "reverb_rt60_0.3s": {
+      "condition": "Synthetic Reverb (RT60 = 0.3s)",
+      "seeds_evaluated": [
+        42,
+        43,
+        44
+      ],
+      "crnn": {
+        "eer": 13.267997580144646,
+        "eer_std": 1.496621074845365,
+        "ci_95": [
+          10.817810208091611,
+          13.0435038543026
+        ],
+        "delta_eer": 5.431740270203126,
+        "acc_thresh": 90.10000000000001,
+        "far_thresh": 1.0292397660818713,
+        "frr_thresh": 62.206896551724135
+      }
+    },
+    "packet_loss_5pct": {
+      "condition": "Packet Loss (5% Random Burst)",
+      "seeds_evaluated": [
+        42,
+        43,
+        44
+      ],
+      "crnn": {
+        "eer": 7.7996907978195935,
+        "eer_std": 0.05707551776976724,
+        "ci_95": [
+          6.880622626931071,
+          8.765317931235332
+        ],
+        "delta_eer": -0.03656651212192674,
+        "acc_thresh": 92.56,
+        "far_thresh": 7.251461988304094,
+        "frr_thresh": 8.551724137931034
+      }
+    },
+    "packet_loss_10pct": {
+      "condition": "Packet Loss (10% Random Burst)",
+      "seeds_evaluated": [
+        42,
+        43,
+        44
+      ],
+      "crnn": {
+        "eer": 7.952409760028817,
+        "eer_std": 0.1741875927120379,
+        "ci_95": [
+          6.689429909560723,
+          8.400449927429685
+        ],
+        "delta_eer": 0.1161524500872968,
+        "acc_thresh": 93.02,
+        "far_thresh": 6.4561403508771935,
+        "frr_thresh": 10.068965517241379
+      }
+    }
+  }
+}

@@ -1,0 +1,40 @@
+# Self-Supervised Learning (SSL) Front-End Configuration (Agam Ghotra)
+# Model C: Frozen XLS-R 300M / Wav2Vec 2.0 with learnable weighted layer aggregation + BiGRU/Attention head
+
+seed: 42
+device: "auto"
+
+ssl_model:
+  name: "facebook/wav2vec2-xls-r-300m"
+  fallback_name: "facebook/wav2vec2-base"
+  freeze_feature_extractor: true
+  freeze_transformer_layers: true
+  unfreeze_top_k_layers: 0  # 0 = completely frozen, >0 = fine-tune top K layers
+  pooling_type: "learnable_weighted_sum"  # learnable softmax weights across transformer layers
+  output_dim: 1024  # 1024 for XLS-R 300M, 768 for wav2vec2-base
+
+downstream_head:
+  proj_dim: 256
+  use_gru: true
+  gru_hidden_size: 128
+  gru_layers: 2
+  gru_bidirectional: true
+  use_attention: true
+  attention_heads: 4
+  attention_dropout: 0.1
+  classifier_dropout: 0.3
+  num_classes: 2
+
+training:
+  batch_size: 16
+  accumulate_grad_batches: 2
+  epochs: 20
+  learning_rate: 0.0001
+  head_learning_rate: 0.0005
+  weight_decay: 0.0001
+  amp: true
+  grad_clip_norm: 5.0
+  early_stopping:
+    patience: 6
+    monitor: "dev_eer"
+    mode: "min"

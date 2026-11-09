@@ -1,0 +1,10 @@
+\begin{tabular}{llllll}
+\toprule
+System & Eval EER (%) [95% CI] & Eval min-tDCF [95% CI] & Eval ROC-AUC [95% CI] & Accuracy at Dev Thresh (%) [95% CI] & Applied Dev Threshold \\
+\midrule
+Stacked Ensemble & 10.74 [9.91, 11.52] & 0.2754 [0.2586, 0.2900] & 0.9572 [0.9516, 0.9625] & 79.93 [78.48, 81.24] & +0.0000 \\
+Best Single Model (CRNN-LFCC) & 6.98 [6.17, 7.64] & 0.2178 [0.2029, 0.2299] & 0.9817 [0.9782, 0.9849] & 86.79 [86.35, 87.25] & +0.0000 \\
+Baseline Mean Fusion & 11.47 [10.49, 12.43] & 0.3077 [0.2827, 0.3296] & 0.9523 [0.9460, 0.9585] & 78.03 [76.16, 79.75] & +0.0000 \\
+LFCC-GMM Baseline & 13.80 [12.01, 15.31] & 0.4071 [0.3669, 0.4411] & 0.9418 [0.9296, 0.9536] & 51.94 [49.41, 54.45] & +0.0000 \\
+\bottomrule
+\end{tabular}

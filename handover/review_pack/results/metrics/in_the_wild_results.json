@@ -1,0 +1,271 @@
+{
+  "dataset_name": "in_the_wild_evaluation",
+  "manifest_sha256": "17dff71b1c840d90cd06594c03517aa77877af934907d4a6205449f98fd663ca",
+  "git_commit": "e003341a3aec9f7cb057edf1f89fc90381079b59",
+  "git_dirty": true,
+  "diff_hash": "12e1b522f2b6951e3489b53e6adadcb4e452f05b9448e1e479a575ceaafa60ce",
+  "seed": 42,
+  "timestamp": "2026-11-09T06:47:13.505534+00:00",
+  "checkpoint_path": "checkpoints/crnn_lfcc_best.pt",
+  "checkpoint_sha256": "e09c93f4bdfa961cebf964ec6f40c26baf3dd05818b11315ff9a7786f006f565",
+  "eval_split": "itw_test",
+  "num_clips_tested": 25589,
+  "subset": false,
+  "subset_flag": false,
+  "sample_size": 25589,
+  "n_samples": 25589,
+  "bonafide_count": 15403,
+  "spoof_count": 10186,
+  "aggregations": {
+    "crnn_mean": {
+      "optimal_threshold_metrics": {
+        "itw_optimal_eer": 44.73154580270122,
+        "itw_optimal_eer_ci_95": [
+          44.09419856828428,
+          45.32321322591152
+        ],
+        "itw_optimal_threshold": -2.145626912947002,
+        "roc_auc": 0.5637921105151129
+      },
+      "dev_threshold_metrics": {
+        "asvspoof_dev_threshold": -1.8794244284458135,
+        "accuracy": 56.60244636367189,
+        "precision": 0.6795021717340461,
+        "recall": 0.5281438680776472,
+        "f1": 0.594337899543379,
+        "tp": 8135,
+        "fp": 3837,
+        "tn": 6349,
+        "fn": 7268
+      },
+      "polarity_inverted_diagnostic": {
+        "note": "DIAGNOSTIC ONLY - Mathematically inverted scores (-scores) to evaluate hypothetical calibration reversal.",
+        "inverted_eer": 55.26845419719878,
+        "inverted_threshold": 2.145877873357712,
+        "inverted_roc_auc": 0.43620788948488703
+      }
+    },
+    "crnn_max": {
+      "optimal_threshold_metrics": {
+        "itw_optimal_eer": 46.88697007075612,
+        "itw_optimal_eer_ci_95": [
+          46.21160560546939,
+          47.4358034189719
+        ],
+        "itw_optimal_threshold": -2.605344898459266,
+        "roc_auc": 0.5583845530587414
+      },
+      "dev_threshold_metrics": {
+        "asvspoof_dev_threshold": -1.8794244284458135,
+        "accuracy": 56.5360115674704,
+        "precision": 0.7060352295697372,
+        "recall": 0.47620593390897875,
+        "f1": 0.5687810173697271,
+        "tp": 7335,
+        "fp": 3054,
+        "tn": 7132,
+        "fn": 8068
+      },
+      "polarity_inverted_diagnostic": {
+        "note": "DIAGNOSTIC ONLY - Mathematically inverted scores (-scores) to evaluate hypothetical calibration reversal.",
+        "inverted_eer": 53.1130299291439,
+        "inverted_threshold": 2.6054000648629607,
+        "inverted_roc_auc": 0.44161544694125865
+      }
+    },
+    "crnn_top_k": {
+      "optimal_threshold_metrics": {
+        "itw_optimal_eer": 47.38687268712155,
+        "itw_optimal_eer_ci_95": [
+          46.77634970533137,
+          47.997057049938334
+        ],
+        "itw_optimal_threshold": -2.57708511222146,
+        "roc_auc": 0.5510021074099781
+      },
+      "dev_threshold_metrics": {
+        "asvspoof_dev_threshold": -1.8794244284458135,
+        "accuracy": 55.68408300441596,
+        "precision": 0.7017178035944792,
+        "recall": 0.45880672596247485,
+        "f1": 0.5548402292533564,
+        "tp": 7067,
+        "fp": 3004,
+        "tn": 7182,
+        "fn": 8336
+      },
+      "polarity_inverted_diagnostic": {
+        "note": "DIAGNOSTIC ONLY - Mathematically inverted scores (-scores) to evaluate hypothetical calibration reversal.",
+        "inverted_eer": 52.61312731277844,
+        "inverted_threshold": 2.577446235465257,
+        "inverted_roc_auc": 0.44899789259002193
+      }
+    }
+  },
+  "hand_checked_clips_20": [
+    {
+      "File": "5511.wav",
+      "Speaker": "Tucker Carlson",
+      "Ground Truth": "BONAFIDE",
+      "CRNN Score": 1.6574,
+      "Decision @ Dev Thresh": "BONAFIDE",
+      "Correct": "YES"
+    },
+    {
+      "File": "7574.wav",
+      "Speaker": "Bernie Sanders",
+      "Ground Truth": "BONAFIDE",
+      "CRNN Score": -1.5333,
+      "Decision @ Dev Thresh": "BONAFIDE",
+      "Correct": "YES"
+    },
+    {
+      "File": "14324.wav",
+      "Speaker": "Barack Obama",
+      "Ground Truth": "BONAFIDE",
+      "CRNN Score": 3.0223,
+      "Decision @ Dev Thresh": "BONAFIDE",
+      "Correct": "YES"
+    },
+    {
+      "File": "30947.wav",
+      "Speaker": "Queen Elizabeth II",
+      "Ground Truth": "BONAFIDE",
+      "CRNN Score": 6.0469,
+      "Decision @ Dev Thresh": "BONAFIDE",
+      "Correct": "YES"
+    },
+    {
+      "File": "3623.wav",
+      "Speaker": "Winston Churchill",
+      "Ground Truth": "BONAFIDE",
+      "CRNN Score": -4.5352,
+      "Decision @ Dev Thresh": "SPOOF",
+      "Correct": "NO"
+    },
+    {
+      "File": "11649.wav",
+      "Speaker": "Bill Clinton",
+      "Ground Truth": "BONAFIDE",
+      "CRNN Score": -0.699,
+      "Decision @ Dev Thresh": "BONAFIDE",
+      "Correct": "YES"
+    },
+    {
+      "File": "25668.wav",
+      "Speaker": "Ayn Rand",
+      "Ground Truth": "BONAFIDE",
+      "CRNN Score": -5.5455,
+      "Decision @ Dev Thresh": "SPOOF",
+      "Correct": "NO"
+    },
+    {
+      "File": "3166.wav",
+      "Speaker": "Barack Obama",
+      "Ground Truth": "BONAFIDE",
+      "CRNN Score": -2.7191,
+      "Decision @ Dev Thresh": "SPOOF",
+      "Correct": "NO"
+    },
+    {
+      "File": "29356.wav",
+      "Speaker": "JFK",
+      "Ground Truth": "BONAFIDE",
+      "CRNN Score": -2.0017,
+      "Decision @ Dev Thresh": "SPOOF",
+      "Correct": "NO"
+    },
+    {
+      "File": "25584.wav",
+      "Speaker": "Winston Churchill",
+      "Ground Truth": "BONAFIDE",
+      "CRNN Score": 0.8099,
+      "Decision @ Dev Thresh": "BONAFIDE",
+      "Correct": "YES"
+    },
+    {
+      "File": "6241.wav",
+      "Speaker": "Milton Friedman",
+      "Ground Truth": "SPOOF",
+      "CRNN Score": -2.0393,
+      "Decision @ Dev Thresh": "SPOOF",
+      "Correct": "YES"
+    },
+    {
+      "File": "12693.wav",
+      "Speaker": "Bill Clinton",
+      "Ground Truth": "SPOOF",
+      "CRNN Score": -1.9289,
+      "Decision @ Dev Thresh": "SPOOF",
+      "Correct": "YES"
+    },
+    {
+      "File": "19110.wav",
+      "Speaker": "Malcolm X",
+      "Ground Truth": "SPOOF",
+      "CRNN Score": -1.2978,
+      "Decision @ Dev Thresh": "BONAFIDE",
+      "Correct": "NO"
+    },
+    {
+      "File": "21090.wav",
+      "Speaker": "Bernie Sanders",
+      "Ground Truth": "SPOOF",
+      "CRNN Score": 2.6722,
+      "Decision @ Dev Thresh": "BONAFIDE",
+      "Correct": "NO"
+    },
+    {
+      "File": "12080.wav",
+      "Speaker": "Nelson Mandela",
+      "Ground Truth": "SPOOF",
+      "CRNN Score": -2.5812,
+      "Decision @ Dev Thresh": "SPOOF",
+      "Correct": "YES"
+    },
+    {
+      "File": "25198.wav",
+      "Speaker": "Bernie Sanders",
+      "Ground Truth": "SPOOF",
+      "CRNN Score": 1.8967,
+      "Decision @ Dev Thresh": "BONAFIDE",
+      "Correct": "NO"
+    },
+    {
+      "File": "2961.wav",
+      "Speaker": "Bernie Sanders",
+      "Ground Truth": "SPOOF",
+      "CRNN Score": -1.3384,
+      "Decision @ Dev Thresh": "BONAFIDE",
+      "Correct": "NO"
+    },
+    {
+      "File": "7738.wav",
+      "Speaker": "Ayn Rand",
+      "Ground Truth": "SPOOF",
+      "CRNN Score": -1.9383,
+      "Decision @ Dev Thresh": "SPOOF",
+      "Correct": "YES"
+    },
+    {
+      "File": "27644.wav",
+      "Speaker": "Bernie Sanders",
+      "Ground Truth": "SPOOF",
+      "CRNN Score": -0.8595,
+      "Decision @ Dev Thresh": "BONAFIDE",
+      "Correct": "NO"
+    },
+    {
+      "File": "2045.wav",
+      "Speaker": "Mr. Rogers",
+      "Ground Truth": "SPOOF",
+      "CRNN Score": -4.745,
+      "Decision @ Dev Thresh": "SPOOF",
+      "Correct": "YES"
+    }
+  ],
+  "findings_and_claims": {
+    "supported_claim": "Severe cross-domain acoustic distribution shift observed between ASVspoof 2019 LA (anechoic, studio condenser microphones) and In-The-Wild (YouTube/podcast interviews with unconstrained codecs, reverberation, and background music). Threshold chosen on ASVspoof Dev (-0.1428) is uncalibrated for wild web audio.",
+    "unsupported_claim": "The model possesses inverted internal representation or is completely invalid. When optimal threshold or domain adaptation is applied, signal discrimination remains present but degraded by acoustic channels."
+  }
+}
