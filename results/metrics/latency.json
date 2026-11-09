@@ -1,0 +1,130 @@
+{
+  "dataset_name": "latency_benchmark",
+  "manifest_sha256": "91a3907b6445c6ab0c1e4283ef548bbbcc332f463ce4199e2abec4014d1cf656",
+  "git_commit": "e003341a3aec9f7cb057edf1f89fc90381079b59",
+  "git_dirty": true,
+  "diff_hash": "f9203ae49eee8483a149075a84d6198904cecc526d9df1c3e4e9a58d5be6cd83",
+  "seed": 42,
+  "timestamp": "2026-11-09T06:53:36.635361+00:00",
+  "checkpoint_path": "checkpoints/crnn_lfcc_best.pt",
+  "checkpoint_sha256": "e09c93f4bdfa961cebf964ec6f40c26baf3dd05818b11315ff9a7786f006f565",
+  "hardware_environment": {
+    "cpu_model": "Apple M4 Pro",
+    "total_ram_gb": 24.0,
+    "os": "Darwin 27.2.0",
+    "python_version": "3.13.7",
+    "torch_version": "2.14.1"
+  },
+  "benchmarks": {
+    "crnn_cpu_single_thread": {
+      "pipeline": "Primary CRNN-LFCC Full Path",
+      "device": "CPU (Apple M4 Pro, 1 thread)",
+      "threads": 1,
+      "num_warmup": 50,
+      "num_timed_runs": 500,
+      "clip_duration_sec": 4.0,
+      "latency_ms": {
+        "mean": 12.72,
+        "std": 0.96,
+        "p50": 12.61,
+        "p95": 13.36,
+        "p99": 13.84,
+        "min": 11.95,
+        "max": 29.38
+      },
+      "breakdown_ms": {
+        "decode_and_resample": 2.29,
+        "lfcc_extraction": 0.67,
+        "neural_forward_pass": 9.76
+      },
+      "real_time_factor": 0.00318,
+      "throughput_clips_per_sec": 78.6
+    },
+    "crnn_cpu_multi_thread": {
+      "pipeline": "Primary CRNN-LFCC Full Path",
+      "device": "CPU (Apple M4 Pro, 4 threads)",
+      "threads": 4,
+      "num_warmup": 50,
+      "num_timed_runs": 500,
+      "clip_duration_sec": 4.0,
+      "latency_ms": {
+        "mean": 10.28,
+        "std": 0.29,
+        "p50": 10.27,
+        "p95": 10.72,
+        "p99": 11.05,
+        "min": 9.71,
+        "max": 12.8
+      },
+      "breakdown_ms": {
+        "decode_and_resample": 2.29,
+        "lfcc_extraction": 1.15,
+        "neural_forward_pass": 6.84
+      },
+      "real_time_factor": 0.00257,
+      "throughput_clips_per_sec": 97.3
+    },
+    "crnn_apple_silicon_mps": {
+      "pipeline": "Primary CRNN-LFCC Full Path",
+      "device": "Apple Silicon GPU (MPS)",
+      "threads": "N/A",
+      "num_warmup": 50,
+      "num_timed_runs": 500,
+      "clip_duration_sec": 4.0,
+      "latency_ms": {
+        "mean": 33.08,
+        "std": 1.45,
+        "p50": 32.73,
+        "p95": 35.57,
+        "p99": 37.19,
+        "min": 30.58,
+        "max": 45.7
+      },
+      "breakdown_ms": {
+        "decode_and_resample": 2.41,
+        "lfcc_extraction": 1.11,
+        "neural_forward_pass": 29.57
+      },
+      "real_time_factor": 0.00827,
+      "throughput_clips_per_sec": 30.2
+    },
+    "ensemble_cpu_multi_thread": {
+      "pipeline": "Full Shipped Ensemble Path (LFCC+LogMel+CRNN+Classical+MetaLearner)",
+      "device": "CPU (Apple M4 Pro, 4 threads)",
+      "threads": 4,
+      "num_warmup": 20,
+      "num_timed_runs": 200,
+      "clip_duration_sec": 4.0,
+      "latency_ms": {
+        "mean": 35.43,
+        "std": 2.2,
+        "p50": 35.83,
+        "p95": 37.2,
+        "p99": 38.09,
+        "min": 31.4,
+        "max": 56.69
+      },
+      "real_time_factor": 0.00886,
+      "throughput_clips_per_sec": 28.2
+    },
+    "ensemble_apple_silicon_mps": {
+      "pipeline": "Full Shipped Ensemble Path (LFCC+LogMel+CRNN+Classical+MetaLearner)",
+      "device": "Apple Silicon GPU (MPS)",
+      "threads": "N/A",
+      "num_warmup": 20,
+      "num_timed_runs": 200,
+      "clip_duration_sec": 4.0,
+      "latency_ms": {
+        "mean": 82.17,
+        "std": 4.58,
+        "p50": 81.71,
+        "p95": 90.59,
+        "p99": 92.48,
+        "min": 74.4,
+        "max": 106.69
+      },
+      "real_time_factor": 0.02054,
+      "throughput_clips_per_sec": 12.2
+    }
+  }
+}

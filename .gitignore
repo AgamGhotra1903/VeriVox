@@ -37,6 +37,8 @@ checkpoints/classical/*.joblib
 checkpoints/calibrator.joblib
 !checkpoints/.gitkeep
 !checkpoints/classical/.gitkeep
+!checkpoints/crnn_lfcc_best.pt
+!checkpoints/crnn_best.pt
 
 # Data directories (large audio files)
 data/raw/
@@ -53,7 +55,8 @@ data/temp_stress/
 results/figures/*.png
 results/figures/*.svg
 results/tables/*.csv
-results/metrics/*.json
+!results/metrics/*.json
+!results/tables/worst_case_errors.csv
 results/logs/*.log
 results/logs/*.csv
 !results/figures/.gitkeep

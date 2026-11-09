@@ -1,0 +1,46 @@
+{
+  "dataset_name": "ASVspoof 2019 LA Parity Check",
+  "manifest_sha256": "91a3907b6445c6ab0c1e4283ef548bbbcc332f463ce4199e2abec4014d1cf656",
+  "git_commit": "e003341a3aec9f7cb057edf1f89fc90381079b59",
+  "git_dirty": true,
+  "diff_hash": "1d0ef31df8dc1a98ccf7e8a0b435e6b30889f58586e25a26033cae5aaaf82577",
+  "seed": 42,
+  "timestamp": "2026-11-09T07:15:22.709327+00:00",
+  "checkpoint_path": "checkpoints/crnn_lfcc_best.pt",
+  "checkpoint_sha256": "e09c93f4bdfa961cebf964ec6f40c26baf3dd05818b11315ff9a7786f006f565",
+  "n_samples": 2000,
+  "subset": true,
+  "subset_flag": true,
+  "parity_passed": true,
+  "max_absolute_score_difference": 0.0037288665771484375,
+  "mean_absolute_score_difference": 0.0003666760749183595,
+  "p95_absolute_score_difference": 0.0011925812577828765,
+  "cached_path_eer": 7.863849765258216,
+  "cached_path_threshold": 3.4468829676637913,
+  "cached_path_eer_ci_95": [
+    6.710882893961834,
+    9.218639677737505
+  ],
+  "raw_audio_path_eer": 7.863849765258216,
+  "raw_audio_path_threshold": 3.4465628006149074,
+  "raw_audio_path_eer_ci_95": [
+    6.710882893961834,
+    9.218639677737505
+  ],
+  "eer_difference_pts": 0.0,
+  "specifications": {
+    "sample_rate": 16000,
+    "target_samples": 64000,
+    "crop_mode": "center_crop_4.0s",
+    "pad_mode": "symmetric_constant_zero_pad",
+    "normalization": "per_utterance_cmvn",
+    "lfcc_filters": 20,
+    "lfcc_coefficients": 20,
+    "deltas": true,
+    "deltadeltas": true,
+    "total_features": 60,
+    "peak_normalization": "none",
+    "bonafide_label": 1,
+    "spoof_label": 0
+  }
+}

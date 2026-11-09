@@ -1,0 +1,127 @@
+{
+  "GaussianNB": {
+    "model_name": "Gaussian Naive Bayes",
+    "dev_eer": 32.06436420712841,
+    "dev_threshold": 0.9350188730141874,
+    "dev_min_tdcf": 0.912073815523251,
+    "dev_roc_auc": 0.7328814479961065,
+    "eval_eer": 33.68469157632482,
+    "eval_eer_ci_95": [
+      33.07102942942338,
+      34.216107519878115
+    ],
+    "eval_min_tdcf": 0.8652321769278062,
+    "eval_roc_auc": 0.7219069400369406,
+    "metrics_at_dev_threshold": {
+      "accuracy": 0.6172354254109522,
+      "precision": 0.17282287216562603,
+      "recall": 0.7150237933378654,
+      "f1": 0.2783644303294958
+    },
+    "confusion_matrix_at_dev_th": [
+      [
+        5259,
+        2096
+      ],
+      [
+        25171,
+        38711
+      ]
+    ]
+  },
+  "k-NN (k=25)": {
+    "model_name": "k-Nearest Neighbors (k=25)",
+    "dev_eer": 17.620264687667905,
+    "dev_threshold": 0.14986439094776724,
+    "dev_min_tdcf": 0.5625693183233605,
+    "dev_roc_auc": 0.8997140355479776,
+    "eval_eer": 25.701249579999818,
+    "eval_eer_ci_95": [
+      25.206366547142007,
+      26.254895924808967
+    ],
+    "eval_min_tdcf": 0.7207726267339304,
+    "eval_roc_auc": 0.8262434715893902,
+    "metrics_at_dev_threshold": {
+      "accuracy": 0.5750803655403793,
+      "precision": 0.18292514182925143,
+      "recall": 0.8987083616587356,
+      "f1": 0.3039779259599908
+    },
+    "confusion_matrix_at_dev_th": [
+      [
+        6610,
+        745
+      ],
+      [
+        29525,
+        34357
+      ]
+    ]
+  },
+  "DecisionTree (depth=10)": {
+    "model_name": "Decision Tree (Entropy, depth=10)",
+    "dev_eer": 23.004367725516527,
+    "dev_threshold": 0.46564670791515456,
+    "dev_min_tdcf": 0.7749139951956947,
+    "dev_roc_auc": 0.801804158154112,
+    "eval_eer": 26.5494014116825,
+    "eval_eer_ci_95": [
+      26.189499592987016,
+      26.907002742011525
+    ],
+    "eval_min_tdcf": 0.7806699628620809,
+    "eval_roc_auc": 0.7731072538974019,
+    "metrics_at_dev_threshold": {
+      "accuracy": 0.6940775158976374,
+      "precision": 0.22611730783822748,
+      "recall": 0.8103331067301156,
+      "f1": 0.35357280574259187
+    },
+    "confusion_matrix_at_dev_th": [
+      [
+        5960,
+        1395
+      ],
+      [
+        20398,
+        43484
+      ]
+    ]
+  },
+  "AdaBoost": {
+    "model_name": "AdaBoost (100 Estimators)",
+    "dev_eer": 18.245425188374597,
+    "dev_threshold": 0.4385600448002776,
+    "dev_min_tdcf": 0.5487143402088639,
+    "dev_roc_auc": 0.8995800807488682,
+    "eval_eer": 22.09512418566595,
+    "eval_eer_ci_95": [
+      21.65721982755233,
+      22.542252078030522
+    ],
+    "eval_min_tdcf": 0.5711480445002284,
+    "eval_roc_auc": 0.8622939375540954,
+    "metrics_at_dev_threshold": {
+      "accuracy": 0.6818366859918301,
+      "precision": 0.23273514419384123,
+      "recall": 0.9063222297756628,
+      "f1": 0.37036419701641804
+    },
+    "confusion_matrix_at_dev_th": [
+      [
+        6666,
+        689
+      ],
+      [
+        21976,
+        41906
+      ]
+    ]
+  },
+  "manifest_sha256": "91a3907b6445c6ab0c1e4283ef548bbbcc332f463ce4199e2abec4014d1cf656",
+  "git_commit": "e003341a3aec9f7cb057edf1f89fc90381079b59",
+  "seed": 42,
+  "dataset_name": "ASVspoof 2019 LA",
+  "timestamp": "2026-11-08T10:56:21.736493+00:00"
+}

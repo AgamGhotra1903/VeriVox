@@ -1,0 +1,41 @@
+{
+  "dataset_name": "ASVspoof 2019 LA",
+  "manifest_sha256": "91a3907b6445c6ab0c1e4283ef548bbbcc332f463ce4199e2abec4014d1cf656",
+  "git_commit": "e003341a3aec9f7cb057edf1f89fc90381079b59",
+  "seed": 42,
+  "timestamp": "2026-11-08T10:31:15.022184+00:00",
+  "checkpoint_path": "checkpoints/crnn_lfcc_best.pt",
+  "checkpoint_sha256": "e09c93f4bdfa961cebf964ec6f40c26baf3dd05818b11315ff9a7786f006f565",
+  "applied_threshold": -1.8794244284458135,
+  "total_trials": 71237,
+  "false_positive_count": 9999,
+  "false_negative_count": 70,
+  "per_attack_eer": {
+    "A11": 0.0407000407000407,
+    "A14": 1.1692726036167775,
+    "A16": 1.5635622025666214,
+    "A09": 0.04078857909825969,
+    "A13": 1.0197144798564923,
+    "A12": 1.8354860638216859,
+    "A18": 22.975172975172974,
+    "A15": 0.31271244045332425,
+    "A08": 2.849002849002849,
+    "A17": 18.450033990446133,
+    "A10": 1.3227513227513228,
+    "A07": 0.9971509971509971,
+    "A19": 4.554724677072332
+  },
+  "most_vulnerable_attack": "A18",
+  "most_vulnerable_eer": 22.975172975172974,
+  "least_vulnerable_attack": "A11",
+  "least_vulnerable_eer": 0.0407000407000407,
+  "known_variants_mean_eer": 3.0591434398194766,
+  "unseen_attacks_mean_eer": 4.637526031097351,
+  "plain_language_findings": [
+    "Audited 71237 evaluation trials at dev-calibrated threshold -1.8794.",
+    "Detected 9999 False Positives (15.65% spoof miss rate) and 70 False Negatives (0.95% genuine false alarm rate).",
+    "Highest vulnerability observed on attack A18 (22.98% EER); lowest on A11 (0.04% EER).",
+    "Known attack variants (A16, A19) achieved mean EER 3.06%, compared to 4.64% across unseen generation algorithms (delta: +1.58 pts).",
+    "Worst-case false alarms and missed detections logged to worst_case_errors.csv for inspection."
+  ]
+}
