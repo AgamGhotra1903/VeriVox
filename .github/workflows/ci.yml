@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, fixes/final ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main, master, fixes/final ]
 
 jobs:
   test:
@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python 3.13
         uses: actions/setup-python@v5
@@ -31,10 +33,41 @@ jobs:
           pip install -e .
 
       - name: Run unit test suite
+        id: test_run
         run: |
-          pytest -v tests/
+          pytest -v -ra --tb=short tests/ 2>&1 | tee test_run.log
+        continue-on-error: true
 
-      - name: Run smoke pipeline audit
+      - name: Publish Test Results to Job Summary
+        if: always()
+        run: |
+          echo "## Pytest Execution Summary" >> $GITHUB_STEP_SUMMARY
+          if [ -f test_run.log ]; then
+            echo '```text' >> $GITHUB_STEP_SUMMARY
+            tail -n 120 test_run.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "No test log produced." >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Assert Test Suite Success
+        run: |
+          if [ ! -f test_run.log ]; then
+            echo "Error: test_run.log not found."
+            exit 1
+          fi
+          if grep -q "FAILED" test_run.log || grep -q "ERROR" test_run.log; then
+            echo "Tests failed. Review step summary above."
+            exit 1
+          fi
+          if ! grep -q "passed" test_run.log; then
+            echo "No passing test marker found."
+            exit 1
+          fi
+          echo "All tests verified successfully!"
+
+      - name: Run provenance audit
         run: |
           python -m pytest tests/test_provenance.py -v
+
 
