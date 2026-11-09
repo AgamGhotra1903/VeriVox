@@ -59,7 +59,7 @@ def evaluate_split(
     all_labels = []
     with torch.no_grad():
         for b_x, b_y in loader:
-            b_x = per_utterance_cmvn(b_x.to(device=device, dtype=torch.float32)).unsqueeze(1)
+            b_x = b_x.to(device=device, dtype=torch.float32).unsqueeze(1)
             b_y = b_y.to(device)
             logits, _ = model(b_x)
             loss = criterion(logits, b_y)
@@ -128,17 +128,17 @@ def run_training(
     guard_no_smoke_test(str(dv_cache))
     guard_no_smoke_test(str(ev_cache))
 
-    print(f"Loading {feature_type.upper()} cached datasets...")
+    print(f"Loading {feature_type.upper()} cached datasets and pre-applying per-utterance CMVN...")
     d_tr = np.load(tr_cache)
-    tr_x = torch.from_numpy(d_tr["features"])
+    tr_x = per_utterance_cmvn(torch.from_numpy(d_tr["features"]))
     tr_y = torch.from_numpy(d_tr["labels"])
 
     d_dv = np.load(dv_cache)
-    dv_x = torch.from_numpy(d_dv["features"])
+    dv_x = per_utterance_cmvn(torch.from_numpy(d_dv["features"]))
     dv_y = torch.from_numpy(d_dv["labels"])
 
     d_ev = np.load(ev_cache)
-    ev_x = torch.from_numpy(d_ev["features"])
+    ev_x = per_utterance_cmvn(torch.from_numpy(d_ev["features"]))
     ev_y = torch.from_numpy(d_ev["labels"])
 
     in_dim = tr_x.shape[1]
@@ -181,7 +181,8 @@ def run_training(
 
     ckpt_dir = Path("checkpoints")
     ckpt_dir.mkdir(parents=True, exist_ok=True)
-    best_ckpt = ckpt_dir / f"crnn_{feature_type}_best.pt"
+    best_ckpt = ckpt_dir / f"crnn_{feature_type}_seed{seed}.pt"
+    best_overall_ckpt = ckpt_dir / f"crnn_{feature_type}_best.pt"
     log_file = Path(f"results/logs/crnn_{feature_type}_seed{seed}.log")
     log_file.parent.mkdir(parents=True, exist_ok=True)
 
@@ -219,7 +220,7 @@ def run_training(
         running_loss = 0.0
         n_samples = 0
         for b_x, b_y in train_loader:
-            b_x = per_utterance_cmvn(b_x.to(device=device, dtype=torch.float32)).unsqueeze(1)
+            b_x = b_x.to(device=device, dtype=torch.float32).unsqueeze(1)
             b_y = b_y.to(device)
             if augmenter:
                 b_x = augmenter(b_x)
@@ -290,7 +291,7 @@ def run_training(
             best_dev_thresh = dev_th
             best_epoch = ep
             patience_cnt = 0
-            torch.save({
+            best_state = {
                 "epoch": ep,
                 "model_state_dict": model.state_dict(),
                 "optimizer_state_dict": optimizer.state_dict(),
@@ -300,8 +301,11 @@ def run_training(
                 "dev_auc": dev_auc,
                 "seed": seed,
                 "features": feature_type,
-            }, str(best_ckpt))
-            print(f" -> New best model at epoch {ep} (Dev EER: {dev_eer:.4f}%, Dev min-tDCF: {dev_tdcf:.4f})")
+            }
+            torch.save(best_state, str(best_ckpt))
+            if seed == 42:
+                torch.save(best_state, str(best_overall_ckpt))
+            print(f" -> New best model for seed {seed} at epoch {ep} (Dev EER: {dev_eer:.4f}%, Dev min-tDCF: {dev_tdcf:.4f})")
         else:
             patience_cnt += 1
             if patience_cnt >= patience:
@@ -317,8 +321,10 @@ def run_training(
     _, best_dev_scores, best_dev_labels = evaluate_split(model, dev_loader, device, criterion)
     calibrator = PlattCalibrator()
     calibrator.fit(best_dev_scores, best_dev_labels)
-    calib_path = ckpt_dir / f"calibrator_crnn_{feature_type}_best.joblib"
+    calib_path = ckpt_dir / f"calibrator_crnn_{feature_type}_seed{seed}.joblib"
     calibrator.save(calib_path)
+    if seed == 42:
+        calibrator.save(ckpt_dir / f"calibrator_crnn_{feature_type}_best.joblib")
 
     print("Evaluating best checkpoint on frozen EVAL split (71,237 trials)...")
     t_ev_start = time.time()
@@ -352,12 +358,16 @@ def run_training(
     eval_at_dev_th = compute_metrics_at_threshold(eval_labels, eval_scores, best_dev_thresh)
     eval_at_opt_th = compute_metrics_at_threshold(eval_labels, eval_scores, eval_opt_th)
 
-    plot_curves(history, Path(f"results/figures/crnn_{feature_type}_training_curves.png"))
+    plot_curves(history, Path(f"results/figures/crnn_{feature_type}_training_curves_seed{seed}.png"))
+    if seed == 42:
+        plot_curves(history, Path(f"results/figures/crnn_{feature_type}_training_curves.png"))
 
     manifest_sha = compute_file_sha256("data/manifests/train.parquet")
     git_hash = get_git_commit()
     ts = datetime.now(timezone.utc).isoformat()
     param_count = sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+    ckpt_sha256 = compute_file_sha256(str(best_ckpt))
 
     run_payload = {
         "dataset_name": "ASVspoof 2019 LA",
@@ -371,6 +381,7 @@ def run_training(
         "training_time_sec": tot_train_time,
         "eval_inference_time_sec": eval_inference_time,
         "checkpoint_path": str(best_ckpt),
+        "checkpoint_sha256": ckpt_sha256,
         "dev": {
             "best_epoch": best_epoch,
             "eer": float(dev_eer),
@@ -395,10 +406,14 @@ def run_training(
     }
 
     guard_results_and_provenance(run_payload)
-    out_json = Path(f"results/metrics/crnn_{feature_type}_results.json")
+    out_json = Path(f"results/metrics/crnn_{feature_type}_results_seed{seed}.json")
     out_json.parent.mkdir(parents=True, exist_ok=True)
     with open(out_json, "w", encoding="utf-8") as f:
         json.dump(run_payload, f, indent=2)
+
+    if seed == 42:
+        with open(f"results/metrics/crnn_{feature_type}_results.json", "w", encoding="utf-8") as f:
+            json.dump(run_payload, f, indent=2)
 
     return run_payload
 
@@ -407,11 +422,11 @@ if __name__ == "__main__":
     parser.add_argument("--features", type=str, choices=["lfcc", "logmel"], default="lfcc")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--seeds", nargs="+", type=int, default=None)
-    parser.add_argument("--epochs", type=int, default=12)
+    parser.add_argument("--epochs", type=int, default=25)
     parser.add_argument("--batch-size", type=int, default=32)
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--weight-decay", type=float, default=1e-4)
-    parser.add_argument("--patience", type=int, default=3)
+    parser.add_argument("--patience", type=int, default=4)
     parser.add_argument("--resume", type=str, default=None)
     parser.add_argument("--device", type=str, default="auto")
     parser.add_argument("--no-augment", action="store_true")

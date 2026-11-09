@@ -1,3 +1,4 @@
+import argparse
 from pathlib import Path
 from typing import Any
 import json
@@ -26,7 +27,7 @@ from acforensics.evaluation.metrics import (
     compute_metrics_at_threshold,
     bootstrap_confidence_interval,
 )
-from acforensics.evaluation.provenance import create_provenance_record
+from acforensics.evaluation.provenance import create_provenance_record, compute_file_sha256
 from acforensics.evaluation.crossdomain import aggregate_window_scores
 from acforensics.utils.logging import get_logger
 
@@ -113,8 +114,21 @@ def compute_detailed_crossdomain_metrics(
     }
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="Evaluate In-the-Wild dataset")
+    parser.add_argument("--checkpoint", type=str, default="checkpoints/crnn_lfcc_best.pt")
+    parser.add_argument("--dev-threshold", type=float, default=None)
+    parser.add_argument("--device", type=str, default="auto")
+    return parser.parse_args()
+
+
 def main():
-    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    args = parse_args()
+    if args.device == "auto":
+        device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    else:
+        device = torch.device(args.device)
+
     logger.info("Starting In-the-Wild Cross-Domain Evaluation on device: %s", device)
 
     results_dir = Path(DEFAULT_RESULTS_DIR)
@@ -123,7 +137,7 @@ def main():
     metrics_dir.mkdir(parents=True, exist_ok=True)
     tables_dir.mkdir(parents=True, exist_ok=True)
 
-    crnn_ckpt_path = Path("checkpoints/crnn_lfcc_best.pt")
+    crnn_ckpt_path = Path(args.checkpoint)
     if not crnn_ckpt_path.exists():
         crnn_ckpt_path = Path("checkpoints/crnn_best.pt")
     ckpt = torch.load(str(crnn_ckpt_path), map_location=device, weights_only=False)
@@ -135,7 +149,13 @@ def main():
     extractor = LFCCExtractor(sample_rate=SAMPLE_RATE, n_fft=512, win_length=400, hop_length=160, n_lfcc=20, with_deltas=True)
     ensemble_predictor = EnsemblePredictor(device=device)
 
-    crnn_dev_th = -0.1428
+    if args.dev_threshold is not None:
+        crnn_dev_th = float(args.dev_threshold)
+    elif "dev_threshold" in ckpt:
+        crnn_dev_th = float(ckpt["dev_threshold"])
+    else:
+        crnn_dev_th = -0.1428
+
     ens_dev_th = -1.9367
 
     itw_manifest = Path("data/manifests/itw_test.parquet")
@@ -218,6 +238,8 @@ def main():
     itw_summary = {
         **itw_prov,
         "eval_split": "itw_test",
+        "checkpoint_path": str(crnn_ckpt_path),
+        "checkpoint_sha256": compute_file_sha256(str(crnn_ckpt_path)),
         "num_clips_tested": len(labels_arr),
         "aggregations": itw_results_by_agg,
     }
@@ -253,4 +275,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

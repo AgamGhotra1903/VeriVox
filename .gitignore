@@ -43,6 +43,8 @@ data/raw/
 data/compressed/
 data/cache/
 data/smoke_test/
+data/temp_uploads/
+data/temp_stress/
 !data/.gitkeep
 !data/manifests/
 !data/test_dataset/

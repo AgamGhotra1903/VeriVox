@@ -12,6 +12,10 @@ class HealthResponse(BaseModel):
     status: str = "healthy"
     version: str = "2.4.0"
     device: str
+    primary_system: str = "CRNN-LFCC"
+    primary_checkpoint: str = "checkpoints/crnn_lfcc_best.pt"
+    primary_checkpoint_sha256: str = "unknown"
+    ensemble_status: str = "EXPERIMENTAL ABLATION"
     models_loaded: list[str]
     memory_rss_mb: float
 
@@ -53,6 +57,12 @@ class ModelScoreItem(BaseModel):
 class AnalysisResult(BaseModel):
     """Full forensic analysis report."""
     job_id: str
+    primary_system: str = "CRNN-LFCC"
+    primary_checkpoint_sha256: str = "unknown"
+    crnn_score: float = 0.0
+    crnn_verdict: str = "SPOOF (SYNTHETIC)"
+    crnn_probability: float = 0.0
+    ensemble_status: str = "EXPERIMENTAL ABLATION"
     verdict: Literal["BONA FIDE (GENUINE)", "SPOOF (SYNTHETIC)", "INCONCLUSIVE"]
     probability_bonafide: float
     confidence_band: Literal["high_confidence_bonafide", "high_confidence_spoof", "uncertainty_band"]

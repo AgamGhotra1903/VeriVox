@@ -2,100 +2,188 @@ import json
 from pathlib import Path
 import re
 import sys
+from typing import Any
 
-def verify_all_report_numbers() -> bool:
-    repo_root = Path(__file__).resolve().parent.parent
-    report_path = repo_root / "EVALUATION_REPORT.md"
-    if not report_path.exists():
-        print(f"Error: {report_path} not found.")
-        return False
+def get_nested_key(data: dict[str, Any], key_path: str) -> Any:
+    if "/" in key_path:
+        parts = key_path.split("/")
+    else:
+        parts = key_path.split(".")
+    curr = data
+    i = 0
+    while i < len(parts):
+        p = parts[i]
+        if isinstance(curr, dict) and p in curr:
+            curr = curr[p]
+            i += 1
+        elif isinstance(curr, list) and p.isdigit():
+            idx = int(p)
+            if idx < len(curr):
+                curr = curr[idx]
+                i += 1
+            else:
+                raise KeyError(f"Index {idx} out of bounds in list of length {len(curr)} for key path '{key_path}'")
+        elif isinstance(curr, dict) and i + 1 < len(parts) and f"{p}.{parts[i+1]}" in curr:
+            curr = curr[f"{p}.{parts[i+1]}"]
+            i += 2
+        else:
+            raise KeyError(f"Key segment '{p}' not found in structure for key path '{key_path}'")
+    return curr
 
-    report_text = report_path.read_text(encoding="utf-8")
-    metrics_dir = repo_root / "results" / "metrics"
+def parse_and_verify_report(report_path: Path | str, repo_root: Path | str = ".") -> list[dict[str, Any]]:
+    report_p = Path(report_path)
+    root_p = Path(repo_root)
+
+    if not report_p.exists():
+        raise FileNotFoundError(f"Report file not found: {report_p}")
+
+    text = report_p.read_text(encoding="utf-8")
+    metrics_cache: dict[str, dict[str, Any]] = {}
+
+    def load_json(rel_path: str) -> dict[str, Any]:
+        if rel_path not in metrics_cache:
+            p = root_p / rel_path
+            if not p.exists():
+                raise FileNotFoundError(f"Referenced metrics JSON does not exist: {p}")
+            with open(p, "r", encoding="utf-8") as f:
+                metrics_cache[rel_path] = json.load(f)
+        return metrics_cache[rel_path]
+
+    checks = []
+
+    comment_pattern = re.compile(
+        r'<!--\s*verify:\s*file="(?P<file>[^"]+)",\s*key="(?P<key>[^"]+)",\s*value="(?P<val>[^"]+)"(?:,\s*tol="(?P<tol>[^"]+)")?\s*-->'
+    )
+    for m in comment_pattern.finditer(text):
+        checks.append({
+            "source_type": "comment",
+            "file": m.group("file").strip(),
+            "key": m.group("key").strip(),
+            "claimed_str": m.group("val").strip(),
+            "tol_str": m.group("tol"),
+        })
+
+    inline_pattern = re.compile(
+        r'\[metric:\s*(?P<file>[^\s\]]+)\s*->\s*(?P<key>[^\s=\]]+)\s*=\s*(?P<val>[0-9\.\-%]+)(?:,\s*tol=(?P<tol>[0-9\.]+))?\]'
+    )
+    for m in inline_pattern.finditer(text):
+        checks.append({
+            "source_type": "inline",
+            "file": m.group("file").strip(),
+            "key": m.group("key").strip(),
+            "claimed_str": m.group("val").strip(),
+            "tol_str": m.group("tol"),
+        })
+
+    table_pattern = re.compile(
+        r'\|\s*`?(?P<file>[a-zA-Z0-9_\-\.\/]+\.json)#(?P<key>[a-zA-Z0-9_\-\.]+)`?\s*\|\s*(?P<val>[0-9\.\-%]+)\s*\|'
+    )
+    for m in table_pattern.finditer(text):
+        checks.append({
+            "source_type": "table",
+            "file": m.group("file").strip(),
+            "key": m.group("key").strip(),
+            "claimed_str": m.group("val").strip(),
+            "tol_str": None,
+        })
+
+    citation_pattern = re.compile(
+        r'(?P<val>[0-9,\.\-%]+)\s*\[(?P<file>[a-zA-Z0-9_\-\.\/]+\.json):(?P<key>[a-zA-Z0-9_\-\.\/]+)\]'
+    )
+    for m in citation_pattern.finditer(text):
+        checks.append({
+            "source_type": "citation",
+            "file": m.group("file").strip(),
+            "key": m.group("key").strip(),
+            "claimed_str": m.group("val").strip(),
+            "tol_str": None,
+        })
 
     mismatches = []
+    verified_count = 0
 
-    itw_file = metrics_dir / "in_the_wild_results.json"
-    if itw_file.exists():
-        with open(itw_file, "r", encoding="utf-8") as f:
-            itw_data = json.load(f)
-        itw_eer = itw_data["aggregations"]["crnn_mean"]["optimal_threshold_metrics"]["itw_optimal_eer"]
-        itw_auc = itw_data["aggregations"]["crnn_mean"]["optimal_threshold_metrics"]["roc_auc"]
-        if not re.findall(rf"{itw_eer:.2f}%?", report_text) and not re.findall(r"31\.39%?", report_text):
-            mismatches.append(f"ITW CRNN EER ({itw_eer:.2f}%) not found in report")
-        if not re.findall(rf"{itw_auc:.4f}", report_text) and not re.findall(r"0\.7098", report_text):
-            mismatches.append(f"ITW CRNN ROC-AUC ({itw_auc:.4f}) not found in report")
+    for item in checks:
+        rel_file = item["file"]
+        key = item["key"]
+        claimed_raw = item["claimed_str"]
 
-    codec_file = metrics_dir / "codec_robustness_results.json"
-    if codec_file.exists():
-        with open(codec_file, "r", encoding="utf-8") as f:
-            codec_data = json.load(f)
-        clean_eer = codec_data["clean_baseline"]["crnn_lfcc_eer"]
-        if not re.findall(rf"{clean_eer:.2f}%?", report_text) and not re.findall(r"10\.28%?", report_text):
-            mismatches.append(f"Clean stratified subset EER ({clean_eer:.2f}%) not found in report")
-        mp3_16k_eer = codec_data["conditions"]["mp3_16k"]["crnn"]["eer"]
-        if not re.findall(rf"{mp3_16k_eer:.2f}%?", report_text) and not re.findall(r"18\.64%?", report_text):
-            mismatches.append(f"MP3 16k EER ({mp3_16k_eer:.2f}%) not found in report")
-        aac_16k_eer = codec_data["conditions"]["aac_16k"]["crnn"]["eer"]
-        if not re.findall(rf"{aac_16k_eer:.2f}%?", report_text) and not re.findall(r"17\.54%?", report_text):
-            mismatches.append(f"AAC 16k EER ({aac_16k_eer:.2f}%) not found in report")
-        opus_16k_eer = codec_data["conditions"]["opus_16k"]["crnn"]["eer"]
-        if not re.findall(rf"{opus_16k_eer:.2f}%?", report_text) and not re.findall(r"13\.73%?", report_text):
-            mismatches.append(f"Opus 16k EER ({opus_16k_eer:.2f}%) not found in report")
+        claimed_clean = claimed_raw.rstrip("%").replace(",", "").strip()
+        try:
+            claimed_val = float(claimed_clean)
+        except ValueError:
+            mismatches.append({
+                "file": rel_file,
+                "key": key,
+                "error": f"Could not parse claimed value '{claimed_raw}' as float.",
+            })
+            continue
 
-    deg_file = metrics_dir / "degradation_chains_results.json"
-    if deg_file.exists():
-        with open(deg_file, "r", encoding="utf-8") as f:
-            deg_data = json.load(f)
-        noise_0db_eer = deg_data["conditions"]["noise_snr_0db"]["crnn"]["eer"]
-        if not re.findall(rf"{noise_0db_eer:.2f}%?", report_text) and not re.findall(r"43\.58%?", report_text):
-            mismatches.append(f"Noise SNR 0 dB EER ({noise_0db_eer:.2f}%) not found in report")
-        alaw_eer = deg_data["conditions"]["telephony_8k_alaw"]["crnn"]["eer"]
-        if not re.findall(rf"{alaw_eer:.2f}%?", report_text) and not re.findall(r"23\.26%?", report_text):
-            mismatches.append(f"G.711 ALAW EER ({alaw_eer:.2f}%) not found in report")
-        reverb_eer = deg_data["conditions"]["reverb_rt60_0.3s"]["crnn"]["eer"]
-        if not re.findall(rf"{reverb_eer:.2f}%?", report_text) and not re.findall(r"12\.64%?", report_text):
-            mismatches.append(f"Reverb RT60 0.3s EER ({reverb_eer:.2f}%) not found in report")
+        try:
+            data = load_json(rel_file)
+            truth_raw = get_nested_key(data, key)
+            truth_val = float(truth_raw)
+        except Exception as exc:
+            mismatches.append({
+                "file": rel_file,
+                "key": key,
+                "error": f"Failed reading ground truth: {exc}",
+            })
+            continue
 
-    logmel_file = metrics_dir / "crnn_logmel_results.json"
-    if logmel_file.exists():
-        with open(logmel_file, "r", encoding="utf-8") as f:
-            logmel_data = json.load(f)
-        logmel_eer = logmel_data["eval"]["eer"]
-        if not re.findall(rf"{logmel_eer:.2f}%?", report_text) and not re.findall(r"10\.28%?", report_text):
-            mismatches.append(f"LogMel Eval EER ({logmel_eer:.2f}%) not found in report")
+        if item["tol_str"] is not None:
+            tol = float(item["tol_str"])
+        else:
+            k_lower = key.lower()
+            if "%" in claimed_raw or any(x in k_lower for x in ["eer", "far", "frr", "acc", "f1", "recall", "precision", "std", "rate"]):
+                tol = 0.05
+            elif any(x in k_lower for x in ["tdcf", "auc"]):
+                tol = 0.005
+            else:
+                tol = 0.01
 
-    ens_file = metrics_dir / "ensemble_results.json"
-    if ens_file.exists():
-        with open(ens_file, "r", encoding="utf-8") as f:
-            ens_data = json.load(f)
-        stack_eer = ens_data["stacked_ensemble"]["eval"]["eer"]
-        if not re.findall(rf"{stack_eer:.2f}%?", report_text) and not re.findall(r"10\.74%?", report_text):
-            mismatches.append(f"Stacked Ensemble Eval EER ({stack_eer:.2f}%) not found in report")
-        stack_tdcf = ens_data["stacked_ensemble"]["eval"]["min_tdcf"]
-        if not re.findall(rf"{stack_tdcf:.4f}", report_text) and not re.findall(r"0\.2754", report_text):
-            mismatches.append(f"Stacked Ensemble Eval min-tDCF ({stack_tdcf:.4f}) not found in report")
-        single_eer = ens_data["best_single_model"]["eval"]["eer"]
-        if not re.findall(rf"{single_eer:.2f}%?", report_text) and not re.findall(r"6\.98%?", report_text):
-            mismatches.append(f"CRNN-LFCC Single Eval EER ({single_eer:.2f}%) not found in report")
+        diff = abs(claimed_val - truth_val)
+        if diff > tol and abs(claimed_val - truth_val * 100.0) <= tol:
+            diff = abs(claimed_val - truth_val * 100.0)
+            truth_val = truth_val * 100.0
 
-    silence_file = metrics_dir / "crnn_silence_audit.json"
-    if silence_file.exists():
-        with open(silence_file, "r", encoding="utf-8") as f:
-            silence_data = json.load(f)
-        delta_trim = silence_data.get("vad_trimming", {}).get("delta_eer", 1.69)
-        if not re.findall(rf"{delta_trim:.2f}", report_text) and not re.findall(r"1\.69", report_text):
-            mismatches.append(f"Silence VAD trimming delta ({delta_trim:.2f}) not found in report")
+        if diff > tol:
+            mismatches.append({
+                "file": rel_file,
+                "key": key,
+                "claimed": claimed_val,
+                "truth": truth_val,
+                "diff": diff,
+                "tolerance": tol,
+                "error": f"Discrepancy: claimed {claimed_val} vs truth {truth_val} (|diff|={diff:.4f} > tol {tol})",
+            })
+        else:
+            verified_count += 1
 
+    print(f"Report verification scanned {len(checks)} claims: {verified_count} verified, {len(mismatches)} mismatches.")
+    return mismatches
+
+def verify_all_report_numbers(report_path: str = "docs/REPORT.md") -> bool:
+    repo_root = Path(__file__).resolve().parent.parent
+    p = repo_root / report_path
+    if not p.exists():
+        fallback = repo_root / "EVALUATION_REPORT.md"
+        if fallback.exists():
+            p = fallback
+        else:
+            print(f"Error: Neither {p} nor {fallback} exists.")
+            return False
+
+    mismatches = parse_and_verify_report(p, repo_root=repo_root)
     if mismatches:
-        print(f"Report verification found {len(mismatches)} discrepancies:")
+        print(f"\nFAIL: Found {len(mismatches)} discrepancies in {p.name}:")
         for m in mismatches:
             print(f"  - {m}")
         return False
-    else:
-        print("Report verification passed: all key metrics match JSON ground truth!")
-        return True
+    print(f"\nSUCCESS: All claimed numbers in {p.name} match ground-truth metrics JSON files within tolerance!")
+    return True
 
 if __name__ == "__main__":
-    success = verify_all_report_numbers()
-    sys.exit(0 if success else 1)
+    rep = sys.argv[1] if len(sys.argv) > 1 else "docs/REPORT.md"
+    ok = verify_all_report_numbers(rep)
+    if not ok:
+        sys.exit(1)

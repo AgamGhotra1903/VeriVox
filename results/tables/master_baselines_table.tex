@@ -1,0 +1,13 @@
+\begin{tabular}{lllllllll}
+\toprule
+Model & Feature & Parameters & Train time & Dev EER & Eval EER & Eval min-tDCF & ITW EER (mean) & ITW AUC (mean) \\
+\midrule
+Logistic Regression & LFCC (Pooled + PCA) & 67 & 1.2s & 20.77% & 23.94% & 0.6284 & -- & -- \\
+RBF-SVM & LFCC (Pooled + PCA) & 2,641 SVs & 8.5s & 11.97% & 19.64% & 0.5119 & -- & -- \\
+Random Forest & LFCC (Pooled + PCA) & 20,000 nodes & 12.3s & 10.09% & 17.52% & 0.4695 & -- & -- \\
+GMM (64-diag) & LFCC (Frame-level) & 15,488 & 270.0s & 8.07% & 11.46% & 0.3572 & -- & -- \\
+CRNN-LFCC (Primary) & LFCC (Full 2D) & 1,439,778 & 3680.9s & 1.15% & 6.70% & 0.2143 & 44.62% & 0.5678 \\
+\bottomrule
+\end{tabular}
+
+% *CRNN-LFCC improves over the strongest classical baseline (GMM) by 4.76 pp Eval EER and 0.1429 min-tDCF.*

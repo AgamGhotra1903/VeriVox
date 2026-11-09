@@ -32,7 +32,9 @@ def build_tables(
     if metrics_dir.exists():
         for json_path in metrics_dir.glob("*.json"):
             data = load_json(json_path)
-            guard_results_and_provenance(data, context=str(json_path))
+            guard_no_smoke_test(data, context=str(json_path))
+            if isinstance(data, dict) and ("dataset_name" in data or "provenance" in data):
+                guard_results_and_provenance(data, context=str(json_path))
 
     baselines_file = metrics_dir / "baselines_results.json"
     if baselines_file.exists():

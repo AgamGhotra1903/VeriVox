@@ -1,10 +1,9 @@
-\begin{tabular}{lllllllll}
+\begin{tabular}{lllllll}
 \toprule
-Model / Aggregation & ITW Optimal EER (%) & 95% CI (%) & ROC-AUC & Accuracy @ Dev Thresh (%) & Precision & Recall & Abstain Coverage (%) & Non-Abstain EER (%) \\
+Model / Aggregation & Optimal EER (%) & 95% CI (%) & ROC-AUC & Acc @ Dev Thresh (%) & Inverted EER (Diagnostic %) & Inverted AUC (Diagnostic) \\
 \midrule
-CRNN-LFCC (mean) & 31.39 & [30.83, 31.97] & 0.7098 & 67.27 & 0.821 & 0.584 & 96.3 & 31.58 \\
-CRNN-LFCC (max) & 32.80 & [32.12, 33.32] & 0.7001 & 66.91 & 0.813 & 0.585 & 98.2 & 33.06 \\
-CRNN-LFCC (top_k) & 33.91 & [33.30, 34.44] & 0.7011 & 63.88 & 0.834 & 0.499 & 97.1 & 34.37 \\
-Stacked Ensemble (mean) & 78.91 & [77.20, 80.61] & 0.1202 & 59.32 & 0.596 & 0.992 & 100.0 & 78.91 \\
+CRNN-LFCC (mean) & 44.73 & [44.09, 45.32] & 0.5638 & 56.60 & 55.27 & 0.4362 \\
+CRNN-LFCC (max) & 46.89 & [46.21, 47.44] & 0.5584 & 56.54 & 53.11 & 0.4416 \\
+CRNN-LFCC (top_k) & 47.39 & [46.78, 48.00] & 0.5510 & 55.68 & 52.61 & 0.4490 \\
 \bottomrule
 \end{tabular}

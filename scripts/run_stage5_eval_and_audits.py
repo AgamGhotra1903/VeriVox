@@ -100,6 +100,13 @@ def run_speaker_level_bootstrap(
     opt_tdcf = fast_min_tdcf(bf_s, sp_s, c0, c1, c2, tdcf_def)
     opt_acc = float(accuracy_score(labels, (scores >= dev_threshold).astype(int)) * 100.0)
 
+    dev_metrics = compute_metrics_at_threshold(labels, scores, dev_threshold)
+    tp, fp, tn, fn = dev_metrics["tp"], dev_metrics["fp"], dev_metrics["tn"], dev_metrics["fn"]
+    far = float(fp / max(1, fp + tn))
+    frr = float(fn / max(1, fn + tp))
+    dev_metrics["far"] = far
+    dev_metrics["frr"] = frr
+
     eers, tdcfs, aucs, accs = [], [], [], []
     for _ in range(n_bootstraps):
         sampled_spks = rng.choice(unique_spks, size=n_spk, replace=True)
@@ -134,6 +141,7 @@ def run_speaker_level_bootstrap(
         "accuracy_dev_th_ci_95": [float(np.percentile(accs, 2.5)), float(np.percentile(accs, 97.5))],
         "accuracy_dev_th_std": float(np.std(accs)),
         "applied_dev_threshold": float(dev_threshold),
+        "metrics_at_dev_threshold": dev_metrics,
         "n_speakers": int(n_spk),
         "n_bootstraps": int(n_bootstraps),
     }
@@ -505,7 +513,7 @@ def run_stage5_all(seed: int = 42, n_bootstraps: int = 1000):
         f.write(df_logo.to_latex(index=False) + "\n")
 
     print("Running Silence Audit and Shortcut Bias Controls...")
-    audit_clips_sample = 1000
+    audit_clips_sample = 1200
     sub_eval_idx = np.random.RandomState(seed).choice(len(ev_df), audit_clips_sample, replace=False)
     sub_eval_df = ev_df.iloc[sub_eval_idx].reset_index(drop=True)
 
@@ -563,11 +571,12 @@ def run_stage5_all(seed: int = 42, n_bootstraps: int = 1000):
     sil_auc = compute_roc_auc(sub_labels, sil_preds)
     sil_status = "PASS" if sil_eer >= 35.0 and sil_auc <= 0.65 else "FAIL"
 
-    print("Audit 2: VAD-Trimmed Audio Evaluation...")
+    n_vad_test = min(1000, len(valid_paths))
+    print(f"Audit 2: VAD-Trimmed Audio Evaluation (N={n_vad_test} trials)...")
     extractor_lfcc = LFCCExtractor(sample_rate=16000, n_fft=512, win_length=400, hop_length=160, n_lfcc=20, with_deltas=True)
     trimmed_scores_crnn = []
     from acforensics.data.segmentation import fixed_length_crop_or_pad
-    for p in valid_paths[:200]:
+    for p in valid_paths[:n_vad_test]:
         sig, sr = sf.read(p)
         w_tensor = fixed_length_crop_or_pad(torch.from_numpy(sig).float(), target_samples=64000, mode="center")
         feat_raw = extractor_lfcc(w_tensor)
@@ -586,24 +595,28 @@ def run_stage5_all(seed: int = 42, n_bootstraps: int = 1000):
             score = (logits[:, BONAFIDE] - logits[:, SPOOF]).item()
             trimmed_scores_crnn.append(score)
 
-    sub_200_labels = sub_labels[:200]
-    sub_200_untrimmed_scores = sub_crnn_scores[:200]
+    sub_vad_labels = sub_labels[:n_vad_test]
+    sub_vad_untrimmed_scores = sub_crnn_scores[:n_vad_test]
     trimmed_scores_crnn = np.array(trimmed_scores_crnn)
-    eer_untrimmed, _ = compute_eer(sub_200_labels, sub_200_untrimmed_scores)
-    eer_trimmed, _ = compute_eer(sub_200_labels, trimmed_scores_crnn)
+    eer_untrimmed, _ = compute_eer(sub_vad_labels, sub_vad_untrimmed_scores)
+    eer_trimmed, _ = compute_eer(sub_vad_labels, trimmed_scores_crnn)
     delta_trim_eer = abs(eer_trimmed - eer_untrimmed)
     trim_status = "PASS" if delta_trim_eer <= 5.0 else "FAIL"
 
-    print("Audit 3: Silence-Swap Test...")
-    bf_v_idx = np.where(sub_labels[:200] == BONAFIDE)[0]
-    sp_v_idx = np.where(sub_labels[:200] == SPOOF)[0]
-    n_pairs = min(len(bf_v_idx), len(sp_v_idx))
+    bf_eval_df = ev_df[ev_df["label"] == BONAFIDE].reset_index(drop=True)
+    sp_eval_df = ev_df[ev_df["label"] == SPOOF].reset_index(drop=True)
+    n_pairs = min(len(bf_eval_df), len(sp_eval_df), 1000)
+    print(f"Audit 3: Silence-Swap Test (N={n_pairs} paired trials)...")
+    rng_swap = np.random.RandomState(seed)
+    bf_choice = rng_swap.choice(len(bf_eval_df), n_pairs, replace=False)
+    sp_choice = rng_swap.choice(len(sp_eval_df), n_pairs, replace=False)
+
     orig_pair_scores = []
     swapped_pair_scores = []
 
     for k in range(n_pairs):
-        p_bf = valid_paths[bf_v_idx[k]]
-        p_sp = valid_paths[sp_v_idx[k]]
+        p_bf = bf_eval_df.iloc[bf_choice[k]]["path"]
+        p_sp = sp_eval_df.iloc[sp_choice[k]]["path"]
         sig_bf, _ = sf.read(p_bf)
         sig_sp, _ = sf.read(p_sp)
         s_bf, e_bf, _, _, _ = get_vad_boundaries(sig_bf)
@@ -612,71 +625,78 @@ def run_stage5_all(seed: int = 42, n_bootstraps: int = 1000):
         sp_swapped = np.concatenate([sig_bf[:s_bf], sig_sp[s_sp:e_sp], sig_bf[e_bf:]])
         w_tensor = torch.from_numpy(sp_swapped).float()
         w_tensor = fixed_length_crop_or_pad(w_tensor, target_samples=64000, mode="center")
+        w_orig = fixed_length_crop_or_pad(torch.from_numpy(sig_sp).float(), target_samples=64000, mode="center")
         with torch.no_grad():
+            feat_orig = per_utterance_cmvn(extractor_lfcc(w_orig)).unsqueeze(0).unsqueeze(0).to(device)
+            logits_orig, _ = crnn(feat_orig)
+            sc_orig = (logits_orig[:, BONAFIDE] - logits_orig[:, SPOOF]).item()
+
             feat = extractor_lfcc(w_tensor)
             feat_norm = per_utterance_cmvn(feat).unsqueeze(0).unsqueeze(0).to(device)
             logits, _ = crnn(feat_norm)
             sc_swapped = (logits[:, BONAFIDE] - logits[:, SPOOF]).item()
 
-        orig_pair_scores.append(sub_crnn_scores[sp_v_idx[k]])
+        orig_pair_scores.append(sc_orig)
         swapped_pair_scores.append(sc_swapped)
 
-    orig_pair_arr = np.array(orig_pair_scores)
-    swapped_pair_arr = np.array(swapped_pair_scores)
+    orig_pair_arr = np.array(orig_pair_scores, dtype=np.float64)
+    swapped_pair_arr = np.array(swapped_pair_scores, dtype=np.float64)
     r_swap, _ = pearsonr(orig_pair_arr, swapped_pair_arr)
     flip_rate = float(np.mean((orig_pair_arr >= dev_crnn_th) != (swapped_pair_arr >= dev_crnn_th)) * 100.0)
     swap_status = "PASS" if r_swap >= 0.80 and flip_rate <= 10.0 else "FAIL"
 
     print("Audit 4, 5, 6: Duration, Loudness, Bandwidth Controls...")
-    durations = np.array([m["duration_sec"] for m in acoustic_meta_list])
-    loudness = np.array([m["rms_dbfs"] for m in acoustic_meta_list])
-    rolloff = np.array([m["rolloff_95_hz"] for m in acoustic_meta_list])
+    durations = np.array([m["duration_sec"] for m in acoustic_meta_list], dtype=np.float64)
+    loudness = np.array([m["rms_dbfs"] for m in acoustic_meta_list], dtype=np.float64)
+    rolloff = np.array([m["rolloff_95_hz"] for m in acoustic_meta_list], dtype=np.float64)
+    sub_crnn_arr = np.array(sub_crnn_scores, dtype=np.float64)
+    sub_ens_arr = np.array(sub_ens_scores, dtype=np.float64)
 
-    r_dur_crnn, _ = pearsonr(durations, sub_crnn_scores)
-    r_dur_ens, _ = pearsonr(durations, sub_ens_scores)
+    r_dur_crnn, _ = pearsonr(durations, sub_crnn_arr)
+    r_dur_ens, _ = pearsonr(durations, sub_ens_arr)
     dur_status = "PASS" if abs(r_dur_crnn) <= 0.20 and abs(r_dur_ens) <= 0.20 else "FAIL"
 
-    r_loud_crnn, _ = pearsonr(loudness, sub_crnn_scores)
-    r_loud_ens, _ = pearsonr(loudness, sub_ens_scores)
+    r_loud_crnn, _ = pearsonr(loudness, sub_crnn_arr)
+    r_loud_ens, _ = pearsonr(loudness, sub_ens_arr)
     loud_status = "PASS" if abs(r_loud_crnn) <= 0.20 and abs(r_loud_ens) <= 0.20 else "FAIL"
 
-    r_bw_crnn, _ = pearsonr(rolloff, sub_crnn_scores)
-    r_bw_ens, _ = pearsonr(rolloff, sub_ens_scores)
+    r_bw_crnn, _ = pearsonr(rolloff, sub_crnn_arr)
+    r_bw_ens, _ = pearsonr(rolloff, sub_ens_arr)
     bw_status = "PASS" if abs(r_bw_crnn) <= 0.35 and abs(r_bw_ens) <= 0.35 else "FAIL"
 
     audit_summary_table = [
         {
-            "Audit Check": "Silence Duration Classifier",
+            "Audit Check": f"Silence Duration Classifier (N={len(sub_labels)})",
             "Observed Metric": f"EER = {sil_eer:.2f}%, AUC = {sil_auc:.4f}",
             "Criterion": "EER >= 35.0%, AUC <= 0.65",
             "Status": sil_status,
         },
         {
-            "Audit Check": "VAD-Trimmed vs Untrimmed Audio",
+            "Audit Check": f"VAD-Trimmed vs Untrimmed Audio (N={n_vad_test})",
             "Observed Metric": f"Untrimmed: {eer_untrimmed:.2f}%, Trimmed: {eer_trimmed:.2f}%, Delta: {delta_trim_eer:.2f} pts",
             "Criterion": "|Delta EER| <= 5.0 pts",
             "Status": trim_status,
         },
         {
-            "Audit Check": "Silence-Swap Score Stability",
+            "Audit Check": f"Silence-Swap Score Stability (N={n_pairs} pairs)",
             "Observed Metric": f"Pearson r = {r_swap:.4f}, Prediction Flip Rate = {flip_rate:.1f}%",
             "Criterion": "r >= 0.80, Flip Rate <= 10.0%",
             "Status": swap_status,
         },
         {
-            "Audit Check": "Duration Control",
+            "Audit Check": f"Duration Control (N={len(acoustic_meta_list)})",
             "Observed Metric": f"CRNN r = {r_dur_crnn:+.4f}, Ensemble r = {r_dur_ens:+.4f}",
             "Criterion": "|r| <= 0.20",
             "Status": dur_status,
         },
         {
-            "Audit Check": "Loudness Control (RMS dBFS)",
+            "Audit Check": f"Loudness Control (RMS dBFS) (N={len(acoustic_meta_list)})",
             "Observed Metric": f"CRNN r = {r_loud_crnn:+.4f}, Ensemble r = {r_loud_ens:+.4f}",
             "Criterion": "|r| <= 0.20",
             "Status": loud_status,
         },
         {
-            "Audit Check": "Bandwidth Control (95% Rolloff)",
+            "Audit Check": f"Bandwidth Control (95% Rolloff) (N={len(acoustic_meta_list)})",
             "Observed Metric": f"CRNN r = {r_bw_crnn:+.4f}, Ensemble r = {r_bw_ens:+.4f}",
             "Criterion": "|r| <= 0.35",
             "Status": bw_status,
@@ -707,6 +727,8 @@ def run_stage5_all(seed: int = 42, n_bootstraps: int = 1000):
         "git_commit": git_hash,
         "seed": seed,
         "timestamp": ts,
+        "checkpoint_path": str(crnn_ckpt),
+        "checkpoint_sha256": compute_file_sha256(str(crnn_ckpt)),
         "speaker_bootstrap_eval": speaker_bootstrap_results,
         "per_attack_evaluation": per_attack_results,
         "logo_crossval": {
@@ -715,22 +737,27 @@ def run_stage5_all(seed: int = 42, n_bootstraps: int = 1000):
         },
         "audits": {
             "silence_duration_classifier": {
+                "n_trials": int(len(sub_labels)),
                 "eer": float(sil_eer),
                 "roc_auc": float(sil_auc),
                 "status": sil_status,
             },
             "vad_trimming": {
+                "n_trials": int(len(trimmed_scores_crnn)),
                 "untrimmed_eer": float(eer_untrimmed),
                 "trimmed_eer": float(eer_trimmed),
                 "delta_eer": float(delta_trim_eer),
                 "status": trim_status,
             },
             "silence_swap": {
+                "n_pairs": int(n_pairs),
+                "n_trials": int(n_pairs * 2),
                 "pearson_r": float(r_swap),
                 "flip_rate_pct": float(flip_rate),
                 "status": swap_status,
             },
             "controls": {
+                "n_trials": int(len(acoustic_meta_list)),
                 "duration_r_crnn": float(r_dur_crnn),
                 "duration_r_ensemble": float(r_dur_ens),
                 "loudness_r_crnn": float(r_loud_crnn),

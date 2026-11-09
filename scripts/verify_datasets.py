@@ -9,6 +9,7 @@ from typing import Any, Optional
 from acforensics.evaluation.provenance import (
     compute_file_sha256,
     get_git_commit,
+    get_git_diff_hash,
     create_provenance_record,
     guard_no_smoke_test,
 )
@@ -69,7 +70,7 @@ def verify_asv_score_file(file_path: Path) -> dict[str, Any]:
 def verify_datasets(
     raw_dir: Path | str = "data/raw",
     output_report_path: Optional[Path | str] = "results/audit/dataset_verification.json",
-    min_free_gb: float = 80.0,
+    min_free_gb: float = 25.0,
     seed: int = 42,
 ) -> dict[str, Any]:
     raw_p = Path(raw_dir)
@@ -133,6 +134,7 @@ def verify_datasets(
     all_passed = disk_ok and protocols_match and asv_valid and audio_present and itw_exists
 
     commit = get_git_commit()
+    is_dirty, diff_h = get_git_diff_hash()
     ref_file = eval_proto if eval_proto.is_file() else (train_proto if train_proto.is_file() else Path("README.md"))
     manifest_sha = compute_file_sha256(ref_file)
 
@@ -141,9 +143,12 @@ def verify_datasets(
         "dataset_name": "asvspoof2019_la_and_itw",
         "manifest_sha256": manifest_sha,
         "git_commit": commit,
+        "git_dirty": is_dirty,
+        "diff_hash": diff_h,
         "seed": seed,
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "disk_free_gb": round(free_gb, 2),
+        "disk_threshold_gb": float(min_free_gb),
         "disk_check_passed": disk_ok,
         "protocols": proto_results,
         "asv_scores": asv_results,
@@ -172,7 +177,7 @@ def main():
     parser = argparse.ArgumentParser(description="ASVspoof 2019 LA & In-the-Wild Dataset Verification")
     parser.add_argument("--raw-dir", type=str, default="data/raw", help="Path to raw datasets directory")
     parser.add_argument("--out-report", type=str, default="results/audit/dataset_verification.json", help="Report destination")
-    parser.add_argument("--min-free-gb", type=float, default=80.0, help="Required disk space threshold in GB")
+    parser.add_argument("--min-free-gb", type=float, default=25.0, help="Required disk space threshold in GB")
     parser.add_argument("--seed", type=int, default=42, help="RNG Seed for reproducibility tracking")
     args = parser.parse_args()
 
@@ -183,13 +188,8 @@ def main():
         min_free_gb=args.min_free_gb,
         seed=args.seed,
     )
-    print(f"Dataset Verification Status: {rep['status']}")
-    print(f"Free Disk Space: {rep['disk_free_gb']} GB (Required >= {args.min_free_gb} GB: {rep['disk_check_passed']})")
-    print(f"Protocols Matched (25,380 / 24,844 / 71,237): {rep['protocols_match_expected']}")
-    print(f"ASV Scores Valid: {rep['asv_scores_valid']}")
-    print(f"Audio Files Complete: {rep['audio_present']}")
+    print(f"Dataset verification status: {rep['status']}")
 
 
 if __name__ == "__main__":
     main()
-

@@ -1,9 +1,11 @@
-\begin{tabular}{lllllllllll}
+\begin{tabular}{llllllllllll}
 \toprule
-Execution Target & Threads & Mean ± Std (ms) & p50 (ms) & p95 (ms) & p99 (ms) & I/O (ms) & Feat (ms) & Inference (ms) & RTF & Clips / sec \\
+Pipeline & Execution Target & Threads & Mean ± Std (ms) & p50 (ms) & p95 (ms) & p99 (ms) & I/O (ms) & Feat (ms) & Inference (ms) & RTF & Clips / sec \\
 \midrule
-CPU (Apple M4 Pro, 1 thread) & 1 & 12.74 ± 1.32 & 12.44 & 14.78 & 17.79 & 2.24 & 0.56 & 9.93 & 0.00318 & 78.5 \\
-CPU (Apple M4 Pro, 4 threads) & 4 & 10.78 ± 1.97 & 10.51 & 11.9 & 13.84 & 2.34 & 1.17 & 7.27 & 0.00269 & 92.8 \\
-Apple Silicon GPU (MPS) & N/A & 32.21 ± 1.68 & 31.8 & 35.01 & 37.31 & 2.33 & 1.14 & 28.74 & 0.00805 & 31.0 \\
+Primary CRNN-LFCC Full Path & CPU (Apple M4 Pro, 1 thread) & 1 & 12.72 ± 0.96 & 12.61 & 13.36 & 13.84 & 2.29 & 0.67 & 9.76 & 0.00318 & 78.6 \\
+Primary CRNN-LFCC Full Path & CPU (Apple M4 Pro, 4 threads) & 4 & 10.28 ± 0.29 & 10.27 & 10.72 & 11.05 & 2.29 & 1.15 & 6.84 & 0.00257 & 97.3 \\
+Primary CRNN-LFCC Full Path & Apple Silicon GPU (MPS) & N/A & 33.08 ± 1.45 & 32.73 & 35.57 & 37.19 & 2.41 & 1.11 & 29.57 & 0.00827 & 30.2 \\
+Full Shipped Ensemble Path (LFCC+LogMel+CRNN+Classical+MetaLearner) & CPU (Apple M4 Pro, 4 threads) & 4 & 35.43 ± 2.2 & 35.83 & 37.2 & 38.09 & - & - & - & 0.00886 & 28.2 \\
+Full Shipped Ensemble Path (LFCC+LogMel+CRNN+Classical+MetaLearner) & Apple Silicon GPU (MPS) & N/A & 82.17 ± 4.58 & 81.71 & 90.59 & 92.48 & - & - & - & 0.02054 & 12.2 \\
 \bottomrule
 \end{tabular}

@@ -1,4 +1,6 @@
+import json
 from pathlib import Path
+from typing import Any
 import pandas as pd
 import pytest
 
@@ -158,3 +160,44 @@ def test_assert_zero_data_leakage_speaker_checks():
             dev_speakers=["spk_d1", "spk_d2"],
             eval_speakers=["spk_e1", "spk_e2"],
         )
+
+
+def test_all_results_metrics_files_have_provenance_and_sufficient_sample_size():
+    metrics_dir = Path("results/metrics")
+    if not metrics_dir.is_dir():
+        pytest.skip("results/metrics directory not found")
+
+    json_files = list(metrics_dir.glob("*.json"))
+    assert len(json_files) > 0, "No metrics JSON files found in results/metrics"
+
+    trial_keys = ("sample_size", "num_trials", "n_trials", "n_samples", "total_trials")
+
+    for jf in json_files:
+        with open(jf, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        guard_results_and_provenance(data, context=str(jf))
+
+        subsample_found = []
+
+        def check_counts(obj: Any):
+            if isinstance(obj, dict):
+                for k, v in obj.items():
+                    if k in trial_keys and isinstance(v, (int, float)):
+                        if v < 1000:
+                            subsample_found.append((k, v))
+                    check_counts(v)
+
+        check_counts(data)
+
+        if subsample_found:
+            has_flag = (
+                data.get("subset") is True
+                or data.get("subset_flag") is True
+                or data.get("is_subset") is True
+                or "subset" in data
+            )
+            assert has_flag, (
+                f"File {jf.name} reports < 1000 trials ({subsample_found}) "
+                f"without an explicit 'subset' flag."
+            )

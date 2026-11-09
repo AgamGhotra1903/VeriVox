@@ -3,7 +3,7 @@ import os
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Mapping, Sequence, Union
+from typing import Any, Mapping, Optional, Sequence, Union
 
 PROVENANCE_REQUIRED_FIELDS = (
     "dataset_name",
@@ -45,11 +45,35 @@ def get_git_commit(repo_path: Union[str, Path] = ".") -> str:
     raise RuntimeError("Unable to determine git commit hash.")
 
 
+def get_git_diff_hash(repo_path: Union[str, Path] = ".") -> tuple[bool, str]:
+    try:
+        st = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=str(repo_path),
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        is_dirty = len(st.stdout.strip()) > 0
+        df = subprocess.run(
+            ["git", "diff", "HEAD"],
+            cwd=str(repo_path),
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        diff_h = hashlib.sha256(df.stdout.encode("utf-8")).hexdigest()
+        return is_dirty, diff_h
+    except Exception:
+        return False, "0" * 64
+
+
 def create_provenance_record(
     dataset_name: str,
     manifest_path: Union[str, Path],
     seed: int,
     repo_path: Union[str, Path] = ".",
+    checkpoint_path: Optional[Union[str, Path]] = None,
 ) -> dict[str, Any]:
     if not dataset_name or not isinstance(dataset_name, str):
         raise ValueError("dataset_name must be a non-empty string.")
@@ -58,14 +82,23 @@ def create_provenance_record(
     manifest_p = Path(manifest_path)
     sha256_hash = compute_file_sha256(manifest_p)
     commit = get_git_commit(repo_path)
+    is_dirty, diff_h = get_git_diff_hash(repo_path)
     ts = datetime.now(timezone.utc).isoformat()
-    return {
+    rec: dict[str, Any] = {
         "dataset_name": dataset_name,
         "manifest_sha256": sha256_hash,
         "git_commit": commit,
+        "git_dirty": is_dirty,
+        "diff_hash": diff_h,
         "seed": seed,
         "timestamp": ts,
     }
+    if checkpoint_path is not None:
+        cp = Path(checkpoint_path)
+        if cp.is_file():
+            rec["checkpoint_path"] = str(cp)
+            rec["checkpoint_sha256"] = compute_file_sha256(cp)
+    return rec
 
 
 def validate_provenance(record: Mapping[str, Any], context: str = "") -> None:
@@ -88,11 +121,9 @@ def validate_provenance(record: Mapping[str, Any], context: str = "") -> None:
 
 
 def guard_no_smoke_test(item: Any, context: str = "") -> None:
-    if isinstance(item, str):
-        if "smoke_test" in item:
-            raise ValueError(f"Smoke test artifact rejected in scientific evaluation ({context}): '{item}'")
-    elif isinstance(item, Path):
-        if "smoke_test" in str(item):
+    if isinstance(item, (str, Path)):
+        s = str(item)
+        if "smoke" in s.lower():
             raise ValueError(f"Smoke test artifact rejected in scientific evaluation ({context}): '{item}'")
     elif isinstance(item, Mapping):
         for k, v in item.items():
@@ -128,4 +159,3 @@ def guard_manifest(manifest_path_or_df: Union[str, Path, Any], context: str = ""
         if col in df.columns:
             for val in df[col].dropna():
                 guard_no_smoke_test(str(val), context=f"manifest column '{col}'")
-

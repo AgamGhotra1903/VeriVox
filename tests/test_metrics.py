@@ -161,3 +161,23 @@ def test_full_evaluation_report():
     assert "min_tdcf" in report
     assert "at_applied_threshold" in report
     assert report["applied_threshold"] == 0.5
+
+
+def test_official_min_tdcf_scorer_real_eval_file_5000_trials():
+    asv_path = Path("data/raw/LA/ASVspoof2019_LA_asv_scores/ASVspoof2019.LA.asv.eval.gi.trl.scores.txt")
+    if not asv_path.exists():
+        pytest.skip("Official ASV evaluation score file not found on disk.")
+    rng = np.random.RandomState(42)
+    n_trials = 6000
+    n_bona = 1500
+    n_spoof = n_trials - n_bona
+    labels = np.array([BONAFIDE] * n_bona + [SPOOF] * n_spoof)
+    cm_scores = np.concatenate([
+        rng.normal(2.5, 1.2, n_bona),
+        rng.normal(-1.5, 1.2, n_spoof),
+    ])
+    min_tdcf_val, opt_th = compute_min_tdcf(labels, cm_scores, asv_score_file=str(asv_path))
+    assert min_tdcf_val >= 0.0
+    assert 0.0 <= min_tdcf_val <= 1.5
+    assert isinstance(opt_th, float)
+

@@ -6,10 +6,12 @@ Author: Agam Ghotra (IIT2024226)
 
 import asyncio
 from datetime import datetime, timezone
+import hashlib
 import os
 from pathlib import Path
 import shutil
 import tempfile
+import threading
 import time
 from typing import Any, AsyncGenerator, Optional
 import numpy as np
@@ -67,6 +69,7 @@ class ForensicService:
         self.device = torch.device("mps" if torch.backends.mps.is_available() else ("cuda" if torch.cuda.is_available() else "cpu"))
         
         logger.info("Initializing ForensicService on device: %s", self.device)
+        self._inference_lock = threading.Lock()
         self.predictor = EnsemblePredictor(device=self.device)
 
         # In-memory caches for active jobs
@@ -104,6 +107,14 @@ class ForensicService:
                 except ValueError:
                     self.dev_threshold = 0.1795
 
+        # Primary model checkpoint & provenance verification
+        self.primary_checkpoint_path = self.repo_root / "checkpoints" / "crnn_lfcc_best.pt"
+        self.primary_checkpoint_sha256 = "unknown"
+        if self.primary_checkpoint_path.exists():
+            with open(self.primary_checkpoint_path, "rb") as f:
+                self.primary_checkpoint_sha256 = hashlib.sha256(f.read()).hexdigest()
+        self.crnn_dev_threshold: float = 0.50
+
     def get_health(self) -> HealthResponse:
         """Reports system operational status and memory."""
         import resource
@@ -115,14 +126,18 @@ class ForensicService:
             status="healthy",
             version="2.4.0",
             device=str(self.device),
+            primary_system="CRNN-LFCC",
+            primary_checkpoint=str(self.primary_checkpoint_path),
+            primary_checkpoint_sha256=self.primary_checkpoint_sha256,
+            ensemble_status="EXPERIMENTAL ABLATION",
             models_loaded=[
-                "CRNN-LFCC",
-                "CRNN-LogMel",
-                "GMM-LFCC (64-diag)",
-                "RBF-SVM (PCA-95%)",
-                "Random Forest (PCA-95%)",
-                "Logistic Regression (PCA-95%)",
-                "Stacked Ensemble (L2 Meta-Learner)",
+                "CRNN-LFCC (Primary Production Model)",
+                "CRNN-LogMel (Ablation)",
+                "GMM-LFCC (64-diag Baseline)",
+                "RBF-SVM (PCA-95% Baseline)",
+                "Random Forest (PCA-95% Baseline)",
+                "Logistic Regression (PCA-95% Baseline)",
+                "Stacked Ensemble (Experimental Ablation)",
             ],
             memory_rss_mb=round(rss_mb, 2),
         )
@@ -233,7 +248,7 @@ class ForensicService:
             # -------------------------------------------------------------
             # Stage 1: Validation & Audio I/O
             # -------------------------------------------------------------
-            res = load_and_validate_audio(str(audio_path), target_sr=SAMPLE_RATE)
+            res = load_and_validate_audio(str(audio_path), target_sr=SAMPLE_RATE, normalization_method="none")
             if not res.is_valid or res.waveform is None:
                 yield PipelineEvent(
                     job_id=job_id,
@@ -259,11 +274,47 @@ class ForensicService:
             # Stage 2: Fixed Window Alignment & Resampling
             # -------------------------------------------------------------
             wave_tensor = res.waveform
-            aligned_wave = fixed_length_crop_or_pad(
-                wave_tensor,
-                target_samples=TARGET_SAMPLES,
-                mode="center",
-            )
+            n_samples = wave_tensor.size(0)
+            if n_samples >= TARGET_SAMPLES:
+                start_i = (n_samples - TARGET_SAMPLES) // 2
+                aligned_wave = wave_tensor[start_i : start_i + TARGET_SAMPLES]
+            else:
+                p_pad = TARGET_SAMPLES - n_samples
+                l_pad = p_pad // 2
+                r_pad = p_pad - l_pad
+                aligned_wave = torch.nn.functional.pad(wave_tensor, (l_pad, r_pad), mode="constant")
+
+            with self._inference_lock:
+                aligned_wave_dev = aligned_wave.to(self.device)
+                raw_lfcc = self.predictor.lfcc_ext(aligned_wave_dev)
+                raw_lfcc_t = raw_lfcc.T.detach().cpu().numpy().astype(np.float64)
+                feat_lfcc = per_utterance_cmvn(raw_lfcc)
+
+                raw_logmel = self.predictor.logmel_ext(aligned_wave_dev)
+                feat_logmel = per_utterance_cmvn(raw_logmel)
+
+                with torch.no_grad():
+                    logits_lfcc, attn_weights_tensor = self.predictor.crnn_lfcc.forward(feat_lfcc.to(self.device))
+                    s_crnn_lfcc = float((logits_lfcc[:, BONAFIDE] - logits_lfcc[:, SPOOF]).item())
+                    attn_np = attn_weights_tensor.squeeze().detach().cpu().numpy()
+
+                    if self.predictor.crnn_logmel is not None:
+                        logits_mel, _ = self.predictor.crnn_logmel.forward(feat_logmel.to(self.device))
+                        s_crnn_logmel = float((logits_mel[:, BONAFIDE] - logits_mel[:, SPOOF]).item())
+                    else:
+                        s_crnn_logmel = s_crnn_lfcc
+
+                mean_v = torch.mean(raw_lfcc, dim=1)
+                std_v = torch.std(raw_lfcc, dim=1)
+                pooled_vec = torch.cat([mean_v, std_v], dim=0).detach().cpu().numpy().reshape(1, -1)
+
+                lfcc_mat = raw_lfcc.detach().cpu().numpy()
+                logmel_mat = raw_logmel.detach().cpu().numpy()
+                wave_np = aligned_wave.detach().cpu().numpy()
+
+                if self.device.type == "mps":
+                    torch.mps.synchronize()
+
             yield PipelineEvent(
                 job_id=job_id,
                 stage="resampling",
@@ -275,13 +326,6 @@ class ForensicService:
             # -------------------------------------------------------------
             # Stage 3: Feature Extraction (LFCC + Log-Mel)
             # -------------------------------------------------------------
-            raw_lfcc = self.predictor.lfcc_ext(aligned_wave)  # (F=60, T)
-            raw_lfcc_t = raw_lfcc.T.detach().cpu().numpy().astype(np.float64)  # (T, F=60)
-            feat_lfcc = self.predictor.norm_lfcc(raw_lfcc) if (self.predictor.norm_lfcc.is_fitted and getattr(self.predictor.norm_lfcc.mean, "shape", [0])[0] == 60) else per_utterance_cmvn(raw_lfcc)
-
-            raw_logmel = self.predictor.logmel_ext(aligned_wave)
-            feat_logmel = self.predictor.norm_logmel(raw_logmel) if (self.predictor.norm_logmel.is_fitted and getattr(self.predictor.norm_logmel.mean, "shape", [0])[0] == 80) else per_utterance_cmvn(raw_logmel)
-
             yield PipelineEvent(
                 job_id=job_id,
                 stage="feature_extraction",
@@ -296,10 +340,7 @@ class ForensicService:
             scores_by_name = {}
 
             # 4.1 CRNN-LFCC
-            with torch.no_grad():
-                logits_lfcc, attn_weights_tensor = self.predictor.crnn_lfcc.forward(feat_lfcc.to(self.device))
-                s_crnn_lfcc = float(logits_lfcc[:, BONAFIDE] - logits_lfcc[:, SPOOF])
-                scores_by_name["CRNN-LFCC"] = s_crnn_lfcc
+            scores_by_name["CRNN-LFCC"] = s_crnn_lfcc
             yield PipelineEvent(
                 job_id=job_id,
                 stage="model_scores",
@@ -311,10 +352,7 @@ class ForensicService:
             await asyncio.sleep(0.01)
 
             # 4.2 CRNN-LogMel
-            with torch.no_grad():
-                logits_mel, _ = self.predictor.crnn_logmel.forward(feat_logmel.to(self.device))
-                s_crnn_logmel = float(logits_mel[:, BONAFIDE] - logits_mel[:, SPOOF])
-                scores_by_name["CRNN-LogMel"] = s_crnn_logmel
+            scores_by_name["CRNN-LogMel"] = s_crnn_logmel
             yield PipelineEvent(
                 job_id=job_id,
                 stage="model_scores",
@@ -326,7 +364,9 @@ class ForensicService:
             await asyncio.sleep(0.01)
 
             # 4.3 GMM Baseline
-            s_gmm = float(self.predictor.gmm.predict_score(raw_lfcc_t))
+            ll_bf = np.mean(self.predictor.gmm_bf.score_samples(raw_lfcc_t))
+            ll_sp = np.mean(self.predictor.gmm_sp.score_samples(raw_lfcc_t))
+            s_gmm = float(ll_bf - ll_sp)
             scores_by_name["GMM"] = s_gmm
             yield PipelineEvent(
                 job_id=job_id,
@@ -339,8 +379,21 @@ class ForensicService:
             await asyncio.sleep(0.01)
 
             # 4.4 Classical Models (SVM, Random Forest, Logistic Regression)
-            mean_std = extract_mean_std_features(raw_lfcc_t)
-            s_svm = float(predict_classical_score(self.predictor.svm, mean_std)[0])
+            scaled_p = self.predictor.scaler_pooled.transform(pooled_vec)
+            s_rf = float(self.predictor.rf.predict_proba(scaled_p)[0, BONAFIDE])
+            scores_by_name["Random Forest"] = s_rf
+            yield PipelineEvent(
+                job_id=job_id,
+                stage="model_scores",
+                model="Random Forest",
+                score=round(s_rf, 4),
+                elapsed_ms=elapsed(),
+                detail="Ensemble of 200 decision trees on pooled LFCC features",
+            )
+            await asyncio.sleep(0.01)
+
+            pca_p = self.predictor.pca.transform(scaled_p)
+            s_svm = float(self.predictor.svm.predict_proba(pca_p)[0, BONAFIDE])
             scores_by_name["SVM"] = s_svm
             yield PipelineEvent(
                 job_id=job_id,
@@ -352,19 +405,7 @@ class ForensicService:
             )
             await asyncio.sleep(0.01)
 
-            s_rf = float(predict_classical_score(self.predictor.rf, mean_std)[0])
-            scores_by_name["Random Forest"] = s_rf
-            yield PipelineEvent(
-                job_id=job_id,
-                stage="model_scores",
-                model="Random Forest",
-                score=round(s_rf, 4),
-                elapsed_ms=elapsed(),
-                detail="Ensemble of 100 decision trees on train-fitted PCA features",
-            )
-            await asyncio.sleep(0.01)
-
-            s_lr = float(predict_classical_score(self.predictor.lr, mean_std)[0])
+            s_lr = float(self.predictor.lr.predict_proba(pca_p)[0, BONAFIDE])
             scores_by_name["Logistic Regression"] = s_lr
             scores_by_name["GMM-LFCC"] = s_gmm
             scores_by_name["SVM-LFCC"] = s_svm
@@ -436,8 +477,6 @@ class ForensicService:
                     )
                 )
 
-            # Downsample waveform envelope (800 min/max points for canvas)
-            wave_np = aligned_wave.detach().cpu().numpy()
             step = max(1, len(wave_np) // 400)
             waveform_peaks = []
             for i in range(0, len(wave_np), step):
@@ -445,17 +484,10 @@ class ForensicService:
                 waveform_peaks.append(round(float(np.min(chunk)), 4))
                 waveform_peaks.append(round(float(np.max(chunk)), 4))
 
-            # Attention weights over time (aligned frames)
-            attn_np = attn_weights_tensor.squeeze().detach().cpu().numpy()
             if attn_np.ndim == 0:
                 attn_np = np.array([float(attn_np)])
-            # Normalize attention to [0, 1] for visual heatstrip
             a_min, a_max = float(np.min(attn_np)), float(np.max(attn_np))
             attn_norm = ((attn_np - a_min) / (a_max - a_min + 1e-8)).tolist()
-
-            # Downsample LFCC and LogMel spectrograms for client Canvas 2D
-            lfcc_mat = raw_lfcc.detach().cpu().numpy()  # (60, T)
-            logmel_mat = raw_logmel.detach().cpu().numpy()  # (80, T)
 
             def downsample_spectrogram(mat: np.ndarray, target_time_bins: int = 150) -> list[list[float]]:
                 F, T = mat.shape
@@ -501,8 +533,17 @@ class ForensicService:
                 "Accuracy may degrade on unseen generative vocoders, acoustic reverberation, or lossy codec re-encoding."
             )
 
+            crnn_prob = 1.0 / (1.0 + np.exp(-np.clip(s_crnn_lfcc - self.crnn_dev_threshold, -30.0, 30.0)))
+            crnn_verdict = "BONA FIDE (GENUINE)" if s_crnn_lfcc >= self.crnn_dev_threshold else "SPOOF (SYNTHETIC)"
+
             result_obj = AnalysisResult(
                 job_id=job_id,
+                primary_system="CRNN-LFCC",
+                primary_checkpoint_sha256=self.primary_checkpoint_sha256,
+                crnn_score=round(s_crnn_lfcc, 4),
+                crnn_verdict=crnn_verdict,
+                crnn_probability=round(float(crnn_prob), 4),
+                ensemble_status="EXPERIMENTAL ABLATION",
                 verdict=verdict,
                 probability_bonafide=round(proba_bonafide, 4),
                 confidence_band=confidence_band,
