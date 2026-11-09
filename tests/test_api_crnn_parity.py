@@ -27,8 +27,9 @@ def test_api_health_endpoint():
 
 def test_api_crnn_score_parity_50_files():
     eval_parquet = Path("data/manifests/eval.parquet")
-    if not eval_parquet.exists():
-        pytest.skip("Eval manifest not found for API parity test.")
+    raw_dir = Path("data/raw")
+    if not (eval_parquet.exists() and raw_dir.exists()):
+        pytest.skip("Audio files referenced in eval.parquet not found on disk (CI environment).")
 
     df = pd.read_parquet(eval_parquet)
     n_files = min(50, len(df))

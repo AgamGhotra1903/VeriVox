@@ -58,8 +58,9 @@ def test_align_codec_delay():
 
 def test_clean_subset_eer_guard():
     eval_parquet = Path("data/manifests/eval.parquet")
-    if not eval_parquet.exists():
-        pytest.skip("ASVspoof Eval manifest not found")
+    raw_dir = Path("data/raw")
+    if not (eval_parquet.exists() and raw_dir.exists()):
+        pytest.skip("ASVspoof Eval manifest or raw audio dataset not found")
 
     ckpt_path = Path("checkpoints/crnn_lfcc_best.pt")
     if not ckpt_path.exists():

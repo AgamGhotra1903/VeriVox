@@ -18,8 +18,8 @@ def test_ensemble_raw_waveform_vs_offline_matrix_parity():
     bundle_path = Path("checkpoints/ensemble/classical_bundle.joblib")
     ensemble_path = Path("checkpoints/ensemble/stacked_ensemble.joblib")
 
-    if not (eval_parquet.exists() and eval_npz_path.exists() and bundle_path.exists() and ensemble_path.exists()):
-        pytest.skip("Required manifests, caches, or checkpoints missing for parity test.")
+    if not (eval_parquet.exists() and eval_npz_path.exists() and bundle_path.exists() and ensemble_path.exists() and Path("data/raw").exists()):
+        pytest.skip("Required manifests, caches, audio files, or checkpoints missing for parity test.")
 
     df = pd.read_parquet(eval_parquet)
     bundle = joblib.load(bundle_path)
