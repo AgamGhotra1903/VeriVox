@@ -34,6 +34,9 @@ def test_api_crnn_score_parity_50_files():
     n_files = min(50, len(df))
     subset_df = df.iloc[:n_files]
 
+    if not Path(subset_df.iloc[0]["path"]).exists():
+        pytest.skip("Audio files referenced in eval.parquet not found on disk (CI environment).")
+
     service = get_forensic_service()
     device = service.device
     client = TestClient(app)
