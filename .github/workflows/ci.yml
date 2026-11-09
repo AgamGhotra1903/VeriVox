@@ -33,41 +33,9 @@ jobs:
           pip install -e .
 
       - name: Run unit test suite
-        id: test_run
         run: |
-          pytest -v -ra --tb=short tests/ 2>&1 | tee test_run.log
-        continue-on-error: true
-
-      - name: Publish Test Results to Job Summary
-        if: always()
-        run: |
-          echo "## Pytest Execution Summary" >> $GITHUB_STEP_SUMMARY
-          if [ -f test_run.log ]; then
-            echo '```text' >> $GITHUB_STEP_SUMMARY
-            tail -n 120 test_run.log >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-          else
-            echo "No test log produced." >> $GITHUB_STEP_SUMMARY
-          fi
-
-      - name: Assert Test Suite Success
-        run: |
-          if [ ! -f test_run.log ]; then
-            echo "Error: test_run.log not found."
-            exit 1
-          fi
-          if grep -q "FAILED" test_run.log || grep -q "ERROR" test_run.log; then
-            echo "Tests failed. Review step summary above."
-            exit 1
-          fi
-          if ! grep -q "passed" test_run.log; then
-            echo "No passing test marker found."
-            exit 1
-          fi
-          echo "All tests verified successfully!"
+          pytest -v -ra --tb=short tests/
 
       - name: Run provenance audit
         run: |
-          python -m pytest tests/test_provenance.py -v
-
-
+          pytest -v tests/test_provenance.py

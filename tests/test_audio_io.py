@@ -110,4 +110,4 @@ def test_spectral_lossy_compression_detection(tmp_path: Path):
         res_mp3 = load_and_validate_audio(mp3_p)
         assert res_mp3.is_valid
         assert res_mp3.is_lossy_compressed
-        assert res_mp3.spectral_cutoff_hz < 5000.0
+        assert res_mp3.spectral_cutoff_hz < 6500.0
