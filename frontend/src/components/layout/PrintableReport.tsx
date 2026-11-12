@@ -125,7 +125,7 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({ result }) => {
 
         <div className="flex justify-between items-end pt-6">
           <div>
-            <div>ANALYSIS SYSTEM: Acoustic Forensics v2.4.0 (CRNN + GMM + Stacking)</div>
+            <div>ANALYSIS SYSTEM: Acoustic Forensics v0.1.0 (CRNN + GMM + Stacking)</div>
             <div>VERIFIED ZERO-LEAKAGE EVALUATION PIPELINE</div>
           </div>
           <div className="border-t border-black w-48 text-center pt-1 text-[10px]">

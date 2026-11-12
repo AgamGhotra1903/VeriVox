@@ -1,11 +1,9 @@
 import React from 'react';
-import { Activity, Sliders, BarChart3, BookOpen, Printer, Shield } from 'lucide-react';
+import { Activity, Printer, Shield } from 'lucide-react';
 import { clsx } from 'clsx';
 import { Button } from '../ui/Button';
 
 export interface HeaderProps {
-  activeScreen: 'analyse' | 'stress-test' | 'benchmarks' | 'method';
-  onScreenChange: (screen: 'analyse' | 'stress-test' | 'benchmarks' | 'method') => void;
   device?: string;
   isOnline?: boolean;
   onPrintReport?: () => void;
@@ -13,23 +11,14 @@ export interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({
-  activeScreen,
-  onScreenChange,
   device = 'MPS',
   isOnline = true,
   onPrintReport,
   canPrint = false,
 }) => {
-  const navItems = [
-    { id: 'analyse', label: 'Analysis Lab', icon: <Activity className="w-4 h-4" /> },
-    { id: 'stress-test', label: 'Codec Stress Test', icon: <Sliders className="w-4 h-4" /> },
-    { id: 'benchmarks', label: 'Benchmarks & Metrics', icon: <BarChart3 className="w-4 h-4" /> },
-    { id: 'method', label: 'Methodology & Ethics', icon: <BookOpen className="w-4 h-4" /> },
-  ] as const;
-
   return (
     <header className="border-b border-borderSubtle bg-surface sticky top-0 z-40 select-none shadow-sm">
-      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+      <div className="max-w-[1240px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
         {}
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-[8px] bg-primary/10 text-primary border border-primary/20 flex items-center justify-center flex-shrink-0">
@@ -51,26 +40,10 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {}
-        <nav className="flex items-center gap-1 p-1 bg-elevated border border-borderSubtle rounded-[10px]">
-          {navItems.map((item) => {
-            const isActive = activeScreen === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => onScreenChange(item.id)}
-                className={clsx(
-                  'flex items-center gap-2 px-3 py-1.5 rounded-[8px] text-xs font-medium transition-colors duration-150 min-h-[36px]',
-                  isActive
-                    ? 'bg-surface text-txt-primary shadow-sm border border-borderSubtle font-medium'
-                    : 'text-txt-secondary hover:text-txt-primary hover:bg-surface/50 border border-transparent'
-                )}
-              >
-                {item.icon}
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </nav>
+        <div className="flex items-center gap-2 px-3.5 py-1.5 bg-surface text-txt-primary shadow-sm border border-borderSubtle rounded-[8px] text-xs font-semibold">
+          <Activity className="w-4 h-4 text-primary" />
+          <span>Analysis Lab</span>
+        </div>
 
         {}
         <div className="flex items-center gap-3">

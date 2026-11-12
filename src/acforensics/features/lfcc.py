@@ -1,5 +1,6 @@
 """Linear Frequency Cepstral Coefficients (LFCC) Extractor with Deltas and Delta-Deltas.
 
+Formulation based on Sahidullah et al., "A comparison of features for synthetic speech detection", Interspeech 2015.
 """
 
 import math

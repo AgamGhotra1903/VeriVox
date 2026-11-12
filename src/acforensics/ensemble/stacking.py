@@ -1,5 +1,7 @@
 """Stacked Ensemble (Score-Level Fusion) and Meta-Learner.
 
+Stacked generalization methodology based on David H. Wolpert, "Stacked generalization", Neural Networks 1992.
+
 Leakage Architecture Rules:
 1. Base models are trained on TRAIN split only.
 2. The meta-learner (L2 Logistic Regression) and its StandardScaler are fitted on DEV split only.

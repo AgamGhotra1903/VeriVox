@@ -118,3 +118,4 @@ export const GroundTruthCard: React.FC<GroundTruthCardProps> = ({
     </div>
   );
 };
+

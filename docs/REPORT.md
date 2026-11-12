@@ -3,7 +3,7 @@
 
 **Package:** `acforensics` (Acoustic Forensics Deepfake Speech Detection System)  
 **Target Dataset:** ASVspoof 2019 Logical Access (LA) & Cross-Domain In-the-Wild  
-**Lead Authors:** Agam Ghotra (IIT2024226), Chunit Bansal (IIT2024223)  
+**Authors:** VeriVox Forensic Research Team, IIIT Allahabad
 **Evaluation Date:** November 9, 2026 | **Results Freeze Date:** November 10, 2026  
 **Repository Branch:** `fixes/final` | **Status:** FROZEN & VERIFIED  
 

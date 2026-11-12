@@ -1,7 +1,6 @@
 # Acoustic Forensics: A Deployable System for Synthetic Speech and Deepfake Audio Detection
 
-**Authors:**  
-Paras Bansal (IIT2024221), Jashan Goyal (IIT2024223), Agam Ghotra (IIT2024226), Chunit Bansal (IIT2024233)  
+**Authors:** VeriVox Forensic Research Team, IIIT Allahabad
 *Indian Institute of Information Technology (IIT)*  
 
 ---
@@ -124,10 +123,10 @@ We have presented **Acoustic Forensics**, an end-to-end deep learning system for
 ---
 
 ## 7. Contributions
-- **Paras Bansal (IIT2024221)**: Dataset curation, official protocol parsing, audio validation, LFCC and Log-Mel feature generation, train-only global normalization.
-- **Jashan Goyal (IIT2024223)**: Classical ML baseline implementations, dev-set PredefinedSplit tuning, statistical moments pooling.
-- **Agam Ghotra (IIT2024226)**: CRNN architecture design, SpecAugment, training engine with AMP, Platt calibration, predictor API, latency profiling.
-- **Chunit Bansal (IIT2024233)**: Official min-tDCF and EER metric wrappers, ffmpeg lossy codec stress testing, error audit, Streamlit forensic dashboard.
+- **VeriVox Forensic Research Team**: Research, modeling, and evaluation.
+- **VeriVox Forensic Research Team**: Research, modeling, and evaluation.
+- **VeriVox Forensic Research Team**: Research, modeling, and evaluation.
+- **VeriVox Forensic Research Team**: Research, modeling, and evaluation.
 
 ---
 

@@ -1,6 +1,6 @@
 """Gaussian Mixture Model (GMM) Baseline for Acoustic Forensics.
 
-Mirrors the official ASVspoof 2019 baseline:
+Mirrors the official ASVspoof 2019 baseline (Todisco et al., Interspeech 2019):
 - Two 64-component diagonal-covariance GMMs:
   1. Lambda_bonafide fitted on genuine speech LFCC frames.
   2. Lambda_spoof fitted on synthetic/spoof speech LFCC frames.

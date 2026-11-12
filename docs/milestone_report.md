@@ -2,10 +2,10 @@
 
 **Course Project:** Acoustic Forensics: A Deployable System for Synthetic Speech and Deepfake Audio Detection  
 **Team Members:**  
-- Paras Bansal (IIT2024221)  
-- Jashan Goyal (IIT2024223)  
-- Agam Ghotra (IIT2024226)  
-- Chunit Bansal (IIT2024233)  
+- VeriVox Forensic Research Team  
+- VeriVox Forensic Research Team  
+- VeriVox Forensic Research Team  
+- VeriVox Forensic Research Team  
 **Date:** October 2026  
 
 ---

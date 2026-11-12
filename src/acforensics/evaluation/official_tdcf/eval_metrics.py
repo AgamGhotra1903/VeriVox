@@ -1,3 +1,5 @@
+# Sourced from the official ASVspoof 2019 evaluation toolkit (Kinnunen et al., 2020).
+# Official ASVspoof / Interspeech academic research reference implementation.
 import numpy as np
 
 

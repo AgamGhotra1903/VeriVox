@@ -9,15 +9,11 @@
 
 **VeriVox** is a modular deepfake audio detection system and interactive forensic laboratory application designed to discriminate authentic human speech (*bona fide*) from synthetic speech and voice conversion deepfakes (*spoof*).
 
-Developed for an advanced machine learning course project by:
-- **Paras Bansal** (IIT2024221): Dataset curation, protocol parsing, audio I/O validation, feature extraction (LFCC, Log-Mel, Normalization).
-- **Jashan Goyal** (IIT2024223): Classical ML baselines (LR, RBF-SVM, RF), dev-set hyperparameter tuning, statistical pooling.
-- **Agam Ghotra** (IIT2024226): CRNN architecture (CNN + BiGRU + Self-Attention + Attention Pooling), regularized training engine, GMM baseline, score-level stacked ensemble, Platt calibration, FastAPI streaming service & React forensic instrument.
-- **Chunit Bansal** (IIT2024233): Evaluation metrics (EER, min-tDCF, ROC-AUC), ffmpeg codec stress testing, In-The-Wild cross-domain testing, error audit.
+Developed by the **VeriVox Research Team**, Department of Information Technology, Indian Institute of Information Technology Allahabad.
 
 ---
 
-## 1. Forensic Web Application ("Signal Intelligence Lab")
+## 1. Forensic Web Application ("Analysis Lab")
 
 The application provides a scientific signal intelligence console rather than a generic SaaS landing page. It features dark obsidian chassis styling (`#0B0F12`), a signature Phosphor Lime CRT trace (`#22E575`), 1px graticule gridlines, monospace tabular figures (`JetBrains Mono`), and dual-encoded status badges for accessibility (contrast $\ge 4.5:1$).
 
@@ -25,42 +21,22 @@ The application provides a scientific signal intelligence console rather than a 
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
 │ [⌖] ACOUSTIC FORENSICS LAB   ::   SIGNAL INTELLIGENCE CONSOLE v2.4                         [● SYSTEM ONLINE]│
 │ ──────────────────────────────────────────────────────────────────────────────────────────────────────────── │
-│ [ 1. ANALYSE ]      [ 2. STRESS TEST ]      [ 3. BENCHMARKS ]      [ 4. METHODOLOGY ]    DEV: MPS (Apple)    │
+│ [ 1. ANALYSIS LAB ]                                                                      DEV: MPS (Apple)    │
 └──────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### The 4 Application Screens
+### Forensic Workstation Capabilities
 
-1. **Screen 1: Analyse (Main Forensic Workstation)**
-   - **Signal Dropzone**: Drag-and-drop audio upload, native file browser, microphone recording with live Web Audio API VU level meter, and instant reference sample selector.
-   - **Real-Time SSE Pipeline Telemetry**: Streams actual backend progress events via Server-Sent Events with precise elapsed millisecond timings:
-     $$\text{Validating} \rightarrow \text{Resampling} \rightarrow \text{Spectral Extraction} \rightarrow \text{Multi-Model Scoring} \rightarrow \text{L2 Meta-Fusion} \rightarrow \text{Synthesis}$$
-   - **Multi-Lane Temporal Signal Inspector**:
-     - *Lane 1 (Oscillogram)*: HTML5 Canvas rendering peak envelope min/max pairs with draggable playhead.
-     - *Lane 2 (CRNN Attention Heatstrip)*: Aligned frame-level self-attention salience showing which temporal moments drove the neural decision. Hovering inspects local time and frame weight.
-     - *Lane 3 (Dual Spectrogram Heatmap)*: Canvas 2D spectral energy map toggleable between 60-dim LFCC and 80-dim Log-Mel with synchronized playhead tracking.
-   - **Calibrated Verdict Gauge**: Radial arc meter displaying calibrated probability $P(\text{Genuine})$, explicit uncertainty band $[40\%, 60\%]$, decision threshold ($0.1795$), and diagnostic summary.
-   - **Multi-Model Decision Axis**: Comparative horizontal score axis plotting CRNN-LFCC, CRNN-LogMel, GMM, SVM, Random Forest, and Logistic Regression on a unified axis with stacking weights and agreement indicators.
-
-2. **Screen 2: Stress Test (Lossy Codec Compression Harness)**
-   - Re-encodes the loaded audio across **MP3**, **AAC**, and **Opus** at **16, 32, and 64 kbps** via native `ffmpeg`.
-   - Generates a 9-cell experimental matrix comparing verdict stability, score shifts ($\Delta$), and high-frequency cutoff roll-off.
-
-3. **Screen 3: Benchmarks & Empirical Validation**
-   - **Master Results Table**: Dynamic evaluation metrics (Dev/Eval EER, ROC-AUC, min-tDCF, and operating thresholds) across all base models and fusion.
-   - **Interactive Canvas ROC Curves**: Smooth multi-model ROC curves with interactive model toggles and diagonal random-guess baseline.
-   - **Controlled Ablation Matrices**: Feature ablation (LFCC vs. Log-Mel vs. Both), Architecture ablation (CNN vs. BiGRU vs. Self-Attention), and Regularization ablation (Dropout/AdamW).
-   - **Per-Attack Evaluation (A07–A19)**: Framework for per-attack evaluation across speech synthesis and voice conversion attacks (pipeline verification).
-   - **Cross-Domain Transfer (In-the-Wild)**: Evaluation framework for unconstrained external deepfake speech (pipeline verification).
-   - **CSV Export**: One-click export for any benchmark matrix.
-
-4. **Screen 4: Methodology & Scientific Rigor**
-   - Interactive end-to-end signal flow breakdown.
-   - Leakage-safe partitioning guarantees (Train $\rightarrow$ Dev $\rightarrow$ Eval).
-   - Forensic limitations & known failure modes (lossy compression roll-off, short clips $<1.0\text{s}$, unseen diffusion vocoders).
-
-5. **Printable Forensic Report**
-   - Press <kbd>P</kbd> or click "Export Report" to generate an official one-page Forensic Examination Certificate via `@media print`.
+- **Signal Ingestion Dropzone**: Drag-and-drop audio upload, native file browser, microphone recording with live Web Audio API VU level meter, and instant evaluation sample selector.
+- **Real-Time SSE Pipeline Telemetry**: Streams actual backend progress events via Server-Sent Events with precise elapsed millisecond timings:
+  $$\text{Validating} \rightarrow \text{Resampling} \rightarrow \text{Spectral Extraction} \rightarrow \text{Multi-Model Scoring} \rightarrow \text{L2 Meta-Fusion} \rightarrow \text{Synthesis}$$
+- **Multi-Lane Temporal Signal Inspector**:
+  - *Lane 1 (Oscillogram)*: HTML5 Canvas rendering peak envelope min/max pairs with draggable playhead.
+  - *Lane 2 (CRNN Attention Heatstrip)*: Aligned frame-level self-attention salience showing which temporal moments drove the neural decision. Hovering inspects local time and frame weight.
+  - *Lane 3 (Dual Spectrogram Heatmap)*: Canvas 2D spectral energy map toggleable between 60-dim LFCC and 80-dim Log-Mel with synchronized playhead tracking.
+- **Calibrated Verdict Gauge**: Radial arc meter displaying calibrated probability $P(\text{Genuine})$, explicit uncertainty band $[40\%, 60\%]$, decision threshold ($0.1795$), and diagnostic summary.
+- **Multi-Model Decision Axis**: Comparative horizontal score axis plotting CRNN-LFCC, CRNN-LogMel, GMM, SVM, Random Forest, and Logistic Regression on a unified axis with stacking weights and agreement indicators.
+- **Printable Forensic Report**: Press <kbd>P</kbd> or click "Export Report" to generate an official one-page Forensic Examination Certificate via `@media print`.
 
 ---
 
@@ -200,15 +176,25 @@ The backend exposes an asynchronous REST and Server-Sent Events API:
 |:---:|---|
 | <kbd>U</kbd> | Open file browser to upload an audio clip |
 | <kbd>Space</kbd> | Toggle audio playback / pause with moving playhead |
-| <kbd>1</kbd> | Switch to **Analyse** Workstation |
-| <kbd>2</kbd> | Switch to **Stress Test** Console |
-| <kbd>3</kbd> | Switch to **Benchmarks** Dashboard |
-| <kbd>4</kbd> | Switch to **Methodology** Documentation |
 | <kbd>P</kbd> | Export printable one-page Forensic Examination Certificate |
 
 ---
 
-## 7. Forensic Limitations & Ethical Disclosures
+## 7. Provenance, Code Attribution & Academic Integrity
+
+For complete software provenance, external code attributions, mathematical lineage, and license compatibility matrices, see [SOURCES.md](SOURCES.md).
+
+- **Original Implementations**: CRNN architecture with multi-head self-attention pooling, score-level stacking meta-learner, Platt scaling calibrator, FastAPI streaming service, and React/Canvas temporal forensic console.
+- **Attributed Baselines & Standards**:
+  - ASVspoof 2019 official evaluation metric toolkit (`compute_tDCF_legacy`, `compute_eer`): Sahidullah et al., Kinnunen et al. (BSD 3-Clause).
+  - Linear Frequency Cepstral Coefficients (LFCC) filterbank & DCT-II formulation: Sahidullah et al. (2015).
+  - 64-component Gaussian Mixture Model baseline: Todisco et al. (2019).
+  - Stacking Generalization: Wolpert (1992).
+- **License**: MIT License. All dependencies and external algorithms are permissively licensed (MIT, BSD-3-Clause, Apache-2.0) with zero copyleft (GPL/AGPL) conflicts.
+
+---
+
+## 8. Forensic Limitations & Ethical Disclosures
 
 1. **Lossy Codec Quantization**: Low-bitrate compression ($\le 16\text{ kbps}$ AAC/MP3) induces spectral roll-off and quantization smearing, shifting scores toward the uncertainty band.
 2. **Short Utterance Context**: Speech clips shorter than 1.0s lack sufficient acoustic window context for recurrent GRU temporal modeling.

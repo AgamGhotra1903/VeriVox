@@ -299,36 +299,6 @@ async def get_analysis_result(job_id: str):
     return res
 
 
-@app.post("/api/stress-test", response_model=StressTestResponse)
-async def run_codec_stress_test(job_id: str = Form(...)):
-    """Re-encodes the specified audio across MP3, AAC, and Opus at 16, 32, 64 kbps via ffmpeg
-
-    and computes the comparative verdict shifts to assess acoustic robustness.
-    """
-    service = get_forensic_service()
-    try:
-        return await service.run_stress_test(job_id)
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-    except Exception as e:
-        logger.exception("Codec stress test failed: %s", e)
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Stress test error: {str(e)}")
-
-
-@app.get("/api/benchmarks", response_model=BenchmarksResponse)
-async def get_experimental_benchmarks():
-    """Serves official ASVspoof 2019 LA evaluation tables, ablations, and ROC curves
-
-    dynamically parsed from results/ without hardcoded parameters.
-    """
-    service = get_forensic_service()
-    try:
-        return service.load_benchmarks()
-    except Exception as e:
-        logger.exception("Failed to load benchmark results: %s", e)
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
-
-
 repo_root = Path(__file__).resolve().parents[3]
 frontend_dist = repo_root / "frontend" / "dist"
 if frontend_dist.exists() and (frontend_dist / "index.html").exists():

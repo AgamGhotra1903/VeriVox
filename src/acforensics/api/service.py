@@ -184,7 +184,9 @@ class ForensicService:
 
     def list_samples(self) -> list[SampleItem]:
         """Discovers bundled forensic reference sample clips."""
-        samples_dir = self.repo_root / "app" / "assets" / "samples"
+        samples_dir = self.repo_root / "data" / "samples"
+        if not samples_dir.exists():
+            samples_dir = self.repo_root / "app" / "assets" / "samples"
         samples = []
         if not samples_dir.exists():
             return samples
@@ -239,7 +241,9 @@ class ForensicService:
 
     def get_sample_file_path(self, filename: str) -> Optional[Path]:
         """Resolves path to a bundled reference sample file."""
-        p = self.repo_root / "app" / "assets" / "samples" / filename
+        p = self.repo_root / "data" / "samples" / filename
+        if not p.exists():
+            p = self.repo_root / "app" / "assets" / "samples" / filename
         return p if p.exists() else None
 
     def _load_eval_manifest(self) -> Optional[pd.DataFrame]:

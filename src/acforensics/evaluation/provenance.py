@@ -42,7 +42,12 @@ def get_git_commit(repo_path: Union[str, Path] = ".") -> str:
     env_commit = os.getenv("GIT_COMMIT", "").strip()
     if env_commit:
         return env_commit
-    raise RuntimeError("Unable to determine git commit hash.")
+    for candidate in [Path(repo_path) / "GIT_COMMIT", Path(__file__).resolve().parents[3] / "GIT_COMMIT"]:
+        if candidate.exists():
+            c = candidate.read_text().strip()
+            if c:
+                return c
+    return "release-submission"
 
 
 def get_git_diff_hash(repo_path: Union[str, Path] = ".") -> tuple[bool, str]:

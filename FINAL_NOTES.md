@@ -1,6 +1,6 @@
 # Acoustic Forensics: Final Verification Notes & Engineering Audit Log
 **Branch:** `fixes/final` (branched from `fixes/review-round-1`)  
-**Authors:** Agam Ghotra (IIT2024226), Paras Bansal (IIT2024221), Chunit Bansal (IIT2024233), Jashan Goyal (IIT2024223)  
+**Authors:** VeriVox Forensic Research Team, IIIT Allahabad
 **Date:** November 2026  
 
 ---

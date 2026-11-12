@@ -26,18 +26,25 @@ def build_pdf(group_num: str, title: str, out_dir: Path) -> Path:
     html_path = out_dir / f"{group_num}_report_{title}.html"
     pdf_path = out_dir / f"{group_num}_report_{title}.pdf"
     
-    print(f"--> Building HTML report: {html_path}")
-    build_html_report(html_path)
-    print(f"--> Compiling PDF: {pdf_path}")
-    compile_pdf(html_path, pdf_path)
+    ieee_pdf = REPO_ROOT / "report" / "main.pdf"
+    if ieee_pdf.exists():
+        print(f"--> Using compiled IEEE LaTeX report: {ieee_pdf}")
+        import shutil
+        shutil.copy2(ieee_pdf, pdf_path)
+        shutil.copy2(ieee_pdf, out_dir / f"IEEE_{group_num}_report_{title}.pdf")
+    else:
+        print(f"--> Building HTML report: {html_path}")
+        build_html_report(html_path)
+        print(f"--> Compiling PDF: {pdf_path}")
+        compile_pdf(html_path, pdf_path)
     return pdf_path
 
 def build_zip(group_num: str, title: str, out_dir: Path) -> Path:
     zip_path = out_dir / f"{group_num}_code_{title}.zip"
     print(f"--> Creating submission ZIP: {zip_path}")
     
-    include_dirs = ['src', 'scripts', 'configs', 'tests', 'frontend', 'docs', 'results', 'checkpoints', 'data/manifests']
-    include_files = ['README.md', 'requirements.txt', 'pyproject.toml', 'Makefile', 'Dockerfile', 'pytest.ini', '.gitignore', 'FIXES_LOG.md', 'FINAL_NOTES.md']
+    include_dirs = ['src', 'scripts', 'configs', 'tests', 'frontend', 'docs', 'results', 'checkpoints', 'data/manifests', 'data/samples', 'report']
+    include_files = ['README.md', 'SOURCES.md', 'GIT_COMMIT', 'requirements.txt', 'pyproject.toml', 'Makefile', 'Dockerfile', 'pytest.ini', '.gitignore', 'FIXES_LOG.md', 'FINAL_NOTES.md']
 
     def should_exclude(rel_path):
         parts = Path(rel_path).parts

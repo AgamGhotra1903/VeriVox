@@ -1,6 +1,6 @@
 # Dataset Card: Acoustic Forensics Benchmark Datasets ("AF-Split v1")
 
-**Authors:** Paras Bansal (IIT2024221), Jashan Goyal (IIT2024223), Agam Ghotra (IIT2024226), Chunit Bansal (IIT2024233)  
+**Authors:** VeriVox Forensic Research Team, IIIT Allahabad
 **Date:** October 2026  
 **Standards Compliance:** Follows official ASVspoof 2019 evaluation protocol and In-The-Wild cross-domain conventions.
 

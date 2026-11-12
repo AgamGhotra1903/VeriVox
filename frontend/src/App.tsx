@@ -3,13 +3,9 @@ import { Header } from './components/layout/Header';
 import { PrintableReport } from './components/layout/PrintableReport';
 import { ToastProvider } from './components/ui/Toast';
 import { AnalyseScreen } from './screens/AnalyseScreen';
-import { StressTestScreen } from './screens/StressTestScreen';
-import { BenchmarksScreen } from './screens/BenchmarksScreen';
-import { MethodScreen } from './screens/MethodScreen';
 import { AnalysisResult, HealthResponse, SampleItem } from './types/api';
 
 export const App: React.FC = () => {
-  const [activeScreen, setActiveScreen] = useState<'analyse' | 'stress-test' | 'benchmarks' | 'method'>('analyse');
   const [activeResult, setActiveResult] = useState<AnalysisResult | null>(null);
   const [samples, setSamples] = useState<SampleItem[]>([]);
   const [health, setHealth] = useState<HealthResponse | null>(null);
@@ -40,10 +36,6 @@ export const App: React.FC = () => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return;
-      if (e.key === '1') setActiveScreen('analyse');
-      if (e.key === '2') setActiveScreen('stress-test');
-      if (e.key === '3') setActiveScreen('benchmarks');
-      if (e.key === '4') setActiveScreen('method');
       if ((e.key === 'p' || e.key === 'P') && activeResult) {
         e.preventDefault();
         window.print();
@@ -63,8 +55,6 @@ export const App: React.FC = () => {
         {}
         <div className="print:hidden">
           <Header
-            activeScreen={activeScreen}
-            onScreenChange={setActiveScreen}
             device={health?.device || 'MPS'}
             isOnline={isOnline}
             onPrintReport={handlePrint}
@@ -74,25 +64,11 @@ export const App: React.FC = () => {
 
         {}
         <main className="flex-1 print:hidden">
-          {activeScreen === 'analyse' && (
-            <AnalyseScreen
-              samples={samples}
-              onAnalysisComplete={setActiveResult}
-              activeResult={activeResult}
-            />
-          )}
-
-          {activeScreen === 'stress-test' && (
-            <StressTestScreen activeResult={activeResult} />
-          )}
-
-          {activeScreen === 'benchmarks' && (
-            <BenchmarksScreen />
-          )}
-
-          {activeScreen === 'method' && (
-            <MethodScreen />
-          )}
+          <AnalyseScreen
+            samples={samples}
+            onAnalysisComplete={setActiveResult}
+            activeResult={activeResult}
+          />
         </main>
 
         {}
@@ -109,7 +85,7 @@ export const App: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-4">
-            <span>Shortcuts: <kbd className="text-phosphor">U</kbd> Upload · <kbd className="text-phosphor">Space</kbd> Play · <kbd className="text-phosphor">1-4</kbd> Switch · <kbd className="text-phosphor">P</kbd> Print</span>
+            <span>Shortcuts: <kbd className="text-phosphor">U</kbd> Upload · <kbd className="text-phosphor">Space</kbd> Play · <kbd className="text-phosphor">P</kbd> Print</span>
             <span className="w-1 h-1 rounded-full bg-borderStrong" />
             <span className="text-txt-secondary">VeriVox Forensic Lab</span>
           </div>
