@@ -81,4 +81,8 @@ Thumbs.db
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Reports and academic submissions
+report/
 submission/
+*.pdf
