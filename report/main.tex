@@ -32,7 +32,7 @@ audio deepfake detection, acoustic forensics, anti-spoofing, ASVspoof 2019, stac
 \end{IEEEkeywords}
 
 \section{Introduction and Related Work}
-Recent advances in deep generative modeling, neural vocoding (e.g., WaveNet, HiFi-GAN), and diffusion architectures enable the synthesis of highly authentic human speech and voice conversion clones from only seconds of reference audio. When deployed maliciously, automated voice spoofing threatens voice-biometric authentication in telephony banking, fuels targeted social engineering fraud, and compromises the evidentiary authenticity of audio recordings in judicial proceedings \cite{wang2020asvspoof,muller2022does}. Countermeasures must discriminate subtle generative phase and harmonic artifacts while remaining resilient to channel effects, background acoustic noise, and lossy compression formats \cite{todisco2019asvspoof,kinnunen2020tandem}.
+Recent advances in deep generative modeling, neural vocoding (e.g., WaveNet \cite{oord2016wavenet}, HiFi-GAN \cite{kong2020hifi}), and diffusion architectures enable the synthesis of highly authentic human speech and voice conversion clones from only seconds of reference audio. When deployed maliciously, automated voice spoofing threatens voice-biometric authentication in telephony banking, fuels targeted social engineering fraud, and compromises the evidentiary authenticity of audio recordings in judicial proceedings \cite{wang2020asvspoof,muller2022does}. Countermeasures must discriminate subtle generative phase and harmonic artifacts while remaining resilient to channel effects, background acoustic noise, and lossy compression formats \cite{todisco2019asvspoof,kinnunen2020tandem}.
 
 Early anti-spoofing countermeasures paired hand-crafted cepstral representations with statistical spectral models. In particular, Linear Frequency Cepstral Coefficients (LFCC) proved decisively superior to conventional Mel-Frequency Cepstral Coefficients (MFCC) because linear filterbank spacing preserves high-frequency spectral flux and unnatural phase boundaries introduced by vocoders, whereas psychoacoustic mel-warping excessively compresses spectral detail above 4\,kHz \cite{sahidullah2015comparison}. Subsequent research introduced deep neural architectures processing static 2D spectrograms or raw waveforms. Representative systems include Light Convolutional Neural Networks (LCNN) utilizing Max-Feature-Map (MFM) activations to suppress low-energy noise \cite{lavrentyeva2019stc}, raw-waveform models such as RawNet2 utilizing sinc-convolutional filters \cite{tak2021rawnet2}, and spectro-temporal graph attention networks such as AASIST \cite{jung2022aasist}. Despite strong benchmark metrics on in-domain evaluation splits, recent evaluations demonstrate that deep detectors often suffer catastrophic performance degradation when deployed on unconstrained real-world web audio \cite{muller2022does}.
 
@@ -48,14 +48,14 @@ Fig.~\ref{fig:pipeline} illustrates the end-to-end signal processing and classif
 
 \begin{figure}[htbp]
 \centering
-\begin{tikzpicture}[node distance=0.25cm and 0.25cm, every node/.style={font=\scriptsize}, b/.style={draw,rounded corners,align=center,minimum height=0.75cm,text width=2.1cm,fill=gray!6}, >=Stealth]
+\begin{tikzpicture}[node distance=0.20cm and 0.20cm, every node/.style={font=\scriptsize}, b/.style={draw,rounded corners,align=center,minimum height=0.68cm,text width=2.1cm,fill=gray!6}, >=Stealth]
 \node[b] (a) {\textbf{Input Audio}\\16\,kHz Mono PCM};
 \node[b,right=of a] (b) {\textbf{Conditioning}\\Peak Norm, 4.0\,s};
 \node[b,right=of b] (c) {\textbf{Features}\\LFCC 60 / Mel 80};
-\node[b,below=0.4cm of c] (d) {\textbf{6 Base Models}\\CRNNs, GMM, SVM, RF, LR};
+\node[b,below=0.28cm of c] (d) {\textbf{6 Base Models}\\CRNNs, GMM, SVM, RF, LR};
 \node[b,left=of d] (e) {\textbf{Standardize}\\$(s_k - \mu_k)/\sigma_k$};
 \node[b,left=of e] (f) {\textbf{Meta-Learner}\\$L_2$ Logistic Stacker};
-\node[b,below=0.4cm of e,text width=6.2cm,fill=blue!5] (g) {\textbf{Forensic Deliverable}\\Calibrated $P(\text{bona fide})$, Uncertainty Band, Attention Salience};
+\node[b,below=0.28cm of e,text width=6.2cm,fill=blue!5] (g) {\textbf{Forensic Deliverable}\\Calibrated $P(\text{bona fide})$, Uncertainty Band, Attention Salience};
 
 \draw[->,line width=0.6pt] (a) -- (b);
 \draw[->,line width=0.6pt] (b) -- (c);
@@ -100,7 +100,7 @@ The standardized feature vector $\mathbf{z} = [z_1, \dots, z_6]^{\top}$ is fused
 \begin{equation}
 P(\text{bona fide} \mid \mathbf{z}) = \sigma(\mathbf{w}^{\top}\mathbf{z} + b) = \frac{1}{1 + \exp(-(\mathbf{w}^{\top}\mathbf{z} + b))},
 \end{equation}
-where weights $\mathbf{w}$ and intercept $b$ are optimized via $L_2$-regularized logistic regression fitted solely on development scores. To guard against over-confident false positives in forensic applications, decisions within $P \in [0.40, 0.60]$ are flagged with an explicit \textit{Uncertainty Band}. Temporal attention weights $\alpha_t \in [0, 1]$ from the CRNN provide a synchronized heatstrip localizing specific phoneme intervals that triggered the spoof verdict.
+where weights $\mathbf{w}$ and intercept $b$ are optimized via $L_2$-regularized logistic regression fitted solely on development scores, yielding a calibrated posterior probability via Platt scaling \cite{platt1999probabilistic}. To guard against over-confident false positives in forensic applications, decisions within $P \in [0.40, 0.60]$ are flagged with an explicit \textit{Uncertainty Band}. Temporal attention weights $\alpha_t \in [0, 1]$ from the CRNN provide a synchronized heatstrip localizing specific phoneme intervals that triggered the spoof verdict.
 
 \section{Experimental Settings}
 \textbf{Datasets.} Countermeasures are trained and benchmarked on the official ASVspoof 2019 Logical Access (LA) database \cite{wang2020asvspoof}. The training split ($N = 25{,}380$ utterances across 20 speakers) trains all base models. The development split ($N = 24{,}844$ utterances across 10 speakers) is reserved strictly for hyperparameter tuning, score standardization parameters, and meta-learner training. The evaluation split ($N = 71{,}237$ utterances across 48 speakers, encompassing 13 unseen acoustic attacks A07--A19) remains strictly held out until frozen scoring. Zero-shot out-of-domain evaluation is conducted on the unconstrained In-the-Wild deepfake speech corpus ($N = 25{,}589$ clips) \cite{muller2022does}.
@@ -147,7 +147,7 @@ Our experimental results demonstrate clear architectural separation:
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.88\columnwidth]{fig_loss.png}
+\includegraphics[width=0.74\columnwidth]{fig_loss.png}
 \caption{Training loss versus training epochs for the deep CRNN models.}
 \label{fig:loss}
 \end{figure}
@@ -155,24 +155,15 @@ Our experimental results demonstrate clear architectural separation:
 Fig.~\ref{fig:loss} illustrates the training loss trajectories. Both CRNN-LFCC and CRNN-LogMel converge smoothly within 15 epochs under AdamW with cosine annealing, with early stopping engaging at epoch 21.
 
 \subsection{Controlled Ablation Studies}
-\begin{itemize}
-    \item \textbf{LFCC versus Log-Mel Spacing:} CRNN-LFCC (6.70\% EER) substantially outperforms CRNN-LogMel (10.28\% EER). Linear filterbank spacing allocates 10 filters above 4\,kHz, whereas the logarithmic Mel scale allocates only 3. Mel pooling averages out high-frequency phase and spectral tilt anomalies generated by neural vocoders, whereas linear filterbanks preserve them.
-    \item \textbf{Attention Pooling versus Average Pooling:} Replacing 4-head multi-head self-attention pooling with standard global temporal average pooling increases Eval EER from 6.70\% to 7.98\% (+1.28\% absolute degradation). Self-attention allows the model to dynamically weight brief transient speech frames containing synthesis glitches while ignoring uninformative background pauses.
-\end{itemize}
+\textbf{LFCC versus Log-Mel Spacing:} CRNN-LFCC (6.70\% EER) substantially outperforms CRNN-LogMel (10.28\% EER). Linear filterbank spacing allocates 10 filters above 4\,kHz, whereas the logarithmic Mel scale allocates only 3. Mel pooling averages out high-frequency phase and spectral tilt anomalies generated by neural vocoders, whereas linear filterbanks preserve them.
+
+\textbf{Attention Pooling versus Average Pooling:} Replacing 4-head multi-head self-attention pooling with standard global temporal average pooling increases Eval EER from 6.70\% to 7.98\% (+1.28\% degradation). Self-attention dynamically weights brief transient speech frames containing synthesis glitches while ignoring uninformative background pauses.
 
 \subsection{Per-Attack Vulnerability Analysis (A07--A19)}
-Evaluation across all 13 unseen attack algorithms reveals acute performance divergence:
-\begin{itemize}
-    \item \textbf{Robust Detection (A07--A12):} For traditional unit selection, diphone concatenative synthesis (A07), and standard acoustic neural vocoders (A10, A11), CRNN-LFCC achieves near-flawless discrimination ($<1.8\%$ EER).
-    \item \textbf{Challenging Attacks (A17--A19):} Spectral filtering voice conversion (A16) and direct waveform concatenation (A19) degrade performance to 12.45\% and 14.80\% EER respectively, where vocoder phase mismatches are minimal.
-\end{itemize}
+Evaluation across all 13 unseen evaluation attacks reveals acute performance divergence. For concatenative and standard acoustic neural vocoders (A07, A10, A11), CRNN-LFCC achieves near-flawless discrimination ($<1.8\%$ EER). Conversely, spectral filtering voice conversion (A16) and direct waveform concatenation (A19) degrade performance to 12.45\% and 14.80\% EER respectively, where vocoder phase mismatches are minimal.
 
 \subsection{Lossy Codec Compression Stress-Testing}
-We stress-test the trained detector against lossy consumer audio compression across MP3, AAC, and Opus at bitrates of 16, 32, and 64\,kbps, using cross-correlation delay alignment to compensate for encoder padding:
-\begin{itemize}
-    \item \textbf{Opus Resilience:} Opus demonstrates superior forensic stability, yielding 7.45\% EER at 64\,kbps and 9.82\% at 16\,kbps.
-    \item \textbf{MP3 Degradation:} MP3 induces severe high-frequency cutoff roll-off ($<11.5\,\text{kHz}$ at 16\,kbps), eroding critical LFCC sub-bands and degrading EER to 16.82\%.
-\end{itemize}
+We stress-test the detector against lossy consumer audio compression across MP3, AAC, and Opus (16--64\,kbps) with cross-correlation delay alignment. Opus demonstrates superior forensic stability (7.45\% EER at 64\,kbps, 9.82\% at 16\,kbps). In contrast, MP3 induces severe high-frequency cutoff roll-off ($<11.5\,\text{kHz}$ at 16\,kbps), eroding critical LFCC sub-bands and degrading EER to 16.82\%.
 
 \subsection{Silence Shortcut Bias Audit}
 We evaluated whether countermeasures exploit silence duration at utterance boundaries. A shallow decision tree trained exclusively on total silence duration achieves an alarming \textbf{18.36\% EER} (ROC-AUC 0.8872) on ASVspoof 2019. Trimming boundary silence from evaluation audio degraded CRNN-LFCC performance by +21.55\% EER. This confirms that speech anti-spoofing benchmarks contain strong silence distribution shortcuts, highlighting that front-end Voice Activity Detection (VAD) is indispensable in operational forensic deployments.
@@ -181,9 +172,10 @@ We evaluated whether countermeasures exploit silence duration at utterance bound
 On the unconstrained In-the-Wild corpus ($N = 25{,}589$), the model records an optimal EER of 44.73\% (ROC-AUC 0.5638). Polarity verification confirms that predictions are positively aligned with bona fide speech, but diverse recording hardware, reverberation, and unknown social media lossy compression create a profound acoustic distribution shift.
 
 \section{Conclusion}
-We investigated an end-to-end acoustic forensics system for synthetic speech detection, tracing the progression from classical statistical baselines (11.46\%--23.94\% EER) to a deep multi-head self-attentive CRNN-LFCC countermeasure (6.70\% EER, 0.2143 min-tDCF). While score-level stacked generalization was explored to fuse complementary feature spaces, empirical evaluation demonstrated that the stacker overfits clean development scores (10.74\% Eval EER), confirming that standalone CRNN-LFCC offers superior operational generalization. Forensic stress-testing quantified model resilience under lossy codecs, exposed the critical impact of silence shortcut bias, and documented the domain shift on real-world audio. Future research will explore self-supervised front-ends (WavLM, HuBERT), acoustic room impulse response (RIR) augmentation, and multi-domain channel normalization.
+We presented an acoustic forensics system for synthetic speech detection, tracing the progression from classical statistical baselines (11.46\%--23.94\% EER) to a deep multi-head self-attentive CRNN-LFCC countermeasure (6.70\% EER, 0.2143 min-tDCF). While score-level stacked generalization was explored to fuse complementary feature spaces, empirical evaluation demonstrated that the stacker overfits clean development scores (10.74\% Eval EER), confirming that standalone CRNN-LFCC offers superior operational generalization. Forensic stress-testing quantified model resilience under lossy codecs, exposed the critical impact of silence shortcut bias, and documented the domain shift on real-world audio. Future research will explore self-supervised front-ends (WavLM, HuBERT), acoustic room impulse response (RIR) augmentation, and multi-domain channel normalization.
 
 \begin{thebibliography}{00}
+\footnotesize
 \bibitem{wang2020asvspoof} X. Wang, J. Yamagishi, M. Todisco, H. Delgado, A. Nautsch, N. Evans, M. Sahidullah, V. Vestman, T. Kinnunen, K. A. Lee \textit{et al.}, ``ASVspoof 2019: A large-scale public database of synthesized, converted and replayed speech,'' \textit{Computer Speech \& Language}, vol. 64, p. 101114, 2020.
 \bibitem{todisco2019asvspoof} M. Todisco, X. Wang, V. Vestman, M. Sahidullah, H. Delgado, A. Nautsch, J. Yamagishi, N. Evans, T. Kinnunen, and K. A. Lee, ``ASVspoof 2019: Future horizons in spoofed and fake audio detection,'' in \textit{Proc. Interspeech}, 2019, pp. 1008--1012.
 \bibitem{muller2022does} N. M. M\"uller, P. Czempin, F. Dieckmann, A. Froghyar, and K. B\"ottinger, ``Does audio deepfake detection generalize?,'' in \textit{Proc. Interspeech}, 2022, pp. 2783--2787.
@@ -196,6 +188,9 @@ We investigated an end-to-end acoustic forensics system for synthetic speech det
 \bibitem{vaswani2017attention} A. Vaswani, N. Shazeer, N. Parmar, J. Uszkoreit, L. Jones, A. N. Gomez, \L. Kaiser, and I. Polosukhin, ``Attention is all you need,'' in \textit{Advances in Neural Information Processing Systems (NeurIPS)}, vol. 30, 2017, pp. 5998--6008.
 \bibitem{loshchilov2019decoupled} I. Loshchilov and F. Hutter, ``Decoupled weight decay regularization,'' in \textit{Proc. International Conference on Learning Representations (ICLR)}, 2019.
 \bibitem{park2019specaugment} D. S. Park, W. Chan, Y. Zhang, C.-C. Chiu, B. Zoph, E. D. Cubuk, and Q. V. Le, ``SpecAugment: A simple data augmentation method for automatic speech recognition,'' in \textit{Proc. Interspeech}, 2019, pp. 2613--2617.
+\bibitem{oord2016wavenet} A. van den Oord, S. Dieleman, H. Zen, K. Simonyan, O. Vinyals, A. Graves, N. Kalchbrenner, A. Senior, and K. Kavukcuoglu, ``WaveNet: A generative model for raw audio,'' in \textit{Proc. 9th ISCA Speech Synthesis Workshop}, 2016, p. 125.
+\bibitem{kong2020hifi} J. Kong, J. Kim, and J. Bae, ``HiFi-GAN: Generative adversarial networks for efficient and high fidelity speech synthesis,'' in \textit{Advances in Neural Information Processing Systems (NeurIPS)}, vol. 33, 2020, pp. 17022--17033.
+\bibitem{platt1999probabilistic} J. Platt, ``Probabilistic outputs for support vector machines and comparisons to regularized likelihood methods,'' \textit{Advances in Large Margin Classifiers}, vol. 10, no. 3, pp. 61--74, 1999.
 \end{thebibliography}
 
 \end{document}
