@@ -1,6 +1,5 @@
 """Execution timing and benchmark utilities.
 
-Author: Chunit Bansal (IIT2024233)
 """
 
 import time

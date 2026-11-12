@@ -1,5 +1,5 @@
 {
-  "model": "CRNN (Agam Ghotra)",
+  "model": "CRNN",
   "eval_trials": 100,
   "standard_evaluation": {
     "eer": 0.0,

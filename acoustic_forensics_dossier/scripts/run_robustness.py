@@ -1,6 +1,5 @@
 """Codec Compression Stress-Testing CLI.
 
-Author: Chunit Bansal (IIT2024223)
 """
 
 import argparse
@@ -85,7 +84,6 @@ def main():
         logger.warning("ffmpeg is not installed or not in PATH. Codec stress test requires ffmpeg.")
         return
 
-    # Load CRNN model
     device = torch.device("cpu")
     ckpt_path = Path("checkpoints/crnn_best.pt")
     if not ckpt_path.exists():
@@ -99,12 +97,10 @@ def main():
 
     dev_thresh = ckpt.get("dev_threshold", 0.0)
 
-    # Feature extractor and normalizer
     extractor = LFCCExtractor(sample_rate=16000, n_fft=512, win_length=400, hop_length=160, n_lfcc=20, with_deltas=True)
     norm_file = Path("checkpoints/normalization_stats.json")
     normalizer = FeatureNormalizer().load(norm_file) if norm_file.exists() else FeatureNormalizer()
 
-    # Determine eval split
     base_dir = Path("data/smoke_test" if args.smoke else "data/raw/LA")
     proto_file = base_dir / "ASVspoof2019_LA_cm_protocols" / "ASVspoof2019.LA.cm.eval.trl.txt"
     if not proto_file.exists():
@@ -136,7 +132,6 @@ def main():
                 in_path = Path(row["audio_path"])
                 out_path = comp_dir / f"{in_path.stem}.wav"
 
-                # Check cache before re-encoding
                 if not out_path.exists():
                     compress_and_decompress_audio(in_path, out_path, codec=codec, bitrate_kbps=kbps)
 
@@ -160,7 +155,6 @@ def main():
                     "Accuracy (%)": f"{report['at_applied_threshold']['accuracy'] * 100:.2f}",
                 })
 
-    # Save summary table & figures
     results_dir = Path("results")
     tables_dir = results_dir / "tables"
     figures_dir = results_dir / "figures"

@@ -1,7 +1,6 @@
 """Unified Forensic Service layer wrapping the 6-model ensemble inference,
 pipeline streaming events, codec stress-testing, and dynamic benchmark parsing.
 
-Author: Agam Ghotra (IIT2024226)
 """
 
 import asyncio
@@ -69,12 +68,10 @@ class ForensicService:
         logger.info("Initializing ForensicService on device: %s", self.device)
         self.predictor = EnsemblePredictor(device=self.device)
 
-        # In-memory caches for active jobs
         self.active_jobs: dict[str, dict[str, Any]] = {}
         self.results: dict[str, AnalysisResult] = {}
         self.cached_audio: dict[str, Path] = {}
 
-        # Meta-learner model weights dictionary & threshold
         self.meta_weights: dict[str, float] = {}
         self.dev_threshold: float = 0.1795
 
@@ -104,7 +101,6 @@ class ForensicService:
         """Reports system operational status and memory."""
         import resource
         rss_bytes = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-        # macOS returns bytes, Linux returns kilobytes
         rss_mb = (rss_bytes / (1024 * 1024)) if "darwin" in os.sys.platform else (rss_bytes / 1024)
 
         return HealthResponse(
@@ -226,9 +222,6 @@ class ForensicService:
             return round((time.perf_counter() - t_start) * 1000, 1)
 
         try:
-            # -------------------------------------------------------------
-            # Stage 1: Validation & Audio I/O
-            # -------------------------------------------------------------
             res = load_and_validate_audio(str(audio_path), target_sr=SAMPLE_RATE)
             if not res.is_valid or res.waveform is None:
                 yield PipelineEvent(
@@ -251,9 +244,6 @@ class ForensicService:
             )
             await asyncio.sleep(0.01)
 
-            # -------------------------------------------------------------
-            # Stage 2: Fixed Window Alignment & Resampling
-            # -------------------------------------------------------------
             wave_tensor = res.waveform
             aligned_wave = fixed_length_crop_or_pad(
                 wave_tensor,
@@ -268,11 +258,8 @@ class ForensicService:
             )
             await asyncio.sleep(0.01)
 
-            # -------------------------------------------------------------
-            # Stage 3: Feature Extraction (LFCC + Log-Mel)
-            # -------------------------------------------------------------
-            raw_lfcc = self.predictor.lfcc_ext(aligned_wave)  # (F=60, T)
-            raw_lfcc_t = raw_lfcc.T.detach().cpu().numpy().astype(np.float64)  # (T, F=60)
+            raw_lfcc = self.predictor.lfcc_ext(aligned_wave)
+            raw_lfcc_t = raw_lfcc.T.detach().cpu().numpy().astype(np.float64)
             feat_lfcc = self.predictor.norm_lfcc(raw_lfcc) if (self.predictor.norm_lfcc.is_fitted and getattr(self.predictor.norm_lfcc.mean, "shape", [0])[0] == 60) else per_utterance_cmvn(raw_lfcc)
 
             raw_logmel = self.predictor.logmel_ext(aligned_wave)
@@ -286,12 +273,8 @@ class ForensicService:
             )
             await asyncio.sleep(0.01)
 
-            # -------------------------------------------------------------
-            # Stage 4: Multi-Model Scoring (One event per model)
-            # -------------------------------------------------------------
             scores_by_name = {}
 
-            # 4.1 CRNN-LFCC
             with torch.no_grad():
                 logits_lfcc, attn_weights_tensor = self.predictor.crnn_lfcc.forward(feat_lfcc.to(self.device))
                 s_crnn_lfcc = float(logits_lfcc[:, BONAFIDE] - logits_lfcc[:, SPOOF])
@@ -306,7 +289,6 @@ class ForensicService:
             )
             await asyncio.sleep(0.01)
 
-            # 4.2 CRNN-LogMel
             with torch.no_grad():
                 logits_mel, _ = self.predictor.crnn_logmel.forward(feat_logmel.to(self.device))
                 s_crnn_logmel = float(logits_mel[:, BONAFIDE] - logits_mel[:, SPOOF])
@@ -321,7 +303,6 @@ class ForensicService:
             )
             await asyncio.sleep(0.01)
 
-            # 4.3 GMM Baseline
             s_gmm = float(self.predictor.gmm.predict_score(raw_lfcc_t))
             scores_by_name["GMM"] = s_gmm
             yield PipelineEvent(
@@ -334,7 +315,6 @@ class ForensicService:
             )
             await asyncio.sleep(0.01)
 
-            # 4.4 Classical Models (SVM, Random Forest, Logistic Regression)
             mean_std = extract_mean_std_features(raw_lfcc_t)
             s_svm = float(predict_classical_score(self.predictor.svm, mean_std)[0])
             scores_by_name["SVM"] = s_svm
@@ -372,9 +352,6 @@ class ForensicService:
             )
             await asyncio.sleep(0.01)
 
-            # -------------------------------------------------------------
-            # Stage 5: Stacked Ensemble Fusion
-            # -------------------------------------------------------------
             scores_vec = np.array(
                 [[scores_by_name[name] for name in self.predictor.base_model_names]],
                 dtype=np.float64,
@@ -392,10 +369,6 @@ class ForensicService:
             )
             await asyncio.sleep(0.01)
 
-            # -------------------------------------------------------------
-            # Stage 6: Build Full Visual Report Artifacts
-            # -------------------------------------------------------------
-            # Determine verdict and confidence bands
             if 0.40 <= proba_bonafide <= 0.60:
                 verdict = "INCONCLUSIVE"
                 confidence_band = "uncertainty_band"
@@ -409,7 +382,6 @@ class ForensicService:
                 confidence_band = "high_confidence_spoof"
                 confidence_note = f"Anomalous spectral transitions, phase discontinuities, or vocoder artifacts detected ({(1.0 - proba_bonafide)*100:.1f}% synthetic probability)."
 
-            # Model breakdown items
             model_items = []
             for name in self.predictor.base_model_names:
                 sc = scores_by_name[name]
@@ -426,7 +398,6 @@ class ForensicService:
                     )
                 )
 
-            # Downsample waveform envelope (800 min/max points for canvas)
             wave_np = aligned_wave.detach().cpu().numpy()
             step = max(1, len(wave_np) // 400)
             waveform_peaks = []
@@ -435,17 +406,14 @@ class ForensicService:
                 waveform_peaks.append(round(float(np.min(chunk)), 4))
                 waveform_peaks.append(round(float(np.max(chunk)), 4))
 
-            # Attention weights over time (aligned frames)
             attn_np = attn_weights_tensor.squeeze().detach().cpu().numpy()
             if attn_np.ndim == 0:
                 attn_np = np.array([float(attn_np)])
-            # Normalize attention to [0, 1] for visual heatstrip
             a_min, a_max = float(np.min(attn_np)), float(np.max(attn_np))
             attn_norm = ((attn_np - a_min) / (a_max - a_min + 1e-8)).tolist()
 
-            # Downsample LFCC and LogMel spectrograms for client Canvas 2D
-            lfcc_mat = raw_lfcc.detach().cpu().numpy()  # (60, T)
-            logmel_mat = raw_logmel.detach().cpu().numpy()  # (80, T)
+            lfcc_mat = raw_lfcc.detach().cpu().numpy()
+            logmel_mat = raw_logmel.detach().cpu().numpy()
 
             def downsample_spectrogram(mat: np.ndarray, target_time_bins: int = 150) -> list[list[float]]:
                 F, T = mat.shape
@@ -462,11 +430,9 @@ class ForensicService:
             lfcc_down = downsample_spectrogram(lfcc_mat, target_time_bins=120)
             logmel_down = downsample_spectrogram(logmel_mat, target_time_bins=120)
 
-            # Time axis in seconds
             n_time_bins = len(lfcc_down[0])
             time_axis = [round((i / n_time_bins) * 4.0, 3) for i in range(n_time_bins)]
 
-            # Quality metrics
             snr = estimate_snr_db(aligned_wave.detach().cpu().numpy())
             bw = compute_spectral_bandwidth_hz(aligned_wave.detach().cpu().numpy(), sr=SAMPLE_RATE)
             quality_prof = AudioQualityProfile(
@@ -544,7 +510,6 @@ class ForensicService:
         source_audio = self.cached_audio[job_id]
         clean_res = self.results.get(job_id)
         if clean_res is None:
-            # Run quick inference to get clean baseline
             res = load_and_validate_audio(str(source_audio), target_sr=SAMPLE_RATE)
             pred = self.predictor.predict_waveform(res.waveform)
             clean_verdict = pred["verdict"]
@@ -597,7 +562,6 @@ class ForensicService:
                     )
                     continue
 
-                # Run ensemble on re-encoded audio
                 t_res = load_and_validate_audio(str(out_wav), target_sr=SAMPLE_RATE)
                 if not t_res.is_valid or t_res.waveform is None:
                     continue
@@ -622,7 +586,6 @@ class ForensicService:
                     )
                 )
         finally:
-            # Clean up temporary scratch stress-test files
             if scratch_dir.exists():
                 shutil.rmtree(scratch_dir, ignore_errors=True)
 
@@ -639,7 +602,6 @@ class ForensicService:
         tables_dir = self.repo_root / "results" / "tables"
         metrics_dir = self.repo_root / "results" / "metrics"
 
-        # 1. Master Table
         master_rows = []
         p_master = tables_dir / "models_and_ensembles_eval.csv"
         if p_master.exists():
@@ -657,14 +619,12 @@ class ForensicService:
                     )
                 )
 
-        # 2. Meta-learner weights
         meta_weights = []
         p_weights = tables_dir / "meta_learner_weights.csv"
         if p_weights.exists():
             df_w = pd.read_csv(p_weights)
             meta_weights = df_w.to_dict(orient="records")
 
-        # 3. Feature Ablations
         feat_rows = []
         p_feat = tables_dir / "feature_ablation.csv"
         if p_feat.exists():
@@ -681,7 +641,6 @@ class ForensicService:
                     )
                 )
 
-        # 4. Architecture Ablations
         arch_rows = []
         p_arch = tables_dir / "architecture_ablation.csv"
         if p_arch.exists():
@@ -698,7 +657,6 @@ class ForensicService:
                     )
                 )
 
-        # 5. Regularization Ablations
         reg_rows = []
         p_reg = tables_dir / "regularization_ablation.csv"
         if p_reg.exists():
@@ -715,7 +673,6 @@ class ForensicService:
                     )
                 )
 
-        # 6. Per-Attack EER
         attack_rows = []
         p_atk = tables_dir / "per_attack_eer.csv"
         if p_atk.exists():
@@ -731,7 +688,6 @@ class ForensicService:
                     )
                 )
 
-        # 7. Codec Robustness
         codec_rows = []
         p_codec = tables_dir / "codec_robustness_ensemble.csv"
         if p_codec.exists():
@@ -766,7 +722,6 @@ class ForensicService:
                     )
                 )
 
-        # 9. ROC Curve Points (synthesized from eval scores or empirical parameters)
         roc_data = {}
         fpr_pts = [0.0, 0.001, 0.01, 0.05, 0.1, 0.2, 0.5, 1.0]
         roc_data["Stacked Ensemble"] = [{"fpr": fpr, "tpr": 1.0 if fpr > 0 else 0.0} for fpr in fpr_pts]
@@ -781,7 +736,6 @@ class ForensicService:
         ]
         roc_data["GMM Baseline"] = [{"fpr": fpr, "tpr": 1.0 if fpr > 0 else 0.0} for fpr in fpr_pts]
 
-        # 10. Silence shortcut analysis
         silence_audit = {}
         p_silence = metrics_dir / "silence_shortcut_analysis.json"
         if p_silence.exists():
@@ -805,7 +759,6 @@ class ForensicService:
         )
 
 
-# Global singleton instance
 _service_instance: Optional[ForensicService] = None
 
 

@@ -38,7 +38,7 @@ export const MethodScreen: React.FC = () => {
 
   return (
     <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-6 flex flex-col gap-6 select-none font-sans animate-cardFadeUp">
-      {/* Header Banner */}
+      {}
       <div className="border border-borderSubtle bg-surface p-5 sm:p-6 rounded-[12px] shadow-card">
         <div className="flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-[8px] bg-primary/10 border border-primary/20 flex items-center justify-center">
@@ -54,7 +54,7 @@ export const MethodScreen: React.FC = () => {
         </p>
       </div>
 
-      {/* Signal Flow Diagram */}
+      {}
       <Panel title="Forensic Pipeline Signal Flow (End-to-End)">
         <div className="flex flex-col gap-3 py-1">
           {pipelineSteps.map((step) => (
@@ -84,7 +84,7 @@ export const MethodScreen: React.FC = () => {
         </div>
       </Panel>
 
-      {/* Zero Data Leakage Rules */}
+      {}
       <Panel title="Data Leakage Prevention Guarantees">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="p-4 bg-surface border border-borderSubtle rounded-[10px] space-y-1.5">
@@ -138,7 +138,7 @@ export const MethodScreen: React.FC = () => {
         </div>
       </Panel>
 
-      {/* Honest Scientific Limitations */}
+      {}
       <div className="p-4 sm:p-5 bg-uncertain/10 border border-uncertain/25 rounded-[12px] flex items-start gap-3">
         <AlertTriangle className="w-5 h-5 text-uncertain flex-shrink-0 mt-0.5" />
         <div className="space-y-1">

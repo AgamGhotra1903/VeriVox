@@ -1,6 +1,5 @@
 """Unit tests for configuration loading and validation.
 
-Author: Agam Ghotra (IIT2024226)
 """
 
 from pathlib import Path

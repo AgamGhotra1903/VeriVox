@@ -10,7 +10,6 @@ Provides endpoints for:
 - GET  /api/health (system health, device, loaded models)
 - Mounts React production single-page application from frontend/dist if available.
 
-Author: Agam Ghotra (IIT2024226)
 """
 
 from contextlib import asynccontextmanager
@@ -45,14 +44,12 @@ from acforensics.utils.logging import get_logger
 
 logger = get_logger(__name__)
 
-# Upload limits
-MAX_UPLOAD_BYTES = 25 * 1024 * 1024  # 25 MB
+MAX_UPLOAD_BYTES = 25 * 1024 * 1024
 ALLOWED_EXTENSIONS = {".wav", ".mp3", ".flac", ".ogg", ".m4a"}
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize singleton model weights and service at startup
     logger.info("Initializing Acoustic Forensics backend service...")
     service = get_forensic_service()
     yield
@@ -66,7 +63,6 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS Configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -124,7 +120,6 @@ async def analyze_audio_upload(
             detail=f"Unsupported audio format '{ext}'. Allowed: {', '.join(sorted(ALLOWED_EXTENSIONS))}",
         )
 
-    # Read uploaded bytes with size validation
     content = await audio.read()
     if len(content) > MAX_UPLOAD_BYTES:
         raise HTTPException(
@@ -248,7 +243,6 @@ async def get_experimental_benchmarks():
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
-# Mount React static distribution if built
 repo_root = Path(__file__).resolve().parents[3]
 frontend_dist = repo_root / "frontend" / "dist"
 if frontend_dist.exists() and (frontend_dist / "index.html").exists():

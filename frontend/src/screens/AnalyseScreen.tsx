@@ -28,7 +28,6 @@ export const AnalyseScreen: React.FC<AnalyseScreenProps> = ({
   const [events, setEvents] = useState<PipelineEvent[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Audio Playback state
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
@@ -47,7 +46,6 @@ export const AnalyseScreen: React.FC<AnalyseScreenProps> = ({
     };
   }, [audioUrl]);
 
-  // Spacebar play/pause
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === 'Space' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
@@ -190,7 +188,7 @@ export const AnalyseScreen: React.FC<AnalyseScreenProps> = ({
 
   return (
     <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-6 flex flex-col gap-6">
-      {/* Hidden Audio Element */}
+      {}
       {audioUrl && (
         <audio
           ref={audioRef}
@@ -201,9 +199,9 @@ export const AnalyseScreen: React.FC<AnalyseScreenProps> = ({
         />
       )}
 
-      {/* Main 2-Column Responsive Layout: stacks on screens under 768px */}
+      {}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
-        {/* Left Column: Audio Input & Signal Diagnostics */}
+        {}
         <div className="md:col-span-5 lg:col-span-4 flex flex-col gap-6">
           <Panel title="Audio Recording">
             <AudioDropzone
@@ -214,7 +212,7 @@ export const AnalyseScreen: React.FC<AnalyseScreenProps> = ({
             />
           </Panel>
 
-          {/* Real-Time Pipeline Telemetry */}
+          {}
           {(isProcessing || events.length > 0) && (
             <PipelineTracker
               events={events}
@@ -223,7 +221,7 @@ export const AnalyseScreen: React.FC<AnalyseScreenProps> = ({
             />
           )}
 
-          {/* Signal Diagnostics Profile */}
+          {}
           {result && (
             <Panel title="Acoustic Quality Profile">
               <div className="grid grid-cols-2 gap-3">
@@ -270,12 +268,12 @@ export const AnalyseScreen: React.FC<AnalyseScreenProps> = ({
           )}
         </div>
 
-        {/* Right Column: Forensic Results, Waveform Player & Model Breakdown */}
+        {}
         <div className="md:col-span-7 lg:col-span-8 flex flex-col gap-6">
-          {/* Top Verdict Presentation Banner */}
+          {}
           {result ? (
             <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-stretch animate-card-mount">
-              {/* Verdict Gauge */}
+              {}
               <div className="md:col-span-5 flex">
                 <Gauge
                   probability={result.probability_bonafide}
@@ -285,7 +283,7 @@ export const AnalyseScreen: React.FC<AnalyseScreenProps> = ({
                 />
               </div>
 
-              {/* Plain English Finding & Caveats */}
+              {}
               <div className="md:col-span-7 flex flex-col justify-between p-5 sm:p-6 bg-surface border border-borderSubtle rounded-[12px] shadow-card">
                 <div>
                   <div className="flex items-center justify-between pb-3 border-b border-borderSubtle mb-3">
@@ -302,7 +300,7 @@ export const AnalyseScreen: React.FC<AnalyseScreenProps> = ({
                   </p>
                 </div>
 
-                {/* Clear Inline Warning/Caveat (soft amber tint, not alarming) */}
+                {}
                 <div className="mt-4 p-3 bg-amber-50 border border-amber-200 text-amber-900 dark:bg-amber-950/20 dark:border-amber-900/40 dark:text-amber-200 rounded-[8px] text-xs flex items-start gap-2.5">
                   <AlertCircle className="w-4 h-4 text-uncertain flex-shrink-0 mt-0.5" />
                   <span className="leading-snug">{result.caveat}</span>
@@ -323,7 +321,7 @@ export const AnalyseScreen: React.FC<AnalyseScreenProps> = ({
             </div>
           )}
 
-          {/* Time-Frequency Interactive Player */}
+          {}
           {result && (
             <Panel
               title="Time-Frequency Signal Inspection"
@@ -353,7 +351,7 @@ export const AnalyseScreen: React.FC<AnalyseScreenProps> = ({
               }
             >
               <div className="flex flex-col gap-4">
-                {/* Waveform Oscillogram */}
+                {}
                 <div>
                   <div className="flex items-center justify-between text-xs text-txt-secondary mb-1.5">
                     <span className="font-medium text-txt-primary">Waveform Amplitude (16 kHz Peak Envelope)</span>
@@ -368,7 +366,7 @@ export const AnalyseScreen: React.FC<AnalyseScreenProps> = ({
                   />
                 </div>
 
-                {/* CRNN Attention Heatstrip */}
+                {}
                 <AttentionHeatstrip
                   attentionWeights={result.attention_weights}
                   durationSec={duration}
@@ -376,7 +374,7 @@ export const AnalyseScreen: React.FC<AnalyseScreenProps> = ({
                   height={18}
                 />
 
-                {/* Spectrogram (LFCC / Log-Mel) */}
+                {}
                 <SpectrogramCanvas
                   lfccData={result.lfcc_downsampled}
                   logmelData={result.logmel_downsampled}
@@ -388,7 +386,7 @@ export const AnalyseScreen: React.FC<AnalyseScreenProps> = ({
             </Panel>
           )}
 
-          {/* Multi-Model Breakdown */}
+          {}
           {result && (
             <ModelBreakdownChart
               models={result.models}

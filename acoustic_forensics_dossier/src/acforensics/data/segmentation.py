@@ -1,6 +1,5 @@
 """Audio temporal segmentation, fixed-length cropping, repeat-padding, and multi-crop windowing.
 
-Author: Paras Bansal (IIT2024221), Agam Ghotra (IIT2024226)
 """
 
 from typing import Any, Literal, Optional
@@ -62,7 +61,6 @@ def fixed_length_crop_or_pad(
     elif length < target_samples:
         return repeat_pad(waveform, target_samples)
     else:
-        # waveform is longer than target_samples -> crop
         excess = length - target_samples
         if mode == "center":
             start_idx = excess // 2
@@ -101,7 +99,6 @@ def generate_multi_crop_windows(
     """
     total_samples = waveform.size(0)
 
-    # If shorter than window, repeat-pad to one window
     if total_samples <= window_samples:
         padded = repeat_pad(waveform, window_samples)
         return [{
@@ -124,7 +121,6 @@ def generate_multi_crop_windows(
             chunk = waveform[start:end]
             actual_end = end
         else:
-            # Final window: pad or take last window_samples
             chunk = waveform[total_samples - window_samples : total_samples]
             start = total_samples - window_samples
             actual_end = total_samples

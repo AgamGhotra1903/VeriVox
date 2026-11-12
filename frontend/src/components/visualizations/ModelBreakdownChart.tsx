@@ -65,21 +65,21 @@ export const ModelBreakdownChart: React.FC<ModelBreakdownChartProps> = ({
               key={model.name}
               className="grid grid-cols-[160px_70px_1fr_90px_24px] items-center gap-3 text-xs py-2 px-3 rounded-[8px] bg-elevated/40 border border-borderSubtle hover:bg-elevated/70 transition-colors duration-150"
             >
-              {/* Model Name */}
+              {}
               <span className="font-medium text-txt-primary truncate" title={model.name}>
                 {model.name}
               </span>
 
-              {/* Ensemble Meta Weight */}
+              {}
               <span className="text-xs font-mono text-txt-secondary tabular-nums">
                 {model.ensemble_weight > 0 ? `+${model.ensemble_weight.toFixed(3)}` : model.ensemble_weight.toFixed(3)}
               </span>
 
-              {/* Centered Comparative Bar Axis */}
+              {}
               <div className="h-3.5 bg-inset rounded-[4px] relative flex items-center overflow-hidden border border-borderSubtle">
                 <div className="absolute left-1/2 top-0 bottom-0 w-[1px] bg-borderStrong z-10" />
 
-                {/* Score Bar */}
+                {}
                 {model.score < 0 ? (
                   <div
                     className="absolute right-1/2 top-0 bottom-0 bg-spoof rounded-l"
@@ -93,12 +93,12 @@ export const ModelBreakdownChart: React.FC<ModelBreakdownChartProps> = ({
                 )}
               </div>
 
-              {/* Continuous Score Value */}
+              {}
               <span className="text-right font-mono text-xs tabular-nums text-txt-primary">
                 {model.score > 0 ? `+${model.score.toFixed(3)}` : model.score.toFixed(3)}
               </span>
 
-              {/* Agreement Checkmark */}
+              {}
               <div className="flex justify-center">
                 {agrees ? (
                   <span title="Agrees with final ensemble">
@@ -114,7 +114,7 @@ export const ModelBreakdownChart: React.FC<ModelBreakdownChartProps> = ({
           );
         })}
 
-        {/* Fused Stacked Ensemble Row */}
+        {}
         <div className="grid grid-cols-[160px_70px_1fr_90px_24px] items-center gap-3 text-xs py-2.5 px-3 rounded-[8px] bg-primary/5 border border-primary/20 shadow-sm mt-3 font-semibold">
           <span className="text-primary font-semibold">
             Stacked Meta-Learner

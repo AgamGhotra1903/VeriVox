@@ -1,6 +1,5 @@
 """Forensic error audit: False Positives & False Negatives broken down by attack, speaker, and quality.
 
-Author: Chunit Bansal (IIT2024223)
 """
 
 from pathlib import Path
@@ -79,13 +78,9 @@ def run_error_audit(
     df["score"] = scores
     df["predicted_label"] = (scores >= threshold).astype(int)
 
-    # Classifications
-    # False Positive: Spoof classified as Bona Fide (score >= threshold)
-    # False Negative: Bona Fide classified as Spoof (score < threshold)
     df["is_fp"] = (df["label"] == SPOOF) & (df["predicted_label"] == BONAFIDE)
     df["is_fn"] = (df["label"] == BONAFIDE) & (df["predicted_label"] == SPOOF)
 
-    # 1. Per-Attack EER Calculation
     bf_scores = df[df["label"] == BONAFIDE]["score"].values
     attack_eers = {}
     attack_counts = {}
@@ -99,7 +94,6 @@ def run_error_audit(
             attack_eers[attack_id] = float(eer_val)
             attack_counts[attack_id] = len(sp_scores)
 
-    # Plot per-attack breakdown
     plot_per_attack_eer(attack_eers, figures_dir / "per_attack_eer.png")
 
     if "file_id" not in df.columns and "path" in df.columns:

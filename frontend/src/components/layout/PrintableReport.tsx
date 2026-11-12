@@ -8,7 +8,7 @@ export interface PrintableReportProps {
 export const PrintableReport: React.FC<PrintableReportProps> = ({ result }) => {
   return (
     <div className="hidden print:block p-8 bg-white text-black font-mono text-xs max-w-4xl mx-auto">
-      {/* Official Header */}
+      {}
       <div className="border-b-2 border-black pb-4 mb-6 flex justify-between items-start">
         <div>
           <h1 className="text-xl font-bold uppercase tracking-wider text-black">
@@ -25,7 +25,7 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({ result }) => {
         </div>
       </div>
 
-      {/* Primary Finding */}
+      {}
       <div className="border-2 border-black p-4 mb-6 bg-gray-50 flex items-center justify-between">
         <div>
           <div className="text-[10px] uppercase text-gray-600 font-bold">
@@ -49,7 +49,7 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({ result }) => {
         </div>
       </div>
 
-      {/* Signal Quality Diagnostics */}
+      {}
       <div className="mb-6">
         <h2 className="text-xs font-bold uppercase tracking-wider border-b border-black pb-1 mb-2">
           Signal Conditioning Diagnostics
@@ -74,7 +74,7 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({ result }) => {
         </div>
       </div>
 
-      {/* Multi-Model Breakdown Table */}
+      {}
       <div className="mb-6">
         <h2 className="text-xs font-bold uppercase tracking-wider border-b border-black pb-1 mb-2">
           Ensemble Model Breakdown
@@ -116,7 +116,7 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({ result }) => {
         </table>
       </div>
 
-      {/* Caveat and Sign-off */}
+      {}
       <div className="border-t border-black pt-3 text-[9px] text-gray-700 leading-relaxed">
         <p className="mb-4">
           <strong>Caveat: </strong>

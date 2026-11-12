@@ -11,7 +11,6 @@ Outputs:
 - Calibrated confidence probability P(bona fide) via sigmoid of meta-learner.
 - Baseline mean fusion (mean of z-normalized scores) for benchmark comparison.
 
-Author: Agam Ghotra (IIT2024226)
 """
 
 from pathlib import Path
@@ -86,7 +85,6 @@ class StackedEnsemble:
         self.model_names = model_names or []
         self.seed = seed
         self.scaler = StandardScaler()
-        # LogisticRegressionCV selects C via Stratified K-Fold CV on DEV only
         self.meta_learner: Optional[LogisticRegressionCV] = None
         self.is_fitted = False
         self.best_c: float = 1.0
@@ -125,11 +123,8 @@ class StackedEnsemble:
             dev_scores.shape[0], dev_scores.shape[1],
         )
 
-        # 1. Standardize scores strictly using statistics of DEV split
         z_dev = self.scaler.fit_transform(dev_scores)
 
-        # 2. Fit L2-regularized meta-learner with cross-validation on DEV only
-        # Determine suitable number of folds (default 5, lower if dev split is small)
         n_min_class = int(np.min(np.bincount(dev_labels)))
         cv_folds = max(2, min(5, n_min_class))
 

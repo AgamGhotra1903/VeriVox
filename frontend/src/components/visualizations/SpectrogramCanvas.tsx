@@ -2,8 +2,8 @@ import React, { useRef, useEffect, useState } from 'react';
 import { clsx } from 'clsx';
 
 export interface SpectrogramCanvasProps {
-  lfccData: number[][]; // (60, T)
-  logmelData: number[][]; // (80, T)
+  lfccData: number[][]; 
+  logmelData: number[][]; 
   durationSec: number;
   currentTime?: number;
   height?: number;
@@ -48,7 +48,6 @@ export const SpectrogramCanvas: React.FC<SpectrogramCanvasProps> = ({
     const w = rect.width;
     const h = height;
 
-    // Find min and max for normalization
     let minVal = Infinity;
     let maxVal = -Infinity;
     for (let f = 0; f < numFreqBins; f++) {
@@ -63,7 +62,6 @@ export const SpectrogramCanvas: React.FC<SpectrogramCanvasProps> = ({
     const binW = w / numTimeBins;
     const binH = h / numFreqBins;
 
-    // Restrained, calm sequential colormap (Deep Slate -> Muted Indigo -> Soft Teal -> Pale Gold)
     for (let f = 0; f < numFreqBins; f++) {
       const y = h - (f + 1) * binH;
       for (let t = 0; t < numTimeBins; t++) {
@@ -93,7 +91,6 @@ export const SpectrogramCanvas: React.FC<SpectrogramCanvasProps> = ({
       }
     }
 
-    // Playhead line
     if (durationSec > 0) {
       const progressFrac = currentTime / durationSec;
       const playheadX = progressFrac * w;
@@ -108,7 +105,7 @@ export const SpectrogramCanvas: React.FC<SpectrogramCanvasProps> = ({
 
   return (
     <div className={clsx('flex flex-col gap-2', className)}>
-      {/* Mode Switcher Bar */}
+      {}
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-txt-secondary uppercase tracking-wide">
           Spectrogram Representation
@@ -140,11 +137,11 @@ export const SpectrogramCanvas: React.FC<SpectrogramCanvasProps> = ({
         </div>
       </div>
 
-      {/* Canvas Well with Frequency Axis Ticks */}
+      {}
       <div className="relative rounded-[8px] overflow-hidden border border-borderSubtle bg-chassis">
         <canvas ref={canvasRef} height={height} className="w-full block select-none" />
 
-        {/* Y-Axis Frequency Indicators */}
+        {}
         <div className="absolute top-1.5 left-2 pointer-events-none text-[10px] font-mono text-txt-secondary bg-surface/90 px-1.5 py-0.5 rounded border border-borderSubtle">
           {activeMode === 'lfcc' ? 'Coeff 60 (HF)' : '8 kHz'}
         </div>

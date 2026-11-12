@@ -1,5 +1,3 @@
-# Data Pipeline & Split Configuration ("AF-Split v1")
-# Author: Paras Bansal (IIT2024221)
 
 protocols:
   asvspoof2019_la:
@@ -34,11 +32,10 @@ protocols:
     audio_dir: "data/raw/in_the_wild/audio"
     expected_bonafide: 19963
     expected_spoof: 11816
-    cal_split_ratio: 0.15  # 15% of speakers reserved for few-shot calibration (ITW-CAL)
+    cal_split_ratio: 0.15
     split_seed: 42
 
   extension_dfadd:
-    # Optional multi-domain extension (STRETCH)
     root: "data/raw/DFADD"
     meta_csv: "data/raw/DFADD/meta.csv"
     holdout_test_generator: "flow_matching"
@@ -46,7 +43,7 @@ protocols:
 
 manifests:
   output_dir: "data/manifests"
-  format: "parquet"  # 'parquet' with csv mirror
+  format: "parquet"
   columns:
     - "path"
     - "dataset"

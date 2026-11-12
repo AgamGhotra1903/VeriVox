@@ -11,7 +11,6 @@ Extracts continuous scores from all base models:
 Enforces strict zero-leakage assertions on utterance IDs.
 Saves matrices (N, M) to disk as .npy files with file_ids and labels.
 
-Author: Agam Ghotra (IIT2024226)
 """
 
 import argparse
@@ -19,7 +18,6 @@ from pathlib import Path
 import sys
 import warnings
 
-# Suppress spurious macOS Accelerate BLAS matmul runtime warnings
 warnings.filterwarnings("ignore", message=".*encountered in matmul.*")
 
 _repo_root = Path(__file__).resolve().parent.parent
@@ -87,13 +85,11 @@ def main():
 
     setup_logging()
 
-    # Resolve device
     if args.device == "auto":
         device = torch.device("mps" if hasattr(torch.backends, "mps") and torch.backends.mps.is_available() else ("cuda" if torch.cuda.is_available() else "cpu"))
     else:
         device = torch.device(args.device)
 
-    # 1. Dataset protocols
     base_dir = Path("data/smoke_test" if args.smoke else "data/raw/LA")
     if not (base_dir / "ASVspoof2019_LA_cm_protocols").exists():
         base_dir = Path("data/smoke_test")
@@ -114,7 +110,6 @@ def main():
     if itw_meta.exists() and itw_audio.exists():
         itw_df = load_in_the_wild_protocol(itw_meta, audio_dir=itw_audio)
 
-    # Enforce strict leakage assertion
     assert_zero_data_leakage(
         train_df["file_id"],
         dev_df["file_id"],
@@ -122,27 +117,22 @@ def main():
         itw_df["file_id"] if itw_df is not None else None,
     )
 
-    # 2. Load Base Models
     models_dict = {}
 
-    # CRNN-LFCC
     crnn_lfcc_path = Path("checkpoints/crnn_lfcc_best.pt")
     if not crnn_lfcc_path.exists():
         crnn_lfcc_path = Path("checkpoints/crnn_best.pt")
     assert crnn_lfcc_path.exists(), f"CRNN-LFCC checkpoint missing at {crnn_lfcc_path}. Run train_crnn.py first."
     models_dict["CRNN-LFCC"] = load_crnn_model(crnn_lfcc_path, "lfcc", LFCC_DEFAULT_DIM, device)
 
-    # CRNN-LogMel
     crnn_logmel_path = Path("checkpoints/crnn_logmel_best.pt")
     assert crnn_logmel_path.exists(), f"CRNN-LogMel checkpoint missing at {crnn_logmel_path}. Run train_crnn.py first."
     models_dict["CRNN-LogMel"] = load_crnn_model(crnn_logmel_path, "logmel", LOGMEL_DEFAULT_DIM, device)
 
-    # GMM
     gmm_path = Path("checkpoints/classical/gmm_lfcc.joblib")
     assert gmm_path.exists(), f"GMM checkpoint missing at {gmm_path}. Run train_classical.py first."
     models_dict["GMM"] = GMMForensics.load(gmm_path)
 
-    # Classical with PCA
     svm_path = Path("checkpoints/classical/rbf_svm_lfcc.joblib")
     assert svm_path.exists(), f"SVM checkpoint missing at {svm_path}."
     models_dict["SVM"] = joblib.load(str(svm_path))
@@ -158,8 +148,6 @@ def main():
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    # 3. Generate Score Matrices
-    # A. DEV split (strictly for fitting meta-learner)
     dev_res = build_score_matrix(
         models_dict=models_dict,
         protocol_df=dev_df,
@@ -168,7 +156,6 @@ def main():
         output_dir=out_dir,
     )
 
-    # B. EVAL split (strictly frozen for evaluation)
     eval_res = build_score_matrix(
         models_dict=models_dict,
         protocol_df=eval_df,

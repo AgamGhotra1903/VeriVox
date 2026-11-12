@@ -1,6 +1,5 @@
 """Utterance-level statistical pooling for classical machine learning models.
 
-Author: Jashan Goyal (IIT2024223)
 """
 
 import numpy as np
@@ -45,22 +44,14 @@ def extract_utterance_statistics(
     if feat.ndim != 2:
         raise ValueError(f"Expected 2D feature matrix (F, T), got shape {feat.shape}")
 
-    # feat shape: (F, T)
     stats_list = []
 
-    # Mean: shape (F,)
     mean_val = np.mean(feat, axis=1)
-    # Std: shape (F,)
     std_val = np.std(feat, axis=1)
-    # Min: shape (F,)
     min_val = np.min(feat, axis=1)
-    # Max: shape (F,)
     max_val = np.max(feat, axis=1)
-    # Skewness: shape (F,)
     skew_val = stats.skew(feat, axis=1, bias=False)
-    # Handle NaN in case of constant values
     skew_val = np.nan_to_num(skew_val, nan=0.0)
-    # Kurtosis: shape (F,)
     kurt_val = stats.kurtosis(feat, axis=1, bias=False)
     kurt_val = np.nan_to_num(kurt_val, nan=0.0)
 

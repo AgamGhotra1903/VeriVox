@@ -1,6 +1,5 @@
 """Robust audio input/output, validation, resampling, and normalization.
 
-Author: Paras Bansal (IIT2024221)
 """
 
 from dataclasses import dataclass

@@ -8,7 +8,6 @@ Measures deterministic audio properties for error analysis and the UI reliabilit
 - silence ratio
 - original sample rate
 
-Author: Chunit Bansal (IIT2024223), Paras Bansal (IIT2024221)
 """
 
 from typing import Any
@@ -57,7 +56,6 @@ def compute_spectral_bandwidth_hz(
     if len(waveform) < 512:
         return float(sr / 2.0)
 
-    # Compute FFT power spectrum
     freqs, psd = scipy.signal.welch(waveform, fs=sr, nperseg=min(512, len(waveform)))
     cum_energy = np.cumsum(psd)
     total_energy = cum_energy[-1]
@@ -82,7 +80,6 @@ def compute_silence_ratio(
     if len(waveform) < frame_length:
         return 0.0
 
-    # Frame-wise RMS energy
     n_frames = len(waveform) // frame_length
     frames = waveform[: n_frames * frame_length].reshape(n_frames, frame_length)
     rms = np.sqrt(np.mean(frames**2, axis=1) + 1e-12)
@@ -130,7 +127,6 @@ def evaluate_reliability_checks(
     """
     checks = []
 
-    # 1. Duration check
     dur = quality.get("duration", 0.0)
     if dur < 1.0:
         checks.append({
@@ -154,7 +150,6 @@ def evaluate_reliability_checks(
             "consequence": "Adequate duration (> 2.0s) for robust multi-frame feature extraction.",
         })
 
-    # 2. Clipping check
     clip_ratio = quality.get("clipping", 0.0)
     if clip_ratio > 0.05:
         checks.append({
@@ -178,7 +173,6 @@ def evaluate_reliability_checks(
             "consequence": "No harmful analog or digital clipping detected.",
         })
 
-    # 3. Estimated SNR check
     snr = quality.get("snr_db", 30.0)
     if snr < 12.0:
         checks.append({
@@ -202,7 +196,6 @@ def evaluate_reliability_checks(
             "consequence": "Speech signal is clear with high dynamic range.",
         })
 
-    # 4. Bandwidth / Rolloff check
     bw = quality.get("bandwidth_hz", 8000)
     if bw < 4200:
         checks.append({
@@ -226,7 +219,6 @@ def evaluate_reliability_checks(
             "consequence": "Full 8 kHz Nyquist spectrum available for forensic examination.",
         })
 
-    # 5. Silence Ratio check
     sil = quality.get("silence_ratio", 0.0)
     if sil > 0.65:
         checks.append({
@@ -243,7 +235,6 @@ def evaluate_reliability_checks(
             "consequence": "Active speech occupies the majority of the recording.",
         })
 
-    # 6. Model Agreement check (if available)
     if per_model and len(per_model) >= 2:
         probs = list(per_model.values())
         std_p = float(np.std(probs))

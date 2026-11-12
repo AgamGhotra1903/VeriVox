@@ -11,7 +11,6 @@ Features:
 - Deterministic seed logging and per-run JSON logging.
 - Strict data leakage boundary: eval split is never used for training or model selection.
 
-Author: Agam Ghotra (IIT2024226)
 """
 
 import argparse
@@ -74,7 +73,7 @@ def build_feature_extractor_and_dim(
             n_lfcc=lfcc_params.get("n_lfcc", 20),
             with_deltas=lfcc_params.get("with_deltas", True),
         )
-        in_dim = LFCC_DEFAULT_DIM  # 60
+        in_dim = LFCC_DEFAULT_DIM
     elif feature_type == "logmel":
         mel_params = feature_cfg.get("logmel", {})
         extractor = LogMelExtractor(
@@ -88,7 +87,7 @@ def build_feature_extractor_and_dim(
             power=mel_params.get("power", 2.0),
             top_db=mel_params.get("top_db", 80.0),
         )
-        in_dim = LOGMEL_DEFAULT_DIM  # 80
+        in_dim = LOGMEL_DEFAULT_DIM
     else:
         raise ValueError(f"Unsupported feature type: {feature_type}")
 
@@ -107,7 +106,6 @@ def run_single_crnn_training(
     """Executes a single seeded training run of a CRNN variant."""
     set_seed(seed=seed, deterministic=True)
 
-    # 1. Resolve Device
     if override_device == "auto":
         if torch.cuda.is_available():
             device = torch.device("cuda")
@@ -119,7 +117,6 @@ def run_single_crnn_training(
         device = torch.device(override_device)
     logger.info("Using device: %s for training", device)
 
-    # 2. Locate Dataset & Protocols
     base_dir = Path("data/smoke_test" if smoke else "data/raw/LA")
     if not (base_dir / "ASVspoof2019_LA_cm_protocols").exists():
         logger.warning("Dataset not found at %s. Falling back to data/smoke_test.", base_dir)
@@ -138,7 +135,6 @@ def run_single_crnn_training(
     dev_df = load_asvspoof_protocol(dev_proto, audio_dir=dev_audio_dir, split_name="dev")
     eval_df = load_asvspoof_protocol(eval_proto, audio_dir=eval_audio_dir, split_name="eval")
 
-    # Strict leakage assertion: disjoint utterance IDs
     train_ids = set(train_df["file_id"])
     dev_ids = set(dev_df["file_id"])
     eval_ids = set(eval_df["file_id"])
@@ -146,7 +142,6 @@ def run_single_crnn_training(
     assert len(train_ids.intersection(eval_ids)) == 0, "DATA LEAKAGE: Overlapping IDs between train and eval!"
     assert len(dev_ids.intersection(eval_ids)) == 0, "DATA LEAKAGE: Overlapping IDs between dev and eval!"
 
-    # 3. Setup Feature Extraction & Normalization
     feature_cfg = cfg.get("features", {})
     feat_extractor, in_dim = build_feature_extractor_and_dim(feature_type, feature_cfg)
     cache = FeatureCache(enabled=not smoke)
@@ -166,10 +161,8 @@ def run_single_crnn_training(
                 feat = normalizer(feat)
             else:
                 feat = per_utterance_cmvn(feat)
-            # feat shape: (F, T) -> return (1, F, T) for 2D Conv
             return feat.unsqueeze(0)
 
-    # 4. Data Loaders (4.0s = 64,000 samples crop/pad)
     training_cfg = cfg.get("training", {})
     batch_size = 16 if smoke else training_cfg.get("batch_size", 32)
     epochs = override_epochs if override_epochs is not None else (2 if smoke else training_cfg.get("epochs", 40))
@@ -182,7 +175,6 @@ def run_single_crnn_training(
     dev_loader = DataLoader(dev_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn, num_workers=0)
     eval_loader = DataLoader(eval_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn, num_workers=0)
 
-    # 5. Initialize CRNN Architecture
     model_cfg = cfg.get("model", {})
     gru_cfg = model_cfg.get("gru", {}) if isinstance(model_cfg.get("gru"), dict) else {}
     cnn_cfg = model_cfg.get("cnn", {}) if isinstance(model_cfg.get("cnn"), dict) else {}
@@ -219,7 +211,6 @@ def run_single_crnn_training(
 
     checkpoint_filename = ckpt_name or f"crnn_{feature_type}_best.pt"
 
-    # 6. Train Model with Early Stopping & Checkpointing
     with Timer() as timer:
         trained_model, calibrator, summary = train_crnn(
             model=model,
@@ -246,7 +237,6 @@ def run_single_crnn_training(
 
     training_time_sec = timer.get_elapsed_sec()
 
-    # 7. Final Evaluation on Eval Split (strictly frozen, using dev threshold)
     logger.info("Evaluating best checkpoint on frozen eval split using Dev threshold...")
     dev_threshold = summary["best_dev_threshold"]
     all_eval_scores = []
@@ -264,7 +254,6 @@ def run_single_crnn_training(
     eval_scores_arr = np.array(all_eval_scores, dtype=np.float64)
     eval_labels_arr = np.array(all_eval_labels, dtype=np.int64)
 
-    # Calculate full metrics using dev threshold
     asv_eval_score_file = base_dir / "ASVspoof2019_LA_asv_scores" / "ASVspoof2019.LA.asv.eval.gi.trl.scores.txt"
     asv_path_str = str(asv_eval_score_file) if asv_eval_score_file.exists() else None
 
@@ -312,7 +301,6 @@ def main():
 
     setup_logging()
 
-    # Determine config file and features
     if args.config is not None:
         cfg_path = Path(args.config)
     elif args.features == "logmel":
@@ -353,7 +341,6 @@ def main():
         print(f"Seed {s} Results: Dev EER = {res['dev']['eer']:.2f}% | Eval EER = {res['eval']['eer']:.2f}% | Eval min-tDCF = {res['eval']['min_tdcf']:.4f}")
         print("-" * 60)
 
-    # Multi-seed aggregate reporting
     if len(all_runs) > 1:
         dev_eers = [r["dev"]["eer"] for r in all_runs]
         eval_eers = [r["eval"]["eer"] for r in all_runs]

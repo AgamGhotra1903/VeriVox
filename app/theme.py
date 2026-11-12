@@ -12,9 +12,6 @@ import numpy as np
 import plotly.graph_objects as go
 import plotly.io as pio
 
-# ==============================================================================
-# Color Tokens
-# ==============================================================================
 COLOR_BG = "#0B0F14"
 COLOR_SURFACE = "#121821"
 COLOR_ELEVATED = "#18202B"
@@ -26,17 +23,12 @@ COLOR_GENUINE = "#34D399"
 COLOR_SYNTHETIC = "#F87171"
 COLOR_UNCERTAIN = "#FBBF24"
 
-# Geometric Tokens
 BORDER_RADIUS = "14px"
 GRID_BASE_PX = 8
 
-# Font Stack
 FONT_FAMILY = "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
 
 
-# ==============================================================================
-# Plotly Dark Forensic Template
-# ==============================================================================
 def get_plotly_layout(
     title: str = "",
     height: int = 280,
@@ -73,9 +65,6 @@ def get_plotly_layout(
     )
 
 
-# ==============================================================================
-# Visual Verdict & Badge Helpers (Never rely on color alone)
-# ==============================================================================
 def get_verdict_presentation(verdict: str) -> dict[str, str]:
     """Returns accessible, icon-and-word verdict presentation details."""
     v_clean = str(verdict).lower()
@@ -108,9 +97,6 @@ def get_verdict_presentation(verdict: str) -> dict[str, str]:
         }
 
 
-# ==============================================================================
-# Plotly Chart Generators for Evidence Panel
-# ==============================================================================
 def create_probability_ring(prob_genuine: float, verdict: str) -> go.Figure:
     """Creates a calibrated probability ring gauge."""
     details = get_verdict_presentation(verdict)
@@ -156,7 +142,6 @@ def create_score_meter(
     """Creates a 3-zone score meter: synthetic (left) ◄ inconclusive (middle) ► genuine (right)."""
     fig = go.Figure()
 
-    # Zone 1: Synthetic
     fig.add_shape(
         type="rect",
         x0=0.0,
@@ -166,7 +151,6 @@ def create_score_meter(
         fillcolor="rgba(248, 113, 113, 0.25)",
         line=dict(color=COLOR_SYNTHETIC, width=1),
     )
-    # Zone 2: Inconclusive
     fig.add_shape(
         type="rect",
         x0=abstain_band[0],
@@ -176,7 +160,6 @@ def create_score_meter(
         fillcolor="rgba(251, 191, 36, 0.2)",
         line=dict(color=COLOR_UNCERTAIN, width=1, dash="dot"),
     )
-    # Zone 3: Genuine
     fig.add_shape(
         type="rect",
         x0=abstain_band[1],
@@ -187,7 +170,6 @@ def create_score_meter(
         line=dict(color=COLOR_GENUINE, width=1),
     )
 
-    # Threshold tick mark
     fig.add_shape(
         type="line",
         x0=threshold,
@@ -197,7 +179,6 @@ def create_score_meter(
         line=dict(color=COLOR_TEXT, width=2, dash="dash"),
     )
 
-    # Score marker
     marker_color = (
         COLOR_GENUINE
         if prob_genuine >= abstain_band[1]
@@ -256,7 +237,6 @@ def create_waveform_attention_plot(
 
     fig = go.Figure()
 
-    # Base waveform
     fig.add_trace(
         go.Scatter(
             x=sub_time,
@@ -268,10 +248,8 @@ def create_waveform_attention_plot(
         )
     )
 
-    # Attention overlay if available
     if attention is not None and len(attention) > 0:
         att_time = np.linspace(0, sub_time[-1], len(attention))
-        # Normalize attention for visibility
         att_norm = (attention - np.min(attention)) / (np.ptp(attention) + 1e-8)
         fig.add_trace(
             go.Scatter(
@@ -307,7 +285,6 @@ def create_spectrogram_saliency_plot(
 ) -> go.Figure:
     """Renders time-frequency Log-Mel / Saliency heatmap."""
     if saliency_map is None:
-        # Generate representative mock STFT map if unavailable
         saliency_map = np.random.uniform(-40, 10, size=(80, 200))
 
     fig = go.Figure(
@@ -343,7 +320,6 @@ def create_timeline_plot(
 
     fig = go.Figure()
 
-    # Threshold line
     fig.add_shape(
         type="line",
         x0=0,
@@ -353,7 +329,6 @@ def create_timeline_plot(
         line=dict(color=COLOR_MUTED, width=1.5, dash="dash"),
     )
 
-    # Window scores
     fig.add_trace(
         go.Scatter(
             x=times,

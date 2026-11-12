@@ -21,32 +21,26 @@ def compute_eer(bonafide_scores: np.ndarray, spoof_scores: np.ndarray) -> tuple[
     if len(bonafide_scores) == 0 or len(spoof_scores) == 0:
         return 0.0, 0.0
 
-    # Sort all scores together
     all_scores = np.concatenate([bonafide_scores, spoof_scores])
     sorted_scores = np.sort(np.unique(all_scores))
 
-    # Evaluate FAR (spoof classified as genuine) and FRR (genuine classified as spoof)
     far = np.zeros(len(sorted_scores))
     frr = np.zeros(len(sorted_scores))
 
     n_bonafide = len(bonafide_scores)
     n_spoof = len(spoof_scores)
 
-    # For each threshold, predict genuine if score >= threshold
     for i, thresh in enumerate(sorted_scores):
         far[i] = np.sum(spoof_scores >= thresh) / n_spoof
         frr[i] = np.sum(bonafide_scores < thresh) / n_bonafide
 
-    # Find intersection point where FAR == FRR
     diff = far - frr
     idx = np.argmin(np.abs(diff))
 
-    # Interpolate
     if idx == 0 or idx == len(sorted_scores) - 1:
         eer = (far[idx] + frr[idx]) / 2.0
         threshold = sorted_scores[idx]
     else:
-        # Linear interpolation between adjacent points
         if diff[idx] * diff[idx + 1] < 0:
             i1, i2 = idx, idx + 1
         elif diff[idx] * diff[idx - 1] < 0:
@@ -98,23 +92,17 @@ def compute_tDCF_legacy(
     all_cm_scores = np.concatenate([bonafide_scores, spoof_scores])
     thresholds = np.sort(np.unique(all_cm_scores))
 
-    # Evaluate ASV fixed error rates
-    # Target prior: p_tar, impostor prior: p_non, spoof prior: p_spoof
     c_miss_cm = cost_miss
     c_fa_cm = cost_fa
 
-    # Constants C0 and C1
     c0 = p_tar * c_miss_cm
     c1 = p_spoof * cost_fa_spoof
 
-    # Default baseline cost for default accept/reject
     c_default = min(c0, c1)
 
     t_dcfs = []
     for th in thresholds:
-        # P_miss_cm: bonafide score < th
         p_miss_cm = np.mean(bonafide_scores < th)
-        # P_fa_cm: spoof score >= th
         p_fa_cm = np.mean(spoof_scores >= th)
 
         cost = c0 * p_miss_cm + c1 * p_fa_cm

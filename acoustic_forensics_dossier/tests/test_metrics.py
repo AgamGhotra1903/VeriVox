@@ -1,6 +1,5 @@
 """Unit tests for EER, ROC-AUC, min-tDCF, and bootstrap confidence intervals.
 
-Author: Chunit Bansal (IIT2024223)
 """
 
 from pathlib import Path
@@ -19,14 +18,11 @@ from acforensics.evaluation.metrics import (
 
 
 def test_eer_perfect_separation():
-    # 50 bona fide with high scores (e.g. 5.0 to 10.0)
-    # 50 spoof with low scores (e.g. -10.0 to -5.0)
     labels = np.array([BONAFIDE] * 50 + [SPOOF] * 50)
     scores = np.array([5.0 + i * 0.1 for i in range(50)] + [-5.0 - i * 0.1 for i in range(50)])
 
     eer, th = compute_eer(labels, scores)
     assert eer == pytest.approx(0.0, abs=1e-5)
-    # Threshold should separate negative and positive scores
     assert -5.0 < th <= 5.0
 
 
@@ -37,13 +33,11 @@ def test_eer_random_guess():
     scores = np.random.normal(0, 1, size=n)
 
     eer, _ = compute_eer(labels, scores)
-    # Random guess EER should be close to 50%
     assert 45.0 <= eer <= 55.0
 
 
 def test_eer_flipped_sign():
     """Verifies that inverted scores (spoof higher than bona fide) yields EER ~ 100%."""
-    # Perfectly separated with wrong sign
     labels = np.array([BONAFIDE] * 50 + [SPOOF] * 50)
     scores = np.array([-5.0 - i * 0.1 for i in range(50)] + [5.0 + i * 0.1 for i in range(50)])
 

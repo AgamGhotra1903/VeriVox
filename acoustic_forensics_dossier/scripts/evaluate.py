@@ -16,7 +16,6 @@ Generates the complete set of forensic evaluation deliverables into results/:
 10. Multi-Seed Variance Analysis (Mean +/- Std)
 11. Silence Shortcut Bias Audit
 
-Author: Agam Ghotra (IIT2024226)
 """
 
 import argparse
@@ -25,7 +24,6 @@ import sys
 from typing import Any, Optional
 import warnings
 
-# Suppress macOS Accelerate BLAS false positive FP exception flags
 warnings.filterwarnings("ignore", message=".*encountered in matmul.*")
 
 _repo_root = Path(__file__).resolve().parent.parent
@@ -144,7 +142,6 @@ def run_silence_shortcut_check(
 
         labels.append(row["label"])
 
-        # 1. Untrimmed
         wave_untrimmed = fixed_length_crop_or_pad(res.waveform, target_samples=64000, mode="center")
         with torch.no_grad():
             feat1 = extractor(wave_untrimmed)
@@ -153,7 +150,6 @@ def run_silence_shortcut_check(
             score1 = model.predict_score(feat1.to(device)).item()
             untrimmed_scores.append(score1)
 
-        # 2. Trimmed
         trimmed_wave = energy_based_vad_trim(res.waveform)
         wave_trimmed = fixed_length_crop_or_pad(trimmed_wave, target_samples=64000, mode="center")
         with torch.no_grad():
@@ -202,7 +198,6 @@ def main():
     setup_logging()
     set_seed(42, deterministic=True)
 
-    # 1. Device Resolution
     if args.device == "auto":
         if torch.cuda.is_available():
             device = torch.device("cuda")
@@ -214,7 +209,6 @@ def main():
         device = torch.device(args.device)
     logger.info("Master Evaluation running on device: %s", device)
 
-    # 2. Locate Data & Protocols
     is_smoke = bool(args.smoke)
     base_dir = Path("data/smoke_test" if is_smoke else "data/raw/LA")
     proto_dir = base_dir / "ASVspoof2019_LA_cm_protocols"
@@ -236,14 +230,11 @@ def main():
     itw_meta = Path("data/smoke_test/in_the_wild/meta.csv" if is_smoke else "data/raw/in_the_wild/meta.csv")
     itw_audio = Path("data/smoke_test/in_the_wild/audio" if is_smoke else "data/raw/in_the_wild/audio")
 
-    # ASV official score file
     asv_score_file = base_dir / "ASVspoof2019_LA_asv_scores" / "ASVspoof2019.LA.asv.eval.gi.trl.scores.txt"
     asv_path_str = str(asv_score_file) if asv_score_file.exists() else None
 
-    # Zero-Leakage Assertion
     assert_zero_data_leakage(train_df["file_id"], dev_df["file_id"], eval_df["file_id"])
 
-    # Output paths
     res_dir = Path(args.results_dir)
     tables_dir = res_dir / "tables"
     metrics_dir = res_dir / "metrics"
@@ -252,9 +243,6 @@ def main():
     metrics_dir.mkdir(parents=True, exist_ok=True)
     figures_dir.mkdir(parents=True, exist_ok=True)
 
-    # =========================================================================
-    # PART 1: MASTER MODEL & ENSEMBLE BENCHMARK TABLE
-    # =========================================================================
     logger.info("=== Generating Master Model & Ensemble Benchmark Table ===")
     dev_scores_path = Path("results/scores/dev_scores.npy")
     eval_scores_path = Path("results/scores/eval_scores.npy")
@@ -273,7 +261,6 @@ def main():
     stacker = StackedEnsemble.load(ensemble_ckpt)
     model_names = stacker.model_names
 
-    # Dev evaluation (no redundant bootstrap for threshold discovery)
     dev_mean_scores = stacker.predict_baseline_mean(dev_scores)
     dev_mean_rep = full_evaluation(dev_labels, dev_mean_scores, asv_score_file=asv_path_str, compute_ci=False)
     dev_mean_th = dev_mean_rep["eer_threshold"]
@@ -304,7 +291,6 @@ def main():
             "Applied Threshold": f"{m_dev_th:.4f} (Dev)",
         })
 
-    # Baseline Mean Fusion
     eval_mean_s = stacker.predict_baseline_mean(eval_scores)
     eval_mean_rep = full_evaluation(eval_labels, eval_mean_s, dev_threshold=dev_mean_th, asv_score_file=asv_path_str, compute_ci=not is_smoke)
     roc_dict["Mean Fusion (Z-Score)"] = (eval_labels, eval_mean_s)
@@ -318,7 +304,6 @@ def main():
         "Applied Threshold": f"{dev_mean_th:.4f} (Dev)",
     })
 
-    # Stacked Ensemble
     eval_fused_s = stacker.predict_score(eval_scores)
     eval_stacker_rep = full_evaluation(eval_labels, eval_fused_s, dev_threshold=dev_stacker_th, asv_score_file=asv_path_str, compute_ci=not is_smoke)
     roc_dict["Stacked Ensemble (Proposed)"] = (eval_labels, eval_fused_s)
@@ -340,43 +325,29 @@ def main():
     except Exception:
         pass
 
-    # Plot Multi-Model ROC and DET Curves
     plot_roc_curve(roc_dict, figures_dir / "all_models_roc.png", title="Multi-Model ROC Curves (ASVspoof 2019 Eval)")
     plot_det_curve(roc_dict, figures_dir / "all_models_det.png", title="Multi-Model DET Curves (ASVspoof 2019 Eval)")
 
-    # Confusion matrix of Stacked Ensemble at Dev EER threshold
     cm = np.array([
         [eval_stacker_rep["at_applied_threshold"]["tn"], eval_stacker_rep["at_applied_threshold"]["fp"]],
         [eval_stacker_rep["at_applied_threshold"]["fn"], eval_stacker_rep["at_applied_threshold"]["tp"]],
     ])
     plot_confusion_matrix(cm, figures_dir / "ensemble_confusion_matrix.png", title="Stacked Ensemble Confusion Matrix (Eval)")
 
-    # Meta-Learner Weights Table
     weights_df = stacker.get_coefficients_table()
     weights_df.to_csv(tables_dir / "meta_learner_weights.csv", index=False)
     weights_df.to_markdown(tables_dir / "meta_learner_weights.md", index=False)
 
-    # =========================================================================
-    # PART 2: PER-ATTACK-TYPE FORENSIC AUDIT (A07 - A19)
-    # =========================================================================
     run_per_attack_evaluation(eval_df, eval_fused_s, dev_threshold=dev_stacker_th, results_dir=res_dir)
 
-    # =========================================================================
-    # PART 3: FROZEN ENSEMBLE PREDICTOR FOR ROBUSTNESS & CROSS-DOMAIN
-    # =========================================================================
     predictor = EnsemblePredictor(device=device)
 
-    # Codec Robustness (MP3, AAC, Opus)
     run_ensemble_codec_robustness(predictor, eval_df, max_files=20 if is_smoke else 100, smoke=is_smoke, results_dir=res_dir)
 
     # Cross-Domain In-The-Wild
     if itw_meta.exists() and itw_audio.exists():
         run_ensemble_crossdomain(predictor, itw_meta, itw_audio, dev_threshold=dev_stacker_th, max_clips=50 if is_smoke else 200, results_dir=res_dir)
 
-    # =========================================================================
-    # PART 4: ABLATION STUDIES (DataLoaders for Feature & Architecture Ablations)
-    # =========================================================================
-    # LFCC DataLoaders
     lfcc_ext = LFCCExtractor(sample_rate=16000, n_fft=512, win_length=400, hop_length=160, n_lfcc=20, with_deltas=True)
     norm_file = Path("checkpoints/normalization_stats.json")
     normalizer = FeatureNormalizer().load(norm_file) if norm_file.exists() else FeatureNormalizer()
@@ -393,7 +364,6 @@ def main():
     dl_dv_lfcc = DataLoader(ds_dv_lfcc, batch_size=16, shuffle=False, collate_fn=collate_fn)
     dl_ev_lfcc = DataLoader(ds_ev_lfcc, batch_size=16, shuffle=False, collate_fn=collate_fn)
 
-    # Log-Mel DataLoaders
     logmel_ext = LogMelExtractor(sample_rate=16000, n_fft=512, win_length=400, hop_length=160, n_mels=80)
     norm_logmel_file = Path("checkpoints/normalization_stats_logmel.json")
     normalizer_logmel = FeatureNormalizer().load(norm_logmel_file) if norm_logmel_file.exists() else FeatureNormalizer()
@@ -410,7 +380,6 @@ def main():
     dl_dv_logmel = DataLoader(ds_dv_logmel, batch_size=16, shuffle=False, collate_fn=collate_fn)
     dl_ev_logmel = DataLoader(ds_ev_logmel, batch_size=16, shuffle=False, collate_fn=collate_fn)
 
-    # 1. Feature Ablation
     feat_df = run_feature_ablation(
         dl_tr_lfcc, dl_dv_lfcc, dl_ev_lfcc,
         dl_tr_logmel, dl_dv_logmel, dl_ev_logmel,
@@ -420,7 +389,6 @@ def main():
         results_dir=res_dir,
     )
 
-    # 2. Architecture Ablation
     arch_df = run_architecture_ablation(
         dl_tr_lfcc, dl_dv_lfcc, dl_ev_lfcc,
         device=device,
@@ -429,7 +397,6 @@ def main():
         results_dir=res_dir,
     )
 
-    # 3. Regularization Ablation
     reg_df = run_regularization_ablation(
         dl_tr_lfcc, dl_dv_lfcc, dl_ev_lfcc,
         device=device,
@@ -438,16 +405,11 @@ def main():
         results_dir=res_dir,
     )
 
-    # 4. Multi-seed Variance Check
     run_multi_seed_evaluation("lfcc", results_dir=res_dir)
     run_multi_seed_evaluation("logmel", results_dir=res_dir)
 
-    # 5. Silence Shortcut Check
     silence_report = run_silence_shortcut_check(eval_df, device=device, results_dir=res_dir)
 
-    # =========================================================================
-    # CONSOLE REPORT PRESENTATION
-    # =========================================================================
     print("\n" + "=" * 96)
     print("TABLE 1: MASTER PERFORMANCE BENCHMARK (BASE MODELS VS. FUSIONS)")
     print("=" * 96)

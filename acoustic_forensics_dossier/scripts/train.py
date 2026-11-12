@@ -2,7 +2,6 @@
 
 Delegates to train_crnn.py for regularized CRNN training on LFCC or Log-Mel features.
 
-Author: Agam Ghotra (IIT2024226)
 """
 
 from pathlib import Path

@@ -1,6 +1,5 @@
 """Loss functions for class-imbalanced synthetic speech detection.
 
-Author: Agam Ghotra (IIT2024226)
 """
 
 from typing import Optional

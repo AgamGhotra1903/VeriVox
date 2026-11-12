@@ -1,6 +1,5 @@
 """Feature extraction CLI, normalization fitter, and spectrogram visualizer.
 
-Author: Paras Bansal (IIT2024221), Agam Ghotra (IIT2024226)
 """
 
 import argparse
@@ -50,7 +49,6 @@ def plot_spectrogram_comparison(
         bf_logmel = logmel_extractor(bf_wave).cpu().numpy()
         sp_logmel = logmel_extractor(sp_wave).cpu().numpy()
 
-    # 1. LFCC Heatmap Comparison
     fig, axes = plt.subplots(2, 1, figsize=(10, 6), sharex=True)
     im0 = axes[0].imshow(bf_lfcc, aspect="auto", origin="lower", cmap="magma")
     axes[0].set_title("Bona Fide: LFCC (60 Coefficients with Deltas)", fontsize=11, fontweight="bold")
@@ -68,7 +66,6 @@ def plot_spectrogram_comparison(
     plt.close()
     logger.info("Saved LFCC comparison figure to %s", lfcc_plot_path)
 
-    # 2. Log-Mel Spectrogram Comparison
     fig, axes = plt.subplots(2, 1, figsize=(10, 6), sharex=True)
     im0 = axes[0].imshow(bf_logmel, aspect="auto", origin="lower", cmap="viridis")
     axes[0].set_title("Bona Fide: Log-Mel Spectrogram (80 Mel Bands)", fontsize=11, fontweight="bold")
@@ -99,7 +96,6 @@ def main():
     set_seed(42)
     config = load_config(args.config)
 
-    # Determine data roots
     if args.smoke:
         base_dir = Path("data/smoke_test")
         proto_path = base_dir / "ASVspoof2019_LA_cm_protocols" / "ASVspoof2019.LA.cm.train.trn.txt"
@@ -124,7 +120,6 @@ def main():
     if args.max_utterances is not None:
         train_df = train_df.head(args.max_utterances)
 
-    # Initialize feature extractors
     lfcc_ext = LFCCExtractor(
         sample_rate=config.audio.sample_rate,
         n_fft=config.features.lfcc.n_fft,
@@ -168,7 +163,6 @@ def main():
             feat = lfcc_ext(wave) if config.features.feature_type == "lfcc" else logmel_ext(wave)
             extracted_features.append(feat)
 
-    # Fit train-only global normalization statistics
     normalizer = FeatureNormalizer()
     normalizer.fit_from_tensors(extracted_features)
     stats_out = Path(config.features.stats_file)
@@ -176,7 +170,6 @@ def main():
     normalizer.save(stats_out)
     logger.info("Successfully persisted train-only normalization statistics to: %s", stats_out)
 
-    # Optional visualizations
     if args.visualize and bf_wave is not None and sp_wave is not None:
         figures_dir = Path(config.paths.figures_dir)
         plot_spectrogram_comparison(bf_wave, sp_wave, lfcc_ext, logmel_ext, figures_dir)

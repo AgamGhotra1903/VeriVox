@@ -1,6 +1,5 @@
 """Atomic and type-safe I/O utilities for saving/loading experiment artifacts.
 
-Author: Paras Bansal (IIT2024221), Agam Ghotra (IIT2024226)
 """
 
 import json

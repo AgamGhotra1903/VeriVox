@@ -1,6 +1,5 @@
 """CLI script to build and serialize standardized Parquet manifests for AF-Split v1.
 
-Author: Paras Bansal (IIT2024221), Agam Ghotra (IIT2024226)
 """
 
 import argparse
@@ -129,11 +128,9 @@ def prepare_manifests(
     else:
         logger.info("In-The-Wild metadata not found at %s. Skipping ITW manifests.", itw_meta)
 
-    # 3. Print Structured Summary Table
     summary_df = summarize_splits(manifests)
     logger.info("\n======================== AF-Split v1 Manifest Summary ========================\n%s\n", summary_df.to_string(index=False))
 
-    # Compare against official ground truth if in production mode
     if not debug and "train" in manifests and "dev" in manifests and "eval" in manifests:
         logger.info("Verifying counts against official ASVspoof 2019 LA benchmark specifications:")
         for sp in ["train", "dev", "eval"]:

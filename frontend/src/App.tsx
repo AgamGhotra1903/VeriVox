@@ -15,9 +15,7 @@ export const App: React.FC = () => {
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [isOnline, setIsOnline] = useState(true);
 
-  // Initial data load: health & samples
   useEffect(() => {
-    // Health check
     fetch('/api/health')
       .then((res) => {
         if (!res.ok) throw new Error('API offline');
@@ -31,7 +29,6 @@ export const App: React.FC = () => {
         setIsOnline(false);
       });
 
-    // Reference sample clips
     fetch('/api/samples')
       .then((res) => res.json())
       .then((data: SampleItem[]) => {
@@ -40,7 +37,6 @@ export const App: React.FC = () => {
       .catch(console.error);
   }, []);
 
-  // Keyboard navigation shortcuts (1, 2, 3, 4, P)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return;
@@ -64,7 +60,7 @@ export const App: React.FC = () => {
   return (
     <ToastProvider>
       <div className="min-h-screen bg-chassis text-txt-primary flex flex-col font-sans antialiased">
-        {/* Navigation & Telemetry Header */}
+        {}
         <div className="print:hidden">
           <Header
             activeScreen={activeScreen}
@@ -76,7 +72,7 @@ export const App: React.FC = () => {
           />
         </div>
 
-        {/* Main Content Area */}
+        {}
         <main className="flex-1 print:hidden">
           {activeScreen === 'analyse' && (
             <AnalyseScreen
@@ -99,10 +95,10 @@ export const App: React.FC = () => {
           )}
         </main>
 
-        {/* Printable Forensic Report (Shown only on @media print) */}
+        {}
         {activeResult && <PrintableReport result={activeResult} />}
 
-        {/* Global Footer Status Bar */}
+        {}
         <footer className="border-t border-borderSubtle bg-surface/50 py-2.5 px-4 text-[10px] font-mono text-txt-muted flex flex-col sm:flex-row items-center justify-between gap-2 print:hidden select-none">
           <div className="flex items-center gap-3">
             <span>ACOUSTIC FORENSICS LAB</span>
@@ -115,7 +111,7 @@ export const App: React.FC = () => {
           <div className="flex items-center gap-4">
             <span>Shortcuts: <kbd className="text-phosphor">U</kbd> Upload · <kbd className="text-phosphor">Space</kbd> Play · <kbd className="text-phosphor">1-4</kbd> Switch · <kbd className="text-phosphor">P</kbd> Print</span>
             <span className="w-1 h-1 rounded-full bg-borderStrong" />
-            <span className="text-txt-secondary">Agam Ghotra (IIT2024226)</span>
+            <span className="text-txt-secondary">VeriVox Forensic Lab</span>
           </div>
         </footer>
       </div>

@@ -5,7 +5,6 @@ Enforces rigorous experimental separation:
 - In-The-Wild: Speaker-disjoint partitioning into ITW-CAL (~15% speakers) and ITW-TEST (~85% speakers).
 - Extension splits: Split strictly by generator and speaker family, never by random utterance.
 
-Author: Paras Bansal (IIT2024221), Agam Ghotra (IIT2024226)
 """
 
 from typing import Any, Optional
@@ -68,7 +67,6 @@ def split_in_the_wild_by_speaker(
     cal_speakers = set(shuffled_speakers[:n_cal_speakers])
     test_speakers = set(shuffled_speakers[n_cal_speakers:])
 
-    # Strict assertion: Disjointness
     overlap = cal_speakers.intersection(test_speakers)
     assert not overlap, f"Fatal split error: Speaker leakage detected! Overlapping speakers: {overlap}"
 
@@ -128,7 +126,6 @@ def split_extension_by_generator(
     if generator_col not in extension_df.columns:
         raise ValueError(f"Extension DataFrame missing generator column '{generator_col}'.")
 
-    # Spoof partitions by generator
     test_spoofs = extension_df[
         (extension_df["label"] == SPOOF) & (extension_df[generator_col] == test_generator)
     ].copy()
@@ -147,7 +144,6 @@ def split_extension_by_generator(
             (extension_df["label"] == SPOOF) & (extension_df[generator_col] != test_generator)
         ].copy()
 
-    # Bona fide partition by speaker
     bonafides = extension_df[extension_df["label"] == BONAFIDE].copy()
     if len(bonafides) > 0 and speaker_col in bonafides.columns:
         speakers = sorted(bonafides[speaker_col].astype(str).unique())
@@ -170,7 +166,6 @@ def split_extension_by_generator(
                 "Warning: Speaker shortcut confound exists; results must be interpreted with caution.",
                 len(speakers),
             )
-            # Stratified random split if single speaker, with explicit documented caveat
             bf_train = bonafides.sample(frac=0.6, random_state=seed)
             bf_remain = bonafides.drop(bf_train.index)
             bf_val = bf_remain.sample(frac=0.5, random_state=seed) if val_generator else bonafides.iloc[:0]

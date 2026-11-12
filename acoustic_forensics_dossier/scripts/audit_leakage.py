@@ -6,7 +6,6 @@ Verifies:
 3. Binary audio content hash duplicates (SHA-256).
 4. VCTK heritage overlap warnings.
 
-Author: Paras Bansal (IIT2024221), Agam Ghotra (IIT2024226)
 """
 
 import argparse

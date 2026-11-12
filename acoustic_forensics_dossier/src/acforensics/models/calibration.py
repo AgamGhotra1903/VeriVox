@@ -1,6 +1,5 @@
 """Probability calibration via Platt Scaling fitted exclusively on validation (dev) scores.
 
-Author: Agam Ghotra (IIT2024226)
 """
 
 from pathlib import Path
@@ -62,7 +61,6 @@ class PlattCalibrator:
         self.model.fit(X, y)
         self.is_fitted = True
 
-        # Calculate dev ECE
         probs = self.predict_proba(dev_scores)
         self.dev_ece = compute_expected_calibration_error(dev_labels, probs)
         logger.info(
@@ -77,7 +75,6 @@ class PlattCalibrator:
     def predict_proba(self, scores: np.ndarray | torch.Tensor) -> np.ndarray:
         """Converts raw scores to calibrated probability of bona fide."""
         if not self.is_fitted:
-            # Fallback to standard sigmoid if unfitted
             if isinstance(scores, torch.Tensor):
                 return torch.sigmoid(scores).detach().cpu().numpy()
             return 1.0 / (1.0 + np.exp(-np.clip(scores, -20.0, 20.0)))
@@ -88,7 +85,6 @@ class PlattCalibrator:
             s = np.asarray(scores)
 
         X = s.reshape(-1, 1)
-        # Class 1 is BONAFIDE
         return self.model.predict_proba(X)[:, 1]
 
     def save(self, path: Path | str) -> None:

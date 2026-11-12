@@ -59,7 +59,6 @@ def build_results_index(review_pack: Path) -> None:
 
         rel_path = f"results/metrics/{jf.name}"
         
-        # Determine dataset source
         ds_name = str(data.get("dataset_name", ""))
         if "smoke" in ds_name.lower():
             src = "SMOKE"
@@ -70,7 +69,6 @@ def build_results_index(review_pack: Path) -> None:
         else:
             src = "REAL"
 
-        # N trials
         n_trials = data.get("n_trials", data.get("num_trials", data.get("n_samples", data.get("num_samples"))))
         if n_trials is None:
             if "ASVspoof 2019 LA" in ds_name or "eval" in jf.name or "crnn_lfcc_results" in jf.name:
@@ -97,7 +95,6 @@ def build_results_index(review_pack: Path) -> None:
         if ckpt_sha != "N/A" and len(ckpt_sha) > 12:
             ckpt_sha = ckpt_sha[:12] + "..."
 
-        # Key metrics extraction
         km = "N/A"
         if "metrics" in data and isinstance(data["metrics"], dict):
             m = data["metrics"]
@@ -196,7 +193,6 @@ def build_figures_index(review_pack: Path) -> None:
     fig_dir = review_pack / "figures"
     out_file = fig_dir / "INDEX.md"
 
-    # Map of file names to metadata
     fig_meta = {
         "all_models_roc.png": ("ROC curves on ASVspoof 2019 Eval (N=71,237) for CRNN-LFCC, Stacked Ensemble, GMM, RF, SVM, LR", "scripts/generate_dossier_figures.py", "results/metrics/crnn_lfcc_results_seed42.json, baselines_results.json, ensemble_results.json", "REAL"),
         "all_models_roc.pdf": ("Vector PDF of ROC curves on ASVspoof 2019 Eval (N=71,237)", "scripts/generate_dossier_figures.py", "results/metrics/crnn_lfcc_results_seed42.json, baselines_results.json, ensemble_results.json", "REAL"),
@@ -265,27 +261,22 @@ def assemble_all() -> None:
         shutil.rmtree(REVIEW_PACK_DIR)
     REVIEW_PACK_DIR.mkdir(parents=True, exist_ok=True)
 
-    # 1. REPORT.md
     print("1. Copying REPORT.md...")
     copy_file_safe(REPO_ROOT / "handover" / "final" / "REPORT.md", REVIEW_PACK_DIR / "REPORT.md")
 
-    # 2. figures/
     print("2. Copying figures and plots...")
     copy_tree_filtered(REPO_ROOT / "results" / "figures", REVIEW_PACK_DIR / "figures")
     build_figures_index(REVIEW_PACK_DIR)
 
-    # 3. results/
     print("3. Copying results (metrics, tables, histories, scores)...")
     copy_tree_filtered(REPO_ROOT / "results" / "metrics", REVIEW_PACK_DIR / "results" / "metrics")
     copy_tree_filtered(REPO_ROOT / "results" / "tables", REVIEW_PACK_DIR / "results" / "tables")
     
-    # Training histories
     hist_dir = REVIEW_PACK_DIR / "results" / "histories"
     hist_dir.mkdir(parents=True, exist_ok=True)
     for hf in (REPO_ROOT / "results" / "metrics").glob("crnn_training_run_*.json"):
         copy_file_safe(hf, hist_dir / hf.name)
 
-    # Score files (< 20 MB total)
     score_dir = REVIEW_PACK_DIR / "results" / "scores"
     score_dir.mkdir(parents=True, exist_ok=True)
     for sf in (REPO_ROOT / "results_smoke" / "scores").glob("*.npy"):
@@ -293,7 +284,6 @@ def assemble_all() -> None:
 
     build_results_index(REVIEW_PACK_DIR)
 
-    # 4. logs/
     print("4. Copying training, evaluation, and audit logs...")
     logs_dir = REVIEW_PACK_DIR / "logs"
     logs_dir.mkdir(parents=True, exist_ok=True)
@@ -306,7 +296,6 @@ def assemble_all() -> None:
     for af in (REPO_ROOT / "results" / "audit").glob("*.json"):
         copy_file_safe(af, logs_dir / af.name)
 
-    # 5. code_snapshot/
     print("5. Packaging clean code snapshot...")
     code_dir = REVIEW_PACK_DIR / "code_snapshot"
     for subdir in ["src", "scripts", "configs", "tests"]:
@@ -320,18 +309,15 @@ def assemble_all() -> None:
     if (REPO_ROOT / ".github").exists():
         copy_tree_filtered(REPO_ROOT / ".github", code_dir / ".github")
 
-    # 6. env.md
     print("6. Copying env.md...")
     copy_file_safe(REPO_ROOT / "handover" / "env.md", REVIEW_PACK_DIR / "env.md")
 
-    # 7. paper_facts.json, commands_log.md, decisions.md, issue_register.md, changes_summary.md
     print("7. Copying paper facts, commands log, decisions, issue register, changes summary...")
     copy_file_safe(REPO_ROOT / "handover" / "final" / "paper_facts.json", REVIEW_PACK_DIR / "paper_facts.json")
     copy_file_safe(REPO_ROOT / "handover" / "final" / "commands_log.md", REVIEW_PACK_DIR / "commands_log.md")
     copy_file_safe(REPO_ROOT / "handover" / "final" / "decisions.md", REVIEW_PACK_DIR / "decisions.md")
     copy_file_safe(REPO_ROOT / "FIXES_LOG.md", REVIEW_PACK_DIR / "issue_register.md")
 
-    # Generate changes_summary.md
     git_log_proc = subprocess.run(["git", "log", "--oneline", "f02eeda..HEAD"], cwd=REPO_ROOT, capture_output=True, text=True)
     git_diff_proc = subprocess.run(["git", "diff", "--stat", "f02eeda..HEAD"], cwd=REPO_ROOT, capture_output=True, text=True)
     changes_md = [
@@ -350,7 +336,6 @@ def assemble_all() -> None:
     ]
     (REVIEW_PACK_DIR / "changes_summary.md").write_text("\n".join(changes_md), encoding="utf-8")
 
-    # 8. PACK_MANIFEST.md and checksums.sha256
     print("8. Generating PACK_MANIFEST.md and checksums.sha256...")
     all_files = []
     for p in sorted(REVIEW_PACK_DIR.rglob("*")):
@@ -360,14 +345,11 @@ def assemble_all() -> None:
             sha = compute_sha256(p)
             all_files.append((str(rel_p), sz, sha))
 
-    # Write checksums.sha256
     checksum_lines = [f"{sha}  {rel_p}" for rel_p, sz, sha in all_files]
     (REVIEW_PACK_DIR / "checksums.sha256").write_text("\n".join(checksum_lines) + "\n", encoding="utf-8")
 
-    # Compute checksum of checksums.sha256 itself for completeness
     all_files.append(("checksums.sha256", (REVIEW_PACK_DIR / "checksums.sha256").stat().st_size, compute_sha256(REVIEW_PACK_DIR / "checksums.sha256")))
 
-    # Write PACK_MANIFEST.md
     manifest_lines = [
         "# Review Pack Manifest",
         "",
@@ -410,7 +392,6 @@ def assemble_all() -> None:
     (REVIEW_PACK_DIR / "PACK_MANIFEST.md").write_text("\n".join(manifest_lines), encoding="utf-8")
     print(f"Generated {REVIEW_PACK_DIR / 'PACK_MANIFEST.md'}.")
 
-    # 9. Create Zip Archive
     print("9. Creating review_pack.zip...")
     if ZIP_PATH.exists():
         ZIP_PATH.unlink()

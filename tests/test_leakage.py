@@ -1,6 +1,5 @@
 """Unit tests for leakage detection, speaker disjointness, and content hashing.
 
-Author: Paras Bansal (IIT2024221), Agam Ghotra (IIT2024226)
 """
 
 from pathlib import Path
@@ -67,7 +66,6 @@ def test_audit_content_hash_collision(tmp_path: Path):
     file_b = tmp_path / "audio_b.wav"
     file_c = tmp_path / "audio_c.wav"
 
-    # Write identical bytes to file_a and file_b
     dummy_audio_bytes = b"RIFF____WAVEfmt \x10\x00\x00\x00\x01\x00\x01\x00\x80>\x00\x00\x00}\x00\x00\x02\x00\x10\x00data\x00\x00\x00\x00"
     file_a.write_bytes(dummy_audio_bytes)
     file_b.write_bytes(dummy_audio_bytes)

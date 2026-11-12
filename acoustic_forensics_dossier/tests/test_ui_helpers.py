@@ -1,6 +1,5 @@
 """Unit tests for UI helper functions, quality checks, verdict logic, and report generation.
 
-Author: Chunit Bansal (IIT2024233)
 """
 
 import numpy as np
@@ -44,19 +43,16 @@ def test_estimate_snr_db():
 def test_compute_spectral_bandwidth():
     sr = 16000
     t = np.linspace(0, 1, sr, endpoint=False)
-    # Low frequency tone: 300 Hz
     low_tone = np.sin(2 * np.pi * 300 * t)
     bw_low = compute_spectral_bandwidth_hz(low_tone, sr=sr)
     assert bw_low < 2000.0
 
-    # High frequency wideband noise
     white_noise = np.random.normal(0, 1, sr)
     bw_high = compute_spectral_bandwidth_hz(white_noise, sr=sr)
     assert bw_high > 5000.0
 
 
 def test_verdict_presentation_and_color_independence():
-    # Never rely on color alone: each must have an icon and a distinct title
     res_gen = get_verdict_presentation("genuine")
     assert res_gen["icon"] == "✔"
     assert "GENUINE" in res_gen["title"]
@@ -71,7 +67,6 @@ def test_verdict_presentation_and_color_independence():
 
 
 def test_evaluate_reliability_checks_triggers_warnings():
-    # 1. Short clip triggers red warning
     poor_quality = {
         "duration": 0.8,
         "clipping": 0.08,
@@ -84,7 +79,6 @@ def test_evaluate_reliability_checks_triggers_warnings():
     statuses = [c["status"] for c in checks]
     assert "red" in statuses
 
-    # 2. Pristine clip gets all green
     good_quality = {
         "duration": 4.0,
         "clipping": 0.0,

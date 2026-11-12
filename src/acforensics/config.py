@@ -1,6 +1,5 @@
 """Configuration dataclasses, YAML loader, and validation.
 
-Author: Agam Ghotra (IIT2024226)
 """
 
 from dataclasses import dataclass, field
@@ -24,9 +23,9 @@ class AudioConfig:
     target_length_sec: float = TARGET_DURATION_SEC
     target_length_samples: int = TARGET_SAMPLES
     min_duration_sec: float = MIN_DURATION_SEC
-    normalization_method: str = "peak"  # 'peak', 'rms', 'none'
+    normalization_method: str = "peak"
     vad_silence_trim: bool = False
-    eval_crop_strategy: str = "center"  # 'center', 'multi_crop'
+    eval_crop_strategy: str = "center"
     multi_crop_overlap_ratio: float = 0.5
 
 
@@ -54,8 +53,8 @@ class LogMelConfig:
 
 @dataclass
 class FeaturesConfig:
-    feature_type: str = "lfcc"  # 'lfcc', 'logmel', 'combined'
-    normalization: str = "global_meanstd"  # 'global_meanstd', 'per_utt_cmvn'
+    feature_type: str = "lfcc"
+    normalization: str = "global_meanstd"
     stats_file: str = "checkpoints/normalization_stats.json"
     lfcc: LFCCConfig = field(default_factory=LFCCConfig)
     logmel: LogMelConfig = field(default_factory=LogMelConfig)

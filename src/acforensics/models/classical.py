@@ -8,7 +8,6 @@ Upgraded with:
 - Hyperparameter tuning strictly performed on DEV split.
 - Unified continuous scoring function predict_classical_score() where higher value = more bona fide.
 
-Author: Jashan Goyal (IIT2024223), Agam Ghotra (IIT2024226)
 """
 
 from pathlib import Path
@@ -46,12 +45,11 @@ def extract_mean_std_features(frames: np.ndarray) -> np.ndarray:
     if frames.ndim != 2:
         raise ValueError(f"Expected 2D frames matrix, got shape {frames.shape}")
 
-    # Ensure shape is (F, T)
     if frames.shape[0] > frames.shape[1] and frames.shape[1] in (20, 60, 80):
         frames = frames.T
 
-    mean_vec = np.mean(frames, axis=1)  # (F,)
-    std_vec = np.std(frames, axis=1)    # (F,)
+    mean_vec = np.mean(frames, axis=1)
+    std_vec = np.std(frames, axis=1)
     return np.concatenate([mean_vec, std_vec]).astype(np.float32)
 
 
@@ -75,7 +73,6 @@ def predict_classical_score(model: Any, X: np.ndarray) -> np.ndarray:
     elif hasattr(model, "predict_proba"):
         probs = model.predict_proba(X_arr)
         p_bonafide = probs[:, BONAFIDE] if probs.shape[1] > 1 else probs[:, 0]
-        # Log-odds logit mapping to provide continuous unbounded scores
         p_clamped = np.clip(p_bonafide, 1e-6, 1.0 - 1e-6)
         scores = np.log(p_clamped / (1.0 - p_clamped))
     else:
@@ -98,7 +95,6 @@ def fit_train_preprocessors(
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train)
 
-    # Determine maximum valid components (cannot exceed n_samples or n_features)
     max_components = min(X_train.shape[0], X_train.shape[1])
     n_comp: Any = pca_variance
     if isinstance(pca_variance, float) and pca_variance < 1.0:
@@ -136,11 +132,9 @@ def train_logistic_regression(
     if param_grid is None:
         param_grid = {"C": [0.001, 0.01, 0.1, 1.0, 10.0, 100.0]}
 
-    # 1. Fit Preprocessors on TRAIN only
     scaler, pca, X_tr_pca = fit_train_preprocessors(X_train, pca_variance=pca_variance, seed=seed)
     X_dv_pca = pca.transform(scaler.transform(X_dev))
 
-    # 2. Tune C parameter strictly on DEV
     best_c = 1.0
     best_auc = -1.0
     c_candidates = param_grid.get("C", [0.01, 0.1, 1.0, 10.0])
@@ -156,7 +150,6 @@ def train_logistic_regression(
 
     logger.info("Best Logistic Regression C: %s (Dev AUC: %.4f)", best_c, best_auc)
 
-    # 3. Final model trained on X_train with best C
     final_clf = LogisticRegression(C=best_c, solver="lbfgs", max_iter=1000, class_weight="balanced", random_state=seed)
     final_clf.fit(X_tr_pca, y_train)
 
@@ -187,7 +180,6 @@ def train_rbf_svm(
             "gamma": ["scale", 0.01, 0.1],
         }
 
-    # Stratified subsampling for SVM quadratic protection if dataset is large
     if len(X_train) > max_train_samples:
         logger.warning("Subsampling SVM training set from %d to %d for quadratic complexity safety.", len(X_train), max_train_samples)
         rng = np.random.RandomState(seed)
@@ -209,11 +201,9 @@ def train_rbf_svm(
         X_tr = X_train
         y_tr = y_train
 
-    # Fit preprocessors on TRAIN only
     scaler, pca, X_tr_pca = fit_train_preprocessors(X_tr, pca_variance=pca_variance, seed=seed)
     X_dv_pca = pca.transform(scaler.transform(X_dev))
 
-    # Grid search on DEV
     best_params = {"C": 1.0, "gamma": "scale"}
     best_auc = -1.0
     c_candidates = param_grid.get("C", [0.1, 1.0, 10.0])
@@ -266,7 +256,6 @@ def train_random_forest(
             "max_depth": [10, 20, None],
         }
 
-    # Fit preprocessors on TRAIN only
     scaler, pca, X_tr_pca = fit_train_preprocessors(X_train, pca_variance=pca_variance, seed=seed)
     X_dv_pca = pca.transform(scaler.transform(X_dev))
 

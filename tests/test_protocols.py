@@ -1,6 +1,5 @@
 """Unit tests for ASVspoof 2019 LA and In-The-Wild protocol parsing.
 
-Author: Paras Bansal (IIT2024221)
 """
 
 import pytest
@@ -41,11 +40,8 @@ def test_parse_asvspoof_line_spoof():
 
 
 def test_parse_asvspoof_line_invalid():
-    # Incomplete line
     assert parse_asvspoof_line("LA_0079 LA_D_1105538") is None
-    # Empty string
     assert parse_asvspoof_line("   \n") is None
-    # Unknown key
     assert parse_asvspoof_line("LA_0079 LA_D_1105538 - A06 unknown_key") is None
 
 
@@ -113,12 +109,10 @@ def test_in_the_wild_label_polarity_guard(tmp_path: Path):
     assert labels[2] == 1, "Third sample 'bona-fide' must be label 1"
     assert labels[3] == 0, "Fourth sample 'spoof' must be label 0"
 
-    # Higher scores for bona-fide (e.g. +2.0 vs -2.0)
     ideal_scores = np.where(labels == BONAFIDE, 2.0, -2.0)
     auc = compute_roc_auc(labels, ideal_scores)
     assert auc == 1.0, f"Expected perfect AUC=1.0 for bona-fide positive convention, got {auc}"
 
-    # Verify that inverted labels would flip AUC below 0.5
     inverted_labels = 1 - labels
     inverted_auc = compute_roc_auc(inverted_labels, ideal_scores)
     assert inverted_auc == 0.0, f"Expected inverted AUC=0.0 when polarity flipped, got {inverted_auc}"

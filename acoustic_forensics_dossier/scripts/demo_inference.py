@@ -4,7 +4,6 @@
 Runs end-to-end inference across the 6-model stacked ensemble on real audio samples,
 displays base model scores, fused meta-learner confidence, and outputs the official benchmark tables.
 
-Author: Agam Ghotra (IIT2024226)
 """
 
 import warnings

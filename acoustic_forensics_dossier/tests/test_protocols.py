@@ -1,6 +1,5 @@
 """Unit tests for ASVspoof 2019 LA and In-The-Wild protocol parsing.
 
-Author: Paras Bansal (IIT2024221)
 """
 
 import pytest
@@ -39,11 +38,8 @@ def test_parse_asvspoof_line_spoof():
 
 
 def test_parse_asvspoof_line_invalid():
-    # Incomplete line
     assert parse_asvspoof_line("LA_0079 LA_D_1105538") is None
-    # Empty string
     assert parse_asvspoof_line("   \n") is None
-    # Unknown key
     assert parse_asvspoof_line("LA_0079 LA_D_1105538 - A06 unknown_key") is None
 
 

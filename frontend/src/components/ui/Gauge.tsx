@@ -4,7 +4,7 @@ import { CheckCircle2, AlertOctagon, HelpCircle } from 'lucide-react';
 import { clsx } from 'clsx';
 
 export interface GaugeProps {
-  probability: number; // 0.0 to 1.0 (calibrated P(genuine))
+  probability: number; 
   verdict: 'BONA FIDE (GENUINE)' | 'SPOOF (SYNTHETIC)' | 'INCONCLUSIVE';
   threshold?: number;
   className?: string;
@@ -23,7 +23,6 @@ export const Gauge: React.FC<GaugeProps> = ({
   const isSpoof = verdict === 'SPOOF (SYNTHETIC)';
   const isUncertain = verdict === 'INCONCLUSIVE' || (percentage >= 40 && percentage <= 60);
 
-  // Circular progress geometry
   const strokeWidth = 8;
   const radius = (size - strokeWidth * 2) / 2;
   const center = size / 2;
@@ -67,16 +66,16 @@ export const Gauge: React.FC<GaugeProps> = ({
         className
       )}
     >
-      {/* Top Status Pill */}
+      {}
       <div className={clsx('px-3 py-1 rounded-full border text-xs font-medium flex items-center gap-1.5', statusConfig.pillStyle)}>
         {statusConfig.icon}
         <span>{statusConfig.tag}</span>
       </div>
 
-      {/* Center Circular Progress Ring */}
+      {}
       <div className="relative my-3 flex items-center justify-center">
         <svg width={size} height={size} className="transform -rotate-90">
-          {/* Background Track */}
+          {}
           <circle
             cx={center}
             cy={center}
@@ -85,7 +84,7 @@ export const Gauge: React.FC<GaugeProps> = ({
             stroke="var(--border-subtle)"
             strokeWidth={strokeWidth}
           />
-          {/* Animated Value Arc */}
+          {}
           <motion.circle
             cx={center}
             cy={center}
@@ -101,7 +100,7 @@ export const Gauge: React.FC<GaugeProps> = ({
           />
         </svg>
 
-        {/* Center Percentage Display */}
+        {}
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
           <span className="text-3xl font-semibold font-mono tracking-tight text-txt-primary tabular-nums">
             {percentage.toFixed(1)}%
@@ -112,7 +111,7 @@ export const Gauge: React.FC<GaugeProps> = ({
         </div>
       </div>
 
-      {/* Bottom Summary Text */}
+      {}
       <div className="w-full text-center">
         <h3 className={clsx('text-base font-semibold tracking-tight', statusConfig.textColor)}>
           {statusConfig.label}

@@ -7,7 +7,6 @@ on an audio file or raw waveform, and applies the frozen meta-learner to yield:
 3. Baseline mean fusion score.
 4. Calibrated confidence probability P(bona fide) via sigmoid of the meta-learner output.
 
-Author: Agam Ghotra (IIT2024226)
 """
 
 from pathlib import Path
@@ -60,7 +59,6 @@ class EnsemblePredictor:
         else:
             self.device = device
 
-        # 1. Feature extractors
         self.lfcc_ext = LFCCExtractor(
             sample_rate=SAMPLE_RATE,
             n_fft=512,
@@ -85,8 +83,6 @@ class EnsemblePredictor:
         norm_logmel_file = Path("checkpoints/normalization_stats_logmel.json")
         self.norm_logmel = FeatureNormalizer().load(norm_logmel_file) if norm_logmel_file.exists() else FeatureNormalizer()
 
-        # 2. Base Models
-        # CRNN-LFCC
         p_lfcc = Path(crnn_lfcc_path)
         if not p_lfcc.exists():
             p_lfcc = Path("checkpoints/crnn_best.pt")
@@ -100,7 +96,6 @@ class EnsemblePredictor:
         self.crnn_lfcc.to(self.device)
         self.crnn_lfcc.eval()
 
-        # CRNN-LogMel
         p_logmel = Path(crnn_logmel_path)
         ckpt_logmel = torch.load(str(p_logmel), map_location=self.device, weights_only=False)
         self.crnn_logmel = CRNNForensics(
@@ -112,15 +107,12 @@ class EnsemblePredictor:
         self.crnn_logmel.to(self.device)
         self.crnn_logmel.eval()
 
-        # GMM
         self.gmm = GMMForensics.load(Path(gmm_path))
 
-        # Classical Sklearn Pipelines
         self.svm = joblib.load(str(svm_path))
         self.rf = joblib.load(str(rf_path))
         self.lr = joblib.load(str(lr_path))
 
-        # Meta-learner Stacked Ensemble
         self.stacker = StackedEnsemble.load(Path(ensemble_path))
         self.base_model_names = self.stacker.model_names
 
@@ -142,24 +134,16 @@ class EnsemblePredictor:
         wave = fixed_length_crop_or_pad(waveform, target_samples=TARGET_SAMPLES, mode="center")
 
         with torch.no_grad():
-            # 1. Feature representations
-            # Raw LFCC frames for classical models
-            raw_lfcc = self.lfcc_ext(wave)  # (F=60, T)
-            raw_lfcc_t = raw_lfcc.T.detach().cpu().numpy().astype(np.float64)  # (T, F=60)
+            raw_lfcc = self.lfcc_ext(wave)
+            raw_lfcc_t = raw_lfcc.T.detach().cpu().numpy().astype(np.float64)
 
-            # Normalized LFCC & LogMel for CRNNs
             feat_lfcc = self.norm_lfcc(raw_lfcc) if (self.norm_lfcc.is_fitted and getattr(self.norm_lfcc.mean, "shape", [0])[0] == 60) else per_utterance_cmvn(raw_lfcc)
             raw_logmel = self.logmel_ext(wave)
             feat_logmel = self.norm_logmel(raw_logmel) if (self.norm_logmel.is_fitted and getattr(self.norm_logmel.mean, "shape", [0])[0] == 80) else per_utterance_cmvn(raw_logmel)
 
-            # 2. Base model evaluations
-            # CRNN-LFCC
             s_crnn_lfcc = self.crnn_lfcc.predict_score(feat_lfcc.to(self.device))
-            # CRNN-LogMel
             s_crnn_logmel = self.crnn_logmel.predict_score(feat_logmel.to(self.device))
-            # GMM
             s_gmm = self.gmm.predict_score(raw_lfcc_t)
-            # Classical feature vector (mean & std across frames)
             mean_std = extract_mean_std_features(raw_lfcc_t)
             s_svm = predict_classical_score(self.svm, mean_std)[0]
             s_rf = predict_classical_score(self.rf, mean_std)[0]
@@ -174,10 +158,8 @@ class EnsemblePredictor:
             "Logistic Regression": float(s_lr),
         }
 
-        # Vector ordered according to stacker.model_names
         scores_vec = np.array([[scores_by_name[name] for name in self.base_model_names]], dtype=np.float64)
 
-        # 3. Meta-learner predictions
         fused_score = float(self.stacker.predict_score(scores_vec)[0])
         baseline_mean = float(self.stacker.predict_baseline_mean(scores_vec)[0])
         proba_bonafide = float(self.stacker.predict_proba(scores_vec)[0])

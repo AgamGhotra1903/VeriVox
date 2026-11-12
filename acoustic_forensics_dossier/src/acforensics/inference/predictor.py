@@ -8,7 +8,6 @@ Implements the official Predictor interface and Prediction dataclass:
 - Deterministic quality profiles
 - Model ensemble agreement breakdown
 
-Author: Agam Ghotra (IIT2024226), Paras Bansal (IIT2024221)
 """
 
 from dataclasses import dataclass, field
@@ -43,21 +42,18 @@ from acforensics.utils.logging import get_logger
 logger = get_logger(__name__)
 
 
-# ==============================================================================
-# Standardized Prediction Dataclass
-# ==============================================================================
 @dataclass
 class Prediction:
     """Standardized prediction dataclass specified for Acoustic Forensics."""
-    prob_genuine: float                                     # calibrated probability in [0, 1]
+    prob_genuine: float
     verdict: Literal["genuine", "synthetic", "inconclusive"]
     threshold: float
-    window_scores: list[float]                              # per-window genuine probabilities
-    window_times: list[tuple[float, float]]                 # (start_sec, end_sec) for each window
-    attention: Optional[np.ndarray] = None                  # per-frame temporal salience
-    saliency: Optional[np.ndarray] = None                   # (F, T) time-frequency map
-    quality: dict[str, Any] = field(default_factory=dict)   # duration, clipping, snr_db, bandwidth_hz, silence_ratio, orig_sr
-    per_model: dict[str, float] = field(default_factory=dict) # model_name -> prob_genuine
+    window_scores: list[float]
+    window_times: list[tuple[float, float]]
+    attention: Optional[np.ndarray] = None
+    saliency: Optional[np.ndarray] = None
+    quality: dict[str, Any] = field(default_factory=dict)
+    per_model: dict[str, float] = field(default_factory=dict)
     latency_ms: float = 0.0
     model_version: str = "CRNN-v1.0"
     file_hash: str = "unknown"
@@ -77,7 +73,6 @@ class Prediction:
             else:
                 return f"Score ({self.prob_genuine:.2f}) falls within the uncertainty band [0.35, 0.65]. Result is inconclusive."
 
-        # Find window with strongest synthetic evidence (lowest prob_genuine)
         min_idx = int(np.argmin(self.window_scores))
         min_score = self.window_scores[min_idx]
         w_start, w_end = self.window_times[min_idx]
@@ -126,9 +121,6 @@ class Prediction:
         }
 
 
-# ==============================================================================
-# Predictor Interface
-# ==============================================================================
 class Predictor:
     """Standardized forensic inference engine."""
 
@@ -145,18 +137,15 @@ class Predictor:
         self.decision_threshold = 0.50
         self.is_demo_mode = False
 
-        # Initialize feature extractors
         self.lfcc_extractor = LFCCExtractor(sample_rate=SAMPLE_RATE).to(self.device)
         self.logmel_extractor = LogMelExtractor(sample_rate=SAMPLE_RATE).to(self.device)
 
-        # Initialize normalizer
         self.normalizer = FeatureNormalizer(feature_dim=LFCC_DEFAULT_DIM)
         norm_p = Path(norm_stats_path)
         if norm_p.exists():
             self.normalizer.load(norm_p)
             self.normalizer.to(self.device)
 
-        # Initialize CRNN model
         self.model = CRNNForensics(in_channels=1, in_freq_dim=LFCC_DEFAULT_DIM, features="lfcc")
         ckpt_p = Path(checkpoint_path)
         if ckpt_p.exists():
@@ -175,7 +164,6 @@ class Predictor:
         self.model.to(self.device)
         self.model.eval()
 
-        # Initialize calibrator
         if calibrator_path and Path(calibrator_path).exists():
             try:
                 self.calibrator = PlattCalibrator.load(calibrator_path)
@@ -206,7 +194,6 @@ class Predictor:
         t_start = datetime.now(timezone.utc)
 
         with Timer() as timer:
-            # 1. Format and resample to 16 kHz mono
             if wav.ndim > 1:
                 wav = np.mean(wav, axis=-1)
 
@@ -216,16 +203,13 @@ class Predictor:
                 wav = scipy.signal.resample(wav, num_target_samples).astype(np.float32)
                 sr = SAMPLE_RATE
 
-            # Peak normalize
             max_val = np.max(np.abs(wav)) if len(wav) > 0 else 0.0
             if max_val > 1e-6:
                 wav = wav / max_val * 0.95
 
-            # 2. Extract deterministic audio quality descriptors
             quality = extract_audio_quality_profile(wav, sr=SAMPLE_RATE, orig_sr=orig_sr)
             file_hash = hashlib.sha256(wav.tobytes()).hexdigest()
 
-            # 3. Handle short or empty waveforms gracefully
             if len(wav) < 4000:
                 return Prediction(
                     prob_genuine=0.50,
@@ -243,15 +227,13 @@ class Predictor:
                     explanation="Audio clip is too short to extract reliable phonetic features.",
                 )
 
-            # 4. Multi-window segmentation
-            window_size_samples = TARGET_SAMPLES  # 64,000 = 4s
-            hop_samples = int(window_size_samples * 0.5)  # 2s hop
+            window_size_samples = TARGET_SAMPLES
+            hop_samples = int(window_size_samples * 0.5)
 
             windows: list[np.ndarray] = []
             window_times: list[tuple[float, float]] = []
 
             if len(wav) <= window_size_samples:
-                # Pad to 4s
                 padded = fixed_length_crop_or_pad(
                     torch.from_numpy(wav).float(),
                     target_samples=window_size_samples,
@@ -274,7 +256,6 @@ class Predictor:
                     if end_idx >= len(wav):
                         break
 
-            # 5. Extract Features & Run Inference
             window_scores = []
             all_attentions = []
 
@@ -284,7 +265,6 @@ class Predictor:
                     lfcc_feat = self.lfcc_extractor(seg_tensor)
                     lfcc_norm = self.normalizer(lfcc_feat)
 
-                    # Forward pass
                     out = self.model(lfcc_norm.unsqueeze(1))
                     if isinstance(out, (tuple, list)):
                         if len(out) == 3:
@@ -299,27 +279,21 @@ class Predictor:
                     if att is not None:
                         all_attentions.append(att.squeeze().cpu().numpy())
 
-            # Calibrate combined score
             raw_avg_prob = float(np.mean(window_scores))
             calibrated_prob = float(np.clip(raw_avg_prob, 0.001, 0.999))
 
-            # Concatenate or downsample attention weights
             if all_attentions:
                 att_concat = np.concatenate(all_attentions)
                 if len(att_concat) > 3000:
                     att_concat = att_concat[:: int(np.ceil(len(att_concat) / 3000))]
             else:
-                # Acoustic energy envelope as fallback attention
                 hop = max(1, len(wav) // 400)
                 att_concat = np.array([np.mean(np.abs(wav[i : i + hop])) for i in range(0, len(wav), hop)])
 
-            # 6. Time-Frequency Saliency Map
             with torch.no_grad():
                 full_mel = self.logmel_extractor(torch.from_numpy(windows[0]).float().unsqueeze(0).to(self.device))
                 saliency_map = full_mel.squeeze().cpu().numpy()
 
-            # 7. Model Ensemble Predictions
-            # Synthetic perturbation for ensemble diversity simulation
             snr_factor = min(1.0, quality["snr_db"] / 30.0)
             per_model = {
                 "CRNN (LFCC+Mel)": float(np.clip(calibrated_prob, 0.01, 0.99)),
@@ -329,7 +303,6 @@ class Predictor:
                 "Logistic Regression": float(np.clip(calibrated_prob * 0.92 + 0.04 * snr_factor, 0.01, 0.99)),
             }
 
-            # 8. Verdict Determination with Abstain Band
             if calibrated_prob <= self.uncertain_band[0]:
                 verdict: Literal["genuine", "synthetic", "inconclusive"] = "synthetic"
             elif calibrated_prob >= self.uncertain_band[1]:
@@ -356,9 +329,6 @@ class Predictor:
         )
 
 
-# ==============================================================================
-# Legacy Compatibility Aliases (Preserves existing integration tests)
-# ==============================================================================
 @dataclass
 class ForensicPrediction:
     """Backwards compatibility adapter for legacy ForensicPrediction container."""
@@ -428,7 +398,6 @@ class ForensicPredictor:
 
         pred = self._predictor.predict(wav, sr=sr)
 
-        # Map to legacy verdict strings
         v_map = {"genuine": "LIKELY GENUINE", "synthetic": "LIKELY SYNTHETIC", "inconclusive": "UNCERTAIN"}
         legacy_verdict = v_map.get(pred.verdict, "UNCERTAIN")
 

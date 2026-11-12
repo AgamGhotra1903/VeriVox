@@ -1,6 +1,5 @@
 """Forensic visualization suite: ROC curves, DET curves, score distributions, and confusion matrices.
 
-Author: Chunit Bansal (IIT2024223)
 """
 
 from pathlib import Path
@@ -14,12 +13,11 @@ from sklearn.metrics import roc_curve, det_curve
 
 from acforensics.constants import BONAFIDE, SPOOF, DEFAULT_RESULTS_DIR
 
-# Forensic dark lab aesthetic colors
 PALETTE = {
-    "genuine": "#22C55E",      # Vibrant green
-    "synthetic": "#EF4444",    # Forensic red
-    "accent": "#2DD4BF",       # Lab teal
-    "neutral": "#94A3B8",      # Slate grey
+    "genuine": "#22C55E",
+    "synthetic": "#EF4444",
+    "accent": "#2DD4BF",
+    "neutral": "#94A3B8",
     "bg_dark": "#0E1117",
     "surface": "#161B22",
 }
@@ -51,7 +49,6 @@ def plot_roc_curve(
     out = Path(output_path)
     out.parent.mkdir(parents=True, exist_ok=True)
     plt.savefig(str(out))
-    # Also save SVG vector format
     plt.savefig(str(out.with_suffix(".svg")))
     plt.close()
 
@@ -65,9 +62,7 @@ def plot_det_curve(
     fig, ax = plt.subplots(figsize=(8, 6), dpi=200)
 
     for name, (labels, scores) in models_dict.items():
-        # DET: FPR = FA (spoof called genuine), FNR = Miss (genuine called spoof)
         fpr, fnr, _ = det_curve(labels, scores, pos_label=BONAFIDE)
-        # Safely clip to avoid log(0) divergence when error rate is 0.0%
         fpr_pct = np.clip(fpr * 100.0, 0.01, 100.0)
         fnr_pct = np.clip(fnr * 100.0, 0.01, 100.0)
         ax.plot(fpr_pct, fnr_pct, lw=2, label=name)

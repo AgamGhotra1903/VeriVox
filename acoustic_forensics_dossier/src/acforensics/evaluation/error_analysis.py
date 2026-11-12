@@ -1,6 +1,5 @@
 """Forensic error audit: False Positives & False Negatives broken down by attack, speaker, and quality.
 
-Author: Chunit Bansal (IIT2024223)
 """
 
 from pathlib import Path
@@ -33,10 +32,9 @@ def plot_per_attack_eer(attack_eers: dict[str, float], output_path: Path | str) 
 
     bars = ax.bar(attacks, eers, color="#3B82F6", edgecolor="black", alpha=0.85)
 
-    # Highlight known attack variants (A16 is A04 variant; A17/A19 are A06 variants)
     for i, a in enumerate(attacks):
         if a in ("A16", "A17", "A19"):
-            bars[i].set_color("#F59E0B")  # Amber for variants
+            bars[i].set_color("#F59E0B")
 
     ax.axhline(np.mean(eers), color="#EF4444", linestyle="--", lw=1.5, label=f"Mean Attack EER ({np.mean(eers):.2f}%)")
     ax.set_xlabel("Attack Algorithm (A07 - A19 on ASVspoof 2019 LA Eval)", fontsize=11)
@@ -80,13 +78,9 @@ def run_error_audit(
     df["score"] = scores
     df["predicted_label"] = (scores >= threshold).astype(int)
 
-    # Classifications
-    # False Positive: Spoof classified as Bona Fide (score >= threshold)
-    # False Negative: Bona Fide classified as Spoof (score < threshold)
     df["is_fp"] = (df["label"] == SPOOF) & (df["predicted_label"] == BONAFIDE)
     df["is_fn"] = (df["label"] == BONAFIDE) & (df["predicted_label"] == SPOOF)
 
-    # 1. Per-Attack EER Calculation
     bf_scores = df[df["label"] == BONAFIDE]["score"].values
     attack_eers = {}
     attack_counts = {}
@@ -100,13 +94,9 @@ def run_error_audit(
             attack_eers[attack_id] = float(eer_val)
             attack_counts[attack_id] = len(sp_scores)
 
-    # Plot per-attack breakdown
     plot_per_attack_eer(attack_eers, figures_dir / "per_attack_eer.png")
 
-    # 2. Worst-Case Examples
-    # Top False Positives: Spoofs with highest bona fide scores
     top_fps = df[df["is_fp"]].sort_values("score", ascending=False).head(10)
-    # Top False Negatives: Bona fides with lowest bona fide scores
     top_fns = df[df["is_fn"]].sort_values("score", ascending=True).head(10)
 
     worst_cases = pd.concat([
@@ -117,7 +107,6 @@ def run_error_audit(
     available_cols = [c for c in worst_cases_cols if c in worst_cases.columns]
     worst_cases[available_cols].to_csv(tables_dir / "worst_case_errors.csv", index=False)
 
-    # 3. Plain Language Findings
     n_fp = int(df["is_fp"].sum())
     n_fn = int(df["is_fn"].sum())
     most_vulnerable_attack = max(attack_eers.items(), key=lambda x: x[1])[0] if attack_eers else "N/A"

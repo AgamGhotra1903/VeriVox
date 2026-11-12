@@ -1,6 +1,5 @@
 """Model export to TorchScript / ONNX and automated Model Card generation.
 
-Author: Agam Ghotra (IIT2024226)
 """
 
 import argparse
@@ -81,7 +80,6 @@ def main():
     model.eval()
     param_count = sum(p.numel() for p in model.parameters())
 
-    # 1. TorchScript Export via Tracing
     dummy_input = torch.randn(1, 1, LFCC_DEFAULT_DIM, 400)
     try:
         traced_model = torch.jit.trace(model, dummy_input, check_trace=False)
@@ -91,7 +89,6 @@ def main():
     except Exception as e:
         logger.warning("TorchScript tracing failed: %s", e)
 
-    # 2. ONNX Export
     try:
         import onnx
         onnx_path = out_dir / "crnn_best.onnx"
@@ -108,7 +105,6 @@ def main():
     except Exception as e:
         logger.warning("ONNX export skipped: %s", e)
 
-    # 3. Model Card
     card_path = out_dir / "model_card.md"
     generate_model_card(card_path, "CRNN-Forensics-v1", param_count, metrics)
 

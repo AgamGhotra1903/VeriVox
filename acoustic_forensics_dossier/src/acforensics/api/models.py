@@ -1,6 +1,5 @@
 """Pydantic data schemas for the Acoustic Forensics FastAPI service.
 
-Author: Agam Ghotra (IIT2024226)
 """
 
 from typing import Any, Literal, Optional

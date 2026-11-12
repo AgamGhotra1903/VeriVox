@@ -1,6 +1,5 @@
 """Unit tests for Stacked Ensemble and score-level fusion.
 
-Author: Agam Ghotra (IIT2024226)
 """
 
 import pytest
@@ -15,14 +14,11 @@ def test_leakage_assertion_detects_overlap():
     dev_ids = ["f4", "f5"]
     eval_ids = ["f6", "f7"]
 
-    # Clean splits should pass without exception
     assert_zero_data_leakage(train_ids, dev_ids, eval_ids)
 
-    # Overlap between train and dev should raise AssertionError
     with pytest.raises(AssertionError):
         assert_zero_data_leakage(["f1", "f_LEAK"], ["f_LEAK", "f2"], ["f3"])
 
-    # Overlap between dev and eval should raise AssertionError
     with pytest.raises(AssertionError):
         assert_zero_data_leakage(["f1"], ["f2", "f_LEAK"], ["f_LEAK", "f3"])
 
@@ -33,7 +29,6 @@ def test_stacked_ensemble_fit_and_predict():
     n_models = 4
     model_names = ["CRNN-LFCC", "CRNN-LogMel", "GMM", "SVM"]
 
-    # Simulated base scores for dev: bona fide higher than spoof across models
     dev_scores_bf = np.random.normal(loc=2.0, scale=0.8, size=(25, n_models))
     dev_scores_sp = np.random.normal(loc=-2.0, scale=0.8, size=(25, n_models))
     dev_scores = np.vstack([dev_scores_bf, dev_scores_sp])
@@ -44,7 +39,6 @@ def test_stacked_ensemble_fit_and_predict():
 
     assert stacker.is_fitted is True
 
-    # Test instances
     test_bf = np.random.normal(loc=2.0, scale=0.8, size=(5, n_models))
     test_sp = np.random.normal(loc=-2.0, scale=0.8, size=(5, n_models))
 
@@ -57,12 +51,10 @@ def test_stacked_ensemble_fit_and_predict():
     assert np.all((probs_bf >= 0.0) & (probs_bf <= 1.0))
     assert np.mean(probs_bf) > np.mean(probs_sp)
 
-    # Baseline mean fusion
     mean_bf = stacker.predict_baseline_mean(test_bf)
     mean_sp = stacker.predict_baseline_mean(test_sp)
     assert np.mean(mean_bf) > np.mean(mean_sp)
 
-    # Weights table
     weights_df = stacker.get_coefficients_table()
     assert len(weights_df) == n_models
     assert "Base Model" in weights_df.columns

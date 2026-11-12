@@ -1,6 +1,4 @@
-/**
- * TypeScript API contracts matching the Acoustic Forensics FastAPI schemas.
- */
+
 
 export interface HealthResponse {
   status: string;

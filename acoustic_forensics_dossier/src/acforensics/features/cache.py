@@ -1,6 +1,5 @@
 """On-disk feature caching utility with config hashing.
 
-Author: Paras Bansal (IIT2024221)
 """
 
 import hashlib

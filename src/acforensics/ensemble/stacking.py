@@ -11,7 +11,6 @@ Outputs:
 - Calibrated confidence probability P(bona fide) via sigmoid of meta-learner.
 - Baseline mean fusion (mean of z-normalized scores) for benchmark comparison.
 
-Author: Agam Ghotra (IIT2024226)
 """
 
 import itertools

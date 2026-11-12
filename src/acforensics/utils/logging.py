@@ -1,6 +1,5 @@
 """Structured logging configuration for Acoustic Forensics.
 
-Author: Agam Ghotra (IIT2024226)
 """
 
 import logging
@@ -28,17 +27,14 @@ def setup_logging(
     root_logger = logging.getLogger()
     root_logger.setLevel(level)
 
-    # Clear existing handlers to prevent duplicates
     if root_logger.hasHandlers():
         root_logger.handlers.clear()
 
-    # Stream (console) handler
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(level)
     console_handler.setFormatter(formatter)
     root_logger.addHandler(console_handler)
 
-    # Optional file handler
     if log_file is not None:
         log_path = Path(log_file)
         log_path.parent.mkdir(parents=True, exist_ok=True)

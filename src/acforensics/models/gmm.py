@@ -8,7 +8,6 @@ Mirrors the official ASVspoof 2019 baseline:
   LLR(X) = (1 / T) * sum_{t=1}^T [ log p(x_t | Lambda_bonafide) - log p(x_t | Lambda_spoof) ]
 - High score indicates authentic human speech; low score indicates spoofed speech.
 
-Author: Agam Ghotra (IIT2024226), Jashan Goyal (IIT2024223)
 """
 
 from pathlib import Path
@@ -124,7 +123,6 @@ class GMMForensics:
 
         rng = np.random.RandomState(self.random_state)
 
-        # Frame subsampling if pool exceeds memory/time thresholds
         if len(bf_clean) > self.max_frames_per_class:
             logger.info(
                 "Subsampling bona fide frames from %d to %d for GMM EM training",
@@ -145,7 +143,6 @@ class GMMForensics:
         else:
             spoof_train = sp_clean
 
-        # Handle small smoke test sample edge cases (n_components cannot exceed n_samples)
         n_bf = len(bonafide_train)
         n_sp = len(spoof_train)
         effective_k = min(self.n_components, n_bf, n_sp)
@@ -176,7 +173,6 @@ class GMMForensics:
         if frames.ndim != 2:
             raise ValueError(f"Expected 2D frames matrix, got shape {frames.shape}")
 
-        # Ensure shape is (T, F_dim)
         if frames.shape[0] < frames.shape[1] and frames.shape[0] in (20, 60, 80):
             frames = frames.T
 
@@ -185,7 +181,6 @@ class GMMForensics:
         if T == 0:
             return 0.0
 
-        # score_samples computes per-frame log-likelihood: shape (T,)
         ll_bf = self.gmm_bonafide.score_samples(frames_clean)
         ll_sp = self.gmm_spoof.score_samples(frames_clean)
 

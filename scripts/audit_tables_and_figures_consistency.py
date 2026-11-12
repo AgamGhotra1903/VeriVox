@@ -16,7 +16,6 @@ def check_consistency():
     verified = []
     discrepancies = []
 
-    # 1. Table 1 (Baselines) vs baselines_results.json
     try:
         t1 = (tables_dir / "table1_baselines.md").read_text()
         base = json.loads((metrics_dir / "baselines_results.json").read_text())
@@ -33,7 +32,6 @@ def check_consistency():
     except Exception as e:
         discrepancies.append(f"Table 1 error: {e}")
 
-    # 2. Table 2 (Main Model) vs crnn_lfcc_results_seed42.json & crnn_multiseed_results.json
     try:
         t2 = (tables_dir / "table2_main_model.md").read_text()
         seed42 = json.loads((metrics_dir / "crnn_lfcc_results_seed42.json").read_text())
@@ -58,27 +56,23 @@ def check_consistency():
         else:
             discrepancies.append(f"Table 2 LogMel EER mismatch: expected {logmel_eer:.2f}%")
 
-        # Note: Report documents both Seed 42 and Multi-seed mean (7.10% ± 0.38%)
         multi = json.loads((metrics_dir / "crnn_multiseed_results.json").read_text())
         mean_eval = multi["metrics"]["eval_eer_mean"]
         verified.append(f"Multi-seed Mean Note: Multi-seed Eval EER mean is {mean_eval:.2f}% (crnn_multiseed_results.json), while Table 2 displays primary Seed 42 run ({s42_eval_eer:.2f}%).")
     except Exception as e:
         discrepancies.append(f"Table 2 error: {e}")
 
-    # 3. Table 3 (Codec Robustness) formatting observation
     try:
         t3 = (tables_dir / "table3_codec_robustness.md").read_text()
         codec = json.loads((metrics_dir / "codec_robustness_results.json").read_text())
         clean_eer = codec["clean_baseline"]["crnn_lfcc_eer"]
         mp3_16_deg = codec["conditions"]["mp3_16k"]["crnn"]["delta_eer"]
         
-        # Check delta degradation in Table 3
         if f"{mp3_16_deg:.2f}" in t3:
             verified.append(f"Table 3 (MP3 16k delta = {mp3_16_deg:.2f} pts) matches codec_robustness_results.json")
         else:
             discrepancies.append(f"Table 3 MP3 16k delta mismatch: expected {mp3_16_deg:.2f} pts")
 
-        # Check Table 3 in REPORT.md which contains unrounded float columns
         rep_txt = report_file.read_text()
         if f"{clean_eer:.2f}%" in rep_txt and "14.92%" in rep_txt:
             verified.append(f"REPORT.md Table 3 displays full unrounded values: Clean {clean_eer:.2f}%, MP3-16k 14.92%, matching codec_robustness_results.json exactly.")
@@ -104,7 +98,6 @@ def check_consistency():
     except Exception as e:
         discrepancies.append(f"Table 4 error: {e}")
 
-    # 5. Table 7 (Silence Audit) vs crnn_silence_audit.json
     try:
         t7 = (tables_dir / "table7_silence_audit.md").read_text()
         sil = json.loads((metrics_dir / "crnn_silence_audit.json").read_text())
@@ -126,7 +119,6 @@ def check_consistency():
     except Exception as e:
         discrepancies.append(f"Table 7 error: {e}")
 
-    # 6. Table 8 (Audits Summary) vs stage5_audits_results.json
     try:
         t8 = (tables_dir / "table8_audits_summary.md").read_text()
         aud = json.loads((metrics_dir / "stage5_audits_results.json").read_text())
@@ -136,7 +128,6 @@ def check_consistency():
     except Exception as e:
         discrepancies.append(f"Table 8 error: {e}")
 
-    # 7. Latency and Load Test Tables
     try:
         t_lat = (tables_dir / "table_latency.md").read_text()
         lat = json.loads((metrics_dir / "latency.json").read_text())
@@ -156,7 +147,6 @@ def check_consistency():
     except Exception as e:
         discrepancies.append(f"Latency/Load test table error: {e}")
 
-    # 8. Figures Generation Code Verification
     try:
         script_txt = (REPO_ROOT / "scripts" / "generate_dossier_figures.py").read_text()
         if "0.9800, 0.0670" in script_txt and "55787" in script_txt and "6349" in script_txt:

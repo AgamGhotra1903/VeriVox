@@ -8,12 +8,7 @@ version = "0.1.0"
 description = "Acoustic Forensics - Synthetic Speech and Deepfake Audio Detection"
 readme = "README.md"
 requires-python = ">=3.9"
-authors = [
-    { name = "Agam Ghotra", email = "iit2024226@iiita.ac.in" },
-    { name = "Paras Bansal", email = "iit2024221@iiita.ac.in" },
-    { name = "Jashan Goyal", email = "iit2024223@iiita.ac.in" },
-    { name = "Chunit Bansal", email = "iit2024233@iiita.ac.in" }
-]
+authors = [{ name = "VeriVox Team" }]
 dependencies = [
     "torch>=2.2.0",
     "torchaudio>=2.2.0",

@@ -1,10 +1,6 @@
 """Shared sidebar component for all Streamlit pages with synchronized state.
 
 Academic Project Team:
-- Paras Bansal (IIT2024221)
-- Jashan Goyal (IIT2024223)
-- Agam Ghotra (IIT2024226)
-- Chunit Bansal (IIT2024233)
 """
 
 from pathlib import Path
@@ -13,13 +9,11 @@ import streamlit as st
 
 def render_sidebar() -> dict:
     """Renders persistent sidebar across all multipage views and synchronizes session state."""
-    # Custom CSS injection
     css_path = Path("app/assets/style.css")
     if css_path.exists():
         with open(css_path, "r", encoding="utf-8") as f:
             st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-    # Sidebar Brand Header
     st.sidebar.markdown(
         """
         <div style="padding-bottom: 14px; border-bottom: 1px solid var(--border-subtle); margin-bottom: 16px;">
@@ -38,7 +32,6 @@ def render_sidebar() -> dict:
         unsafe_allow_html=True,
     )
 
-    # Initialize defaults in session state if not present
     if "active_model" not in st.session_state:
         st.session_state["active_model"] = "CRNN (Best)"
     if "feature_representation" not in st.session_state:
@@ -122,15 +115,10 @@ def render_sidebar() -> dict:
     )
     st.session_state["show_tech"] = show_tech
 
-    # Team footer
     st.sidebar.markdown(
         """
         <div style="margin-top: 28px; padding-top: 14px; border-top: 1px solid var(--border-subtle); font-size: 0.78rem; color: var(--text-muted);">
-            <div style="font-weight: 700; color: var(--text-secondary); margin-bottom: 6px; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em;">Engineering Team</div>
-            <div>• <strong style="color: var(--accent-sky);">Paras Bansal</strong> <span style="color: var(--text-dim);">(IIT2024221)</span></div>
-            <div>• <strong style="color: var(--accent-sky);">Jashan Goyal</strong> <span style="color: var(--text-dim);">(IIT2024223)</span></div>
-            <div>• <strong style="color: var(--accent-sky);">Agam Ghotra</strong> <span style="color: var(--text-dim);">(IIT2024226)</span></div>
-            <div>• <strong style="color: var(--accent-sky);">Chunit Bansal</strong> <span style="color: var(--text-dim);">(IIT2024233)</span></div>
+            <div style="font-weight: 700; color: var(--text-secondary); margin-bottom: 6px; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em;">Acoustic Forensics Research Team</div>
         </div>
         """,
         unsafe_allow_html=True,

@@ -11,7 +11,6 @@ Implements all required experimental ablations:
 All tables are saved to results/tables/ in CSV and Markdown formats.
 All figures are saved to results/figures/ in PNG and SVG formats.
 
-Author: Agam Ghotra (IIT2024226)
 """
 
 from pathlib import Path
@@ -123,7 +122,6 @@ def run_feature_ablation(
 
     rows = []
 
-    # 1. LFCC Model
     lfcc_ckpt = Path("checkpoints/crnn_lfcc_best.pt")
     if not lfcc_ckpt.exists():
         lfcc_ckpt = Path("checkpoints/crnn_best.pt")
@@ -148,7 +146,6 @@ def run_feature_ablation(
         "Eval min-tDCF": f"{eval_rep['min_tdcf']:.4f}",
     })
 
-    # 2. Log-Mel Model
     logmel_ckpt = Path("checkpoints/crnn_logmel_best.pt")
     m_logmel = CRNNForensics(in_channels=1, in_freq_dim=LOGMEL_DEFAULT_DIM, features="logmel")
     if logmel_ckpt.exists():
@@ -171,8 +168,6 @@ def run_feature_ablation(
         "Eval min-tDCF": f"{eval_rep2['min_tdcf']:.4f}",
     })
 
-    # 3. Both (Fused LFCC + LogMel Score Fusion)
-    # Mean of z-normalized scores of LFCC and Log-Mel
     z_dev_comb = (
         (dev_s - np.mean(dev_s)) / (np.std(dev_s) + 1e-8)
         + (dev_s2 - np.mean(dev_s2)) / (np.std(dev_s2) + 1e-8)
@@ -560,7 +555,6 @@ def run_per_attack_evaluation(
             auc_val = compute_roc_auc(labels_comb, scores_comb)
             attack_eers[attack_id] = float(eer_val)
 
-            # Attack type taxonomy
             nature = "Known Variant" if attack_id in ("A16", "A17", "A19") else "Unseen Technology"
             attack_data.append({
                 "Attack ID": attack_id,

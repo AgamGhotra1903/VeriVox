@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 
 export interface WaveformCanvasProps {
-  peaks: number[]; // Min/Max downsampled peak pairs
+  peaks: number[]; 
   durationSec: number;
   currentTime: number;
   onSeek?: (time: number) => void;
@@ -42,11 +42,9 @@ export const WaveformCanvas: React.FC<WaveformCanvasProps> = ({
     const h = height;
     const midY = h / 2;
 
-    // Neutral background fill
     ctx.fillStyle = isDark ? '#0f172a' : '#f8fafc';
     ctx.fillRect(0, 0, w, h);
 
-    // Light center baseline
     ctx.strokeStyle = isDark ? 'rgba(148, 163, 184, 0.15)' : 'rgba(148, 163, 184, 0.25)';
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -54,7 +52,6 @@ export const WaveformCanvas: React.FC<WaveformCanvasProps> = ({
     ctx.lineTo(w, midY);
     ctx.stroke();
 
-    // Light time gridlines
     const numMarkers = 6;
     ctx.fillStyle = isDark ? '#94a3b8' : '#64748b';
     ctx.font = '10px Inter, sans-serif';
@@ -70,14 +67,13 @@ export const WaveformCanvas: React.FC<WaveformCanvasProps> = ({
       ctx.fillText(`${sec}s`, x + 4, h - 6);
     }
 
-    // Draw waveform bars with restrained palette
     const numPairs = peaks.length / 2;
     const barWidth = Math.max(1.5, w / numPairs);
     const progressFrac = durationSec > 0 ? currentTime / durationSec : 0;
     const playheadX = progressFrac * w;
 
-    const playedColor = isDark ? '#6366f1' : '#4f46e5'; // Muted indigo
-    const unplayedColor = isDark ? '#334155' : '#cbd5e1'; // Neutral slate
+    const playedColor = isDark ? '#6366f1' : '#4f46e5'; 
+    const unplayedColor = isDark ? '#334155' : '#cbd5e1'; 
 
     for (let i = 0; i < numPairs; i++) {
       const minVal = peaks[i * 2];
@@ -96,7 +92,6 @@ export const WaveformCanvas: React.FC<WaveformCanvasProps> = ({
       ctx.fill();
     }
 
-    // Minimal playhead line
     if (durationSec > 0) {
       ctx.strokeStyle = isDark ? '#f8fafc' : '#0f172a';
       ctx.lineWidth = 1.5;
@@ -112,7 +107,6 @@ export const WaveformCanvas: React.FC<WaveformCanvasProps> = ({
     }
   }, [peaks, durationSec, currentTime, height]);
 
-  // Click & drag scrub handling
   const handleSeekEvent = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!onSeek || !canvasRef.current || durationSec <= 0) return;
     const rect = canvasRef.current.getBoundingClientRect();

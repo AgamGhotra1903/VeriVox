@@ -1,6 +1,5 @@
 """Data augmentation for audio waveforms and spectrogram feature representations.
 
-Author: Agam Ghotra (IIT2024226)
 """
 
 import random
@@ -42,13 +41,11 @@ class SpecAugment(nn.Module):
         B, C, F, T = cloned.shape
 
         for b in range(B):
-            # Apply frequency masks
             for _ in range(self.freq_masks_num):
                 f_width = random.randint(0, min(self.freq_mask_max, F))
                 f_start = random.randint(0, F - f_width)
                 cloned[b, :, f_start : f_start + f_width, :] = 0.0
 
-            # Apply time masks
             for _ in range(self.time_masks_num):
                 t_width = random.randint(0, min(self.time_mask_max, T))
                 t_start = random.randint(0, T - t_width)

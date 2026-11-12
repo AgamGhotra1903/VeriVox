@@ -1,6 +1,5 @@
 """Log-Mel Spectrogram Feature Extractor.
 
-Author: Paras Bansal (IIT2024221)
 """
 
 import torch

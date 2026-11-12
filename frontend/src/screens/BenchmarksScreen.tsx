@@ -13,7 +13,6 @@ export const BenchmarksScreen: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>('master');
 
-  // Canvas ROC state
   const rocCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const [activeRocModels, setActiveRocModels] = useState<Record<string, boolean>>({
     'Stacked Ensemble': true,
@@ -38,7 +37,6 @@ export const BenchmarksScreen: React.FC = () => {
       });
   }, []);
 
-  // Render Interactive Canvas ROC Curve
   useEffect(() => {
     const canvas = rocCanvasRef.current;
     if (!canvas || !data || !data.roc_curves) return;
@@ -59,11 +57,9 @@ export const BenchmarksScreen: React.FC = () => {
     const plotW = w - padding * 2;
     const plotH = h - padding * 2;
 
-    // Neutral background
     ctx.fillStyle = isDark ? '#0f172a' : '#f8fafc';
     ctx.fillRect(0, 0, w, h);
 
-    // Subtle gridlines
     ctx.strokeStyle = isDark ? 'rgba(148, 163, 184, 0.12)' : 'rgba(15, 23, 42, 0.08)';
     ctx.lineWidth = 1;
     for (let i = 0; i <= 5; i++) {
@@ -79,14 +75,12 @@ export const BenchmarksScreen: React.FC = () => {
       ctx.lineTo(x, padding + plotH);
       ctx.stroke();
 
-      // Axis labels
       ctx.fillStyle = isDark ? '#94a3b8' : '#64748b';
       ctx.font = '10px Inter, system-ui, sans-serif';
       ctx.fillText((1.0 - i * 0.2).toFixed(1), padding - 28, y + 3);
       ctx.fillText((i * 0.2).toFixed(1), x - 8, padding + plotH + 16);
     }
 
-    // Diagonal Random Guess line (EER = 50%)
     ctx.strokeStyle = isDark ? 'rgba(148, 163, 184, 0.3)' : 'rgba(100, 116, 139, 0.35)';
     ctx.setLineDash([4, 4]);
     ctx.beginPath();
@@ -95,7 +89,6 @@ export const BenchmarksScreen: React.FC = () => {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Curve color palette
     const colors: Record<string, string> = {
       'Stacked Ensemble': '#6366f1',
       'CRNN-LFCC': '#0ea5e9',
@@ -103,7 +96,6 @@ export const BenchmarksScreen: React.FC = () => {
       'GMM Baseline': '#8b5cf6',
     };
 
-    // Draw active model ROC lines
     Object.entries(data.roc_curves).forEach(([modelName, points]) => {
       if (!activeRocModels[modelName]) return;
       const color = colors[modelName] || (isDark ? '#e2e8f0' : '#334155');
@@ -121,7 +113,6 @@ export const BenchmarksScreen: React.FC = () => {
       ctx.stroke();
     });
 
-    // Axis titles
     ctx.fillStyle = isDark ? '#cbd5e1' : '#475569';
     ctx.font = '11px Inter, system-ui, sans-serif';
     ctx.fillText('False Positive Rate (FPR)', padding + plotW / 2 - 60, h - 8);
@@ -162,7 +153,7 @@ export const BenchmarksScreen: React.FC = () => {
 
   return (
     <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-6 flex flex-col gap-6 select-none animate-cardFadeUp">
-      {/* Title & Tabs */}
+      {}
       <div className="border border-borderSubtle bg-surface p-5 sm:p-6 rounded-[12px] shadow-card flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5">
@@ -195,7 +186,7 @@ export const BenchmarksScreen: React.FC = () => {
         </div>
       )}
 
-      {/* Tab 1: Master Results Table */}
+      {}
       {data && activeTab === 'master' && (
         <Panel
           title="Official ASVspoof 2019 LA Benchmark Table (Dev & Eval Splits)"
@@ -276,7 +267,7 @@ export const BenchmarksScreen: React.FC = () => {
         </Panel>
       )}
 
-      {/* Tab 2: Interactive ROC Curves */}
+      {}
       {data && activeTab === 'roc' && (
         <Panel
           title="Receiver Operating Characteristic (ROC) Inspection"
@@ -318,7 +309,7 @@ export const BenchmarksScreen: React.FC = () => {
         </Panel>
       )}
 
-      {/* Tab 3: Controlled Ablations */}
+      {}
       {data && activeTab === 'ablations' && (
         <div className="grid grid-cols-1 gap-6">
           <Panel
@@ -452,7 +443,7 @@ export const BenchmarksScreen: React.FC = () => {
         </div>
       )}
 
-      {/* Tab 4: Per-Attack Breakdown */}
+      {}
       {data && activeTab === 'attacks' && (
         <Panel
           title="Unseen Synthesis & Voice Conversion Attacks Breakdown (A07–A19 on Eval)"
@@ -500,7 +491,7 @@ export const BenchmarksScreen: React.FC = () => {
         </Panel>
       )}
 
-      {/* Tab 5: Codec Robustness */}
+      {}
       {data && activeTab === 'codec' && (
         <Panel
           title="Empirical Codec Robustness (Degradation on Official Eval Split)"

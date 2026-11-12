@@ -1,6 +1,5 @@
 """Unit tests for audio validation, resampling, and normalization.
 
-Author: Paras Bansal (IIT2024221)
 """
 
 import pytest
@@ -65,7 +64,7 @@ def test_resampling_from_44k(tmp_path: Path):
 
 def test_reject_too_short_audio(tmp_path: Path):
     audio_file = tmp_path / "short.wav"
-    create_synthetic_wav(audio_file, duration_sec=0.2, sr=16000)  # Under 0.5s
+    create_synthetic_wav(audio_file, duration_sec=0.2, sr=16000)
 
     res = load_and_validate_audio(audio_file, min_duration_sec=0.5)
     assert not res.is_valid

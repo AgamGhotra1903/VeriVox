@@ -1,6 +1,5 @@
 """Reproducibility and deterministic random seed utility.
 
-Author: Agam Ghotra (IIT2024226)
 """
 
 import os
@@ -37,9 +36,7 @@ def set_seed(seed: int = 42, deterministic: bool = True) -> int:
         else:
             torch.backends.cudnn.benchmark = True
 
-    # Support Apple Silicon MPS reproducibility
     if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
-        # MPS uses torch.manual_seed
         pass
 
     return seed

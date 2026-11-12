@@ -1,6 +1,5 @@
 """Codec compression stress-testing suite (MP3, AAC, Opus) via ffmpeg.
 
-Author: Chunit Bansal (IIT2024223)
 """
 
 from pathlib import Path
@@ -34,7 +33,7 @@ def check_ffmpeg_available() -> bool:
 def compress_and_decompress_audio(
     input_wav: Path | str,
     output_wav: Path | str,
-    codec: str = "mp3",  # 'mp3', 'aac', 'opus'
+    codec: str = "mp3",
     bitrate_kbps: int = 32,
     target_sr: int = SAMPLE_RATE,
 ) -> bool:
@@ -75,7 +74,6 @@ def compress_and_decompress_audio(
     encoder = encoder_map.get(codec.lower(), "libmp3lame")
 
     try:
-        # Step 1: Encode to lossy format
         cmd_encode = [
             "ffmpeg", "-y", "-v", "error",
             "-i", str(in_path),
@@ -85,7 +83,6 @@ def compress_and_decompress_audio(
         ]
         subprocess.run(cmd_encode, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
 
-        # Step 2: Decode back to 16 kHz mono WAV
         cmd_decode = [
             "ffmpeg", "-y", "-v", "error",
             "-i", str(temp_compressed),
@@ -95,7 +92,6 @@ def compress_and_decompress_audio(
         ]
         subprocess.run(cmd_decode, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
 
-        # Cleanup intermediate compressed file
         if temp_compressed.exists():
             temp_compressed.unlink()
         return True
@@ -131,7 +127,6 @@ def plot_robustness_curves(
             ms=6,
         )
 
-    # Plot baseline clean uncompressed line
     ax.axhline(clean_eer, color="black", linestyle="--", lw=1.5, label=f"Clean Baseline ({clean_eer:.2f}%)")
 
     ax.set_xlabel("Bitrate (kbps)", fontsize=11)

@@ -76,7 +76,7 @@ export const StressTestScreen: React.FC<StressTestScreenProps> = ({ activeResult
 
   return (
     <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-6 flex flex-col gap-6 select-none animate-cardFadeUp">
-      {/* Top Banner and Controls */}
+      {}
       <div className="border border-borderSubtle bg-surface p-5 sm:p-6 rounded-[12px] shadow-card flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5">
@@ -117,10 +117,10 @@ export const StressTestScreen: React.FC<StressTestScreenProps> = ({ activeResult
         </div>
       )}
 
-      {/* Stress Test Matrix Display */}
+      {}
       {stressData ? (
         <div className="flex flex-col gap-6">
-          {/* Summary Readout Strip */}
+          {}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Readout
               label="Original Score"
@@ -145,7 +145,7 @@ export const StressTestScreen: React.FC<StressTestScreenProps> = ({ activeResult
             />
           </div>
 
-          {/* Matrix Cards Grouped by Codec */}
+          {}
           <Panel title="Degradation Matrix by Codec & Bitrate">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {(['mp3', 'aac', 'opus'] as const).map((codecName) => {

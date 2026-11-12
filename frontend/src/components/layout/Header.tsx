@@ -30,7 +30,7 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="border-b border-borderSubtle bg-surface sticky top-0 z-40 select-none shadow-sm">
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-        {/* Left: Brand Identity */}
+        {}
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-[8px] bg-primary/10 text-primary border border-primary/20 flex items-center justify-center flex-shrink-0">
             <Shield className="w-4 h-4" />
@@ -50,7 +50,7 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* Center: Navigation Pills */}
+        {}
         <nav className="flex items-center gap-1 p-1 bg-elevated border border-borderSubtle rounded-[10px]">
           {navItems.map((item) => {
             const isActive = activeScreen === item.id;
@@ -72,9 +72,9 @@ export const Header: React.FC<HeaderProps> = ({
           })}
         </nav>
 
-        {/* Right: Telemetry & Actions */}
+        {}
         <div className="flex items-center gap-3">
-          {/* Hardware & Online Badge */}
+          {}
           <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-elevated border border-borderSubtle rounded-[8px] text-xs text-txt-secondary">
             <span
               className={clsx(
@@ -87,7 +87,7 @@ export const Header: React.FC<HeaderProps> = ({
             </span>
           </div>
 
-          {/* Export Report Action */}
+          {}
           {canPrint && (
             <Button
               variant="secondary"

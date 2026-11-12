@@ -1,6 +1,5 @@
 """Linear Frequency Cepstral Coefficients (LFCC) Extractor with Deltas and Delta-Deltas.
 
-Author: Paras Bansal (IIT2024221)
 """
 
 import math
@@ -35,7 +34,6 @@ def create_linear_filterbank(
     nyquist = sample_rate / 2.0
     all_freqs = torch.linspace(0, nyquist, n_freqs)
 
-    # Linearly spaced filter center frequencies
     filter_centers = torch.linspace(0, nyquist, n_filters + 2)
 
     fb = torch.zeros(n_filters, n_freqs, dtype=torch.float32)
@@ -45,12 +43,10 @@ def create_linear_filterbank(
         f_center = filter_centers[i + 1]
         f_right = filter_centers[i + 2]
 
-        # Left slope: rising from 0 at f_left to 1 at f_center
         left_mask = (all_freqs >= f_left) & (all_freqs <= f_center)
         if f_center > f_left:
             fb[i, left_mask] = (all_freqs[left_mask] - f_left) / (f_center - f_left)
 
-        # Right slope: falling from 1 at f_center to 0 at f_right
         right_mask = (all_freqs > f_center) & (all_freqs <= f_right)
         if f_right > f_center:
             fb[i, right_mask] = (f_right - all_freqs[right_mask]) / (f_right - f_center)
@@ -73,7 +69,6 @@ def create_dct_matrix(n_coeffs: int = 20, n_filters: int = 20) -> torch.Tensor:
         for n in range(n_filters):
             dct_mat[k, n] = math.cos(math.pi * k * (2 * n + 1) / (2 * n_filters))
 
-    # Orthonormal normalization factor
     dct_mat[0, :] *= 1.0 / math.sqrt(n_filters)
     dct_mat[1:, :] *= math.sqrt(2.0 / n_filters)
 
@@ -115,7 +110,6 @@ class LFCCExtractor(nn.Module):
         self.with_deltas = with_deltas
         self.eps = eps
 
-        # Register non-trainable filterbank and DCT buffers
         fb = create_linear_filterbank(n_filters=n_filter, n_fft=n_fft, sample_rate=sample_rate)
         dct = create_dct_matrix(n_coeffs=n_lfcc, n_filters=n_filter)
         window = torch.hann_window(win_length)
@@ -137,7 +131,6 @@ class LFCCExtractor(nn.Module):
         if is_1d:
             waveform = waveform.unsqueeze(0)
 
-        # STFT: returns complex tensor (B, freq_bins, frames)
         stft = torch.stft(
             waveform,
             n_fft=self.n_fft,
@@ -151,27 +144,20 @@ class LFCCExtractor(nn.Module):
             return_complex=True,
         )
 
-        # Power spectrum: |STFT|^2 of shape (B, freq_bins, frames)
         power_spec = stft.abs().pow(2.0)
 
-        # Apply linear filterbank: (n_filter, freq_bins) x (B, freq_bins, frames) -> (B, n_filter, frames)
-        # Using einsum for clean batch contraction
         fb_energy = torch.einsum("mf, bft -> bmt", self.filterbank, power_spec)
 
-        # Log compression
         log_energy = torch.log(fb_energy + self.eps)
 
-        # DCT transformation: (n_lfcc, n_filter) x (B, n_filter, frames) -> (B, n_lfcc, frames)
         lfcc_static = torch.einsum("km, bmt -> bkt", self.dct_matrix, log_energy)
 
         if not self.with_deltas:
             return lfcc_static.squeeze(0) if is_1d else lfcc_static
 
-        # Compute 1st and 2nd order temporal deltas
         delta1 = F.compute_deltas(lfcc_static, win_length=5)
         delta2 = F.compute_deltas(delta1, win_length=5)
 
-        # Concatenate along feature dimension -> (B, 60, frames)
         lfcc_full = torch.cat([lfcc_static, delta1, delta2], dim=1)
 
         return lfcc_full.squeeze(0) if is_1d else lfcc_full

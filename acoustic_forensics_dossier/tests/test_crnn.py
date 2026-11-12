@@ -1,6 +1,5 @@
 """Unit tests for CRNN model architecture, ablation toggles, tensor dimensions, and initialization.
 
-Author: Agam Ghotra (IIT2024226)
 """
 
 import pytest
@@ -11,25 +10,22 @@ from acforensics.models.crnn import CRNNForensics
 
 
 def test_crnn_default_forward():
-    # Batch size 4, 1 channel, 60 LFCC coeffs, 400 time frames
     x = torch.randn(4, 1, 60, 400)
     model = CRNNForensics(in_channels=1, in_freq_dim=60, features="lfcc")
     logits, attn_weights = model(x)
 
     assert logits.shape == (4, 2)
     assert attn_weights.shape == (4, 100)
-    # Attention weights should sum to 1.0 along the time dimension
     assert torch.allclose(attn_weights.sum(dim=1), torch.ones(4), atol=1e-4)
 
 
 def test_crnn_logmel_variant_forward():
-    # Batch size 4, 1 channel, 80 Log-Mel channels, 400 time frames
     x = torch.randn(4, 1, 80, 400)
     model = CRNNForensics(in_channels=1, in_freq_dim=80, features="logmel")
     logits, attn_weights = model(x)
 
     assert logits.shape == (4, 2)
-    assert attn_weights.shape == (4, 100)  # After 4 pools: T' = 400 // 4 = 100
+    assert attn_weights.shape == (4, 100)
     assert torch.allclose(attn_weights.sum(dim=1), torch.ones(4), atol=1e-4)
 
 
@@ -47,7 +43,6 @@ def test_crnn_predict_score():
 
 def test_crnn_shape_assertions():
     model = CRNNForensics(in_channels=1, in_freq_dim=60, features="lfcc")
-    # Invalid 5D input should raise AssertionError
     with pytest.raises(AssertionError):
         invalid_5d = torch.randn(2, 1, 1, 60, 400)
         _ = model(invalid_5d)

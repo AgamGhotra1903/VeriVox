@@ -3,7 +3,6 @@
 Produces standardized manifests matching the AF-Split v1 specification:
 Columns: path, dataset, split, speaker, label, attack_id, duration, codec, bitrate, gender
 
-Author: Paras Bansal (IIT2024221), Agam Ghotra (IIT2024226)
 """
 
 from pathlib import Path
@@ -45,7 +44,7 @@ def probe_audio_file(file_path: Path | str) -> dict[str, Any]:
             "sample_rate": int(info.samplerate),
             "channels": int(info.channels),
             "codec": str(info.format).lower(),
-            "bitrate": int(info.samplerate * info.channels * 16),  # nominal PCM bitrate
+            "bitrate": int(info.samplerate * info.channels * 16),
         }
     except Exception as exc:
         logger.debug("Failed to read header info for %s: %s", path, exc)
@@ -89,7 +88,6 @@ def build_manifest_from_records(
     """
     df = pd.DataFrame(records) if not isinstance(records, pd.DataFrame) else records.copy()
 
-    # Normalize standard field names
     col_mapping = {
         "audio_path": "path",
         "file_path": "path",
@@ -100,7 +98,6 @@ def build_manifest_from_records(
         if old_col in df.columns and new_col not in df.columns:
             df[new_col] = df[old_col]
 
-    # Required columns defaults
     if "dataset" not in df.columns:
         df["dataset"] = dataset_name
     if "split" not in df.columns:
@@ -118,10 +115,8 @@ def build_manifest_from_records(
     if "bitrate" not in df.columns:
         df["bitrate"] = 0
 
-    # Ensure label is strictly integer (1 or 0)
     df["label"] = df["label"].astype(int)
 
-    # Optional header probing
     if probe_audio and len(df) > 0:
         logger.info("Probing audio headers for %d files in %s/%s...", len(df), dataset_name, split_name)
         durations = []
@@ -136,7 +131,6 @@ def build_manifest_from_records(
         df["codec"] = codecs
         df["bitrate"] = bitrates
 
-    # Filter and reorder strictly to MANIFEST_COLUMNS
     for col in MANIFEST_COLUMNS:
         if col not in df.columns:
             df[col] = "" if col in ("path", "dataset", "split", "speaker", "attack_id", "codec", "gender") else 0
@@ -201,7 +195,6 @@ def load_manifest(manifest_path: Path | str) -> pd.DataFrame:
     """
     path = Path(manifest_path)
     if not path.exists():
-        # Check if alternative format exists
         if path.suffix == ".parquet" and path.with_suffix(".csv").exists():
             path = path.with_suffix(".csv")
         elif path.suffix == ".csv" and path.with_suffix(".parquet").exists():
@@ -214,7 +207,6 @@ def load_manifest(manifest_path: Path | str) -> pd.DataFrame:
     else:
         df = pd.read_csv(path)
 
-    # Validate essential columns
     for col in ["path", "label", "speaker"]:
         if col not in df.columns:
             raise ValueError(f"Manifest {path.name} is missing mandatory column: '{col}'")

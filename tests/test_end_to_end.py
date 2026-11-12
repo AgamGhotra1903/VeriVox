@@ -1,6 +1,5 @@
 """End-to-end integration tests for ForensicPredictor on synthetic audio.
 
-Author: Agam Ghotra (IIT2024226)
 """
 
 import pytest
@@ -12,7 +11,6 @@ from acforensics.inference.predictor import ForensicPredictor, ForensicPredictio
 
 
 def test_predictor_end_to_end_on_synthetic_wav(tmp_path: Path):
-    # 1. Create a 3.5s synthetic audio WAV file
     audio_file = tmp_path / "test_sample.wav"
     sr = 16000
     duration = 3.5
@@ -20,7 +18,6 @@ def test_predictor_end_to_end_on_synthetic_wav(tmp_path: Path):
     signal = 0.5 * np.sin(2 * np.pi * 300.0 * t)
     sf.write(str(audio_file), signal, sr)
 
-    # 2. Instantiate ForensicPredictor
     predictor = ForensicPredictor(
         checkpoint_path="checkpoints/crnn_best.pt",
         norm_stats_path="checkpoints/normalization_stats.json",
@@ -28,7 +25,6 @@ def test_predictor_end_to_end_on_synthetic_wav(tmp_path: Path):
         device="cpu",
     )
 
-    # 3. Run prediction
     pred = predictor.predict(audio_file)
 
     assert isinstance(pred, ForensicPrediction)
@@ -42,7 +38,6 @@ def test_predictor_end_to_end_on_synthetic_wav(tmp_path: Path):
     assert len(pred.attention_weights) > 0
     assert len(pred.window_timeline) >= 1
 
-    # Verify standardized forensic JSON output structure
     report = pred.to_dict()
     assert "metadata" in report
     assert "scores" in report

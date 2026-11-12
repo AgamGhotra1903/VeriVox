@@ -1,6 +1,5 @@
 """PyTorch Dataset implementations, collate functions, and balanced samplers.
 
-Author: Paras Bansal (IIT2024221), Agam Ghotra (IIT2024226)
 """
 
 from pathlib import Path
@@ -57,9 +56,7 @@ class ASVspoofDataset(Dataset):
         else:
             self.crop_mode = "random" if split == "train" else "center"
 
-        # Optional debug subsampling (stratified when possible)
         if max_samples is not None and max_samples < len(protocol_df):
-            # Stratified subsampling
             bonafide_df = protocol_df[protocol_df["label"] == BONAFIDE]
             spoof_df = protocol_df[protocol_df["label"] == SPOOF]
 
@@ -87,16 +84,13 @@ class ASVspoofDataset(Dataset):
         speaker_id = str(row["speaker_id"])
         attack_id = str(row.get("attack_id", "-"))
 
-        # Load and validate audio (16 kHz mono)
         res = load_and_validate_audio(audio_path, target_sr=SAMPLE_RATE, log_rejections=True)
         if not res.is_valid or res.waveform is None:
-            # Fallback for corrupted audio to prevent pipeline crashing
             logger.warning("Corrupt or invalid audio encountered at %s: %s", audio_path, res.error_reason)
             waveform = torch.zeros(self.target_samples, dtype=torch.float32)
         else:
             waveform = res.waveform
 
-        # Segment to fixed 4.0s (crop or repeat-pad)
         waveform = fixed_length_crop_or_pad(
             waveform,
             target_samples=self.target_samples,
@@ -106,7 +100,6 @@ class ASVspoofDataset(Dataset):
             f"Expected waveform of shape ({self.target_samples},), got {tuple(waveform.shape)}"
         )
 
-        # Optional waveform augmentation
         if self.audio_transform is not None:
             waveform = self.audio_transform(waveform)
             assert waveform.shape == (self.target_samples,), "Augmentation altered waveform length"
@@ -119,7 +112,6 @@ class ASVspoofDataset(Dataset):
             "attack_id": attack_id,
         }
 
-        # Optional feature extraction (returns 2D or 3D tensor: (F, T) or (1, F, T))
         if self.feature_transform is not None:
             feature = self.feature_transform(waveform)
             assert feature.ndim in (2, 3), (
@@ -196,8 +188,8 @@ def collate_fn(batch: list[dict[str, Any]]) -> dict[str, Any]:
     Features, if present, are batched to (B, 1, F, T).
     """
     assert len(batch) > 0, "Cannot collate empty batch"
-    waveforms = torch.stack([b["waveform"] for b in batch], dim=0)  # Shape: (B, TARGET_SAMPLES)
-    labels = torch.stack([b["label"] for b in batch], dim=0)        # Shape: (B,)
+    waveforms = torch.stack([b["waveform"] for b in batch], dim=0)
+    labels = torch.stack([b["label"] for b in batch], dim=0)
 
     assert waveforms.ndim == 2, f"Expected 2D waveforms tensor (B, T), got {waveforms.shape}"
     assert labels.ndim == 1, f"Expected 1D labels tensor (B,), got {labels.shape}"
@@ -212,7 +204,6 @@ def collate_fn(batch: list[dict[str, Any]]) -> dict[str, Any]:
 
     if "feature" in batch[0]:
         features = torch.stack([b["feature"] for b in batch], dim=0)
-        # Ensure 4D batched feature tensor: (B, 1, F, T)
         if features.ndim == 3:
             features = features.unsqueeze(1)
         assert features.ndim == 4, f"Expected 4D batched feature tensor (B, 1, F, T), got {features.shape}"

@@ -1,4 +1,3 @@
-# Classical Baselines Configuration (Jashan Goyal)
 seed: 42
 
 features:
@@ -19,7 +18,7 @@ models:
     kernel: "rbf"
     probability: true
     class_weight: "balanced"
-    max_samples: 10000  # stratified subsample for SVM quadratic scaling protection
+    max_samples: 10000
     linear_fallback: true
     param_grid:
       C: [0.1, 1.0, 10.0]
@@ -37,4 +36,4 @@ models:
 
 tuning:
   scoring: "roc_auc"
-  cv_strategy: "predefined_split"  # tune strictly on dev split, never on eval
+  cv_strategy: "predefined_split"

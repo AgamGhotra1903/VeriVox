@@ -8,7 +8,6 @@ Complete UI Overhaul:
 - Tab 4: Insights (Benchmarks with 95% CIs, ROC/DET curves, ablations, codec curves, per-attack EER, calibration)
 - Tab 5: About (System architecture, AF-Split v1 protocol, metrics, ethics, team, literature references)
 
-Author: Agam Ghotra (IIT2024226), Chunit Bansal (IIT2024233), Paras Bansal (IIT2024221), Jashan Goyal (IIT2024223)
 """
 
 import io
@@ -21,7 +20,6 @@ import time
 import warnings
 import zipfile
 
-# Filter macOS Accelerate BLAS spurious exception flags
 warnings.filterwarnings("ignore", message=".*encountered in matmul.*")
 
 import numpy as np
@@ -33,26 +31,24 @@ import streamlit as st
 import torch
 
 import hashlib
+from pathlib import Path
 
-# Primary Model Provenance Verification
+_repo_root = Path(__file__).resolve().parent.parent
+if str(_repo_root) not in sys.path:
+    sys.path.insert(0, str(_repo_root))
+
 _primary_ckpt = _repo_root / "checkpoints" / "crnn_lfcc_best.pt"
 _primary_sha256 = "unknown"
 if _primary_ckpt.exists():
     with open(_primary_ckpt, "rb") as _f:
         _primary_sha256 = hashlib.sha256(_f.read()).hexdigest()
 
-# Configure page settings
 st.set_page_config(
     page_title="Acoustic Forensics - Deepfake Audio Screener",
     page_icon="🎙️",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
-
-# Ensure repository root is on sys.path
-_repo_root = Path(__file__).resolve().parent.parent
-if str(_repo_root) not in sys.path:
-    sys.path.insert(0, str(_repo_root))
 
 from acforensics.constants import SAMPLE_RATE
 from acforensics.data.audio_io import load_and_validate_audio
@@ -79,9 +75,6 @@ from app.theme import (
     create_timeline_plot,
 )
 
-# ══════════════════════════════════════════════════════════════════════════════
-# Load Stylesheet
-# ══════════════════════════════════════════════════════════════════════════════
 def load_css():
     css_candidates = [
         Path(__file__).parent / "style.css",
@@ -96,9 +89,6 @@ def load_css():
 load_css()
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# Cached Predictor Resources
-# ══════════════════════════════════════════════════════════════════════════════
 @st.cache_resource
 def get_forensic_predictor():
     return Predictor(
@@ -119,9 +109,6 @@ predictor = get_forensic_predictor()
 ensemble_predictor = get_ensemble_predictor()
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# Session State Initialization
-# ══════════════════════════════════════════════════════════════════════════════
 if "history" not in st.session_state:
     st.session_state["history"] = []
 
@@ -135,9 +122,6 @@ if "active_prediction" not in st.session_state:
     st.session_state["active_prediction"] = None
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# Sidebar - Runtime Engine & Analysis History
-# ══════════════════════════════════════════════════════════════════════════════
 with st.sidebar:
     st.markdown("### ◉ Acoustic Forensics")
     st.caption("v2.5 · Forensic Audio Deepfake Screener")
@@ -175,9 +159,6 @@ with st.sidebar:
         st.caption("No past analyses in this session.")
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# Top Application Branding Header
-# ══════════════════════════════════════════════════════════════════════════════
 badge_cls = "badge-genuine"
 badge_text = "CRNN-LFCC PRIMARY ACTIVE"
 
@@ -207,7 +188,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Top Tabs (Information Architecture)
 tab_analyze, tab_batch, tab_stress, tab_insights, tab_about = st.tabs([
     "Analyze",
     "Batch",
@@ -217,9 +197,6 @@ tab_analyze, tab_batch, tab_stress, tab_insights, tab_about = st.tabs([
 ])
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# TAB 1: ANALYZE
-# ══════════════════════════════════════════════════════════════════════════════
 with tab_analyze:
     col_input, col_hero = st.columns([1, 1.25], gap="large")
 
@@ -276,7 +253,6 @@ with tab_analyze:
                     selected_audio_bytes = recorded.read()
                     selected_audio_name = f"mic_recording_{int(time.time())}.wav"
 
-            # Model Selection
             chosen_model = st.selectbox(
                 "Forensic Model",
                 [
@@ -307,7 +283,6 @@ with tab_analyze:
 
             analyze_btn = st.button("Analyze Audio ▶", use_container_width=True, type="primary")
 
-    # Run Prediction
     should_run = (
         analyze_btn
         or st.session_state.get("active_prediction") is None
@@ -322,7 +297,6 @@ with tab_analyze:
             if wav_data.ndim > 1:
                 wav_data = wav_data.mean(axis=1)
 
-            # Compute standard multi-window prediction & saliency
             pred: Prediction = predictor.predict(
                 wav=wav_data,
                 sr=sr,
@@ -330,13 +304,11 @@ with tab_analyze:
                 threshold=threshold_val,
             )
 
-            # If Stacked Ensemble is chosen and available, override with full 6-model ensemble
             if ensemble_predictor is not None:
                 ens_res = ensemble_predictor.predict_waveform(torch.from_numpy(wav_data).float())
                 prob_ens = float(ens_res["probability_bonafide"])
                 base_sc = ens_res["base_scores"]
 
-                # Populate real per-model calibrated probabilities
                 real_per_model = {
                     "Stacked Ensemble (Proposed)": prob_ens,
                     "CRNN-LFCC": float(1.0 / (1.0 + np.exp(-np.clip(base_sc.get("CRNN-LFCC", 0.0), -20, 20)))),
@@ -398,7 +370,6 @@ with tab_analyze:
             st.session_state["active_model"] = chosen_model
             st.session_state["active_prediction"] = pred
 
-            # Add to history if unique
             if not any(h["filename"] == selected_audio_name for h in st.session_state["history"][-1:]):
                 st.session_state["history"].append({
                     "filename": selected_audio_name,
@@ -415,7 +386,6 @@ with tab_analyze:
         if active_pred is not None:
             pres = get_verdict_presentation(active_pred.verdict)
 
-            # Hero Card
             st.markdown(
                 f"""
                 <div class="hero-verdict-card verdict-{pres['badge_class'].split('-')[1]}">
@@ -464,7 +434,6 @@ with tab_analyze:
                 unsafe_allow_html=True,
             )
 
-            # Reliability Audit
             with st.container(border=True):
                 st.markdown("#### 🛡️ Reliability Audit: Can I trust this result?")
                 checks = evaluate_reliability_checks(active_pred.quality, active_pred.per_model)
@@ -497,7 +466,6 @@ with tab_analyze:
                     unsafe_allow_html=True,
                 )
 
-    # Evidence Tabs
     if active_pred is not None and st.session_state.get("active_audio_bytes") is not None:
         st.markdown("---")
         st.markdown("### Forensic Evidence & Model Explanations")
@@ -579,9 +547,6 @@ with tab_analyze:
             )
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# TAB 2: BATCH PROCESSING
-# ══════════════════════════════════════════════════════════════════════════════
 with tab_batch:
     st.markdown("### 📦 Batch Forensic Screening")
     st.caption("Upload multiple audio recordings or a ZIP archive for automated batch processing.")
@@ -648,7 +613,6 @@ with tab_batch:
     if st.session_state.get("batch_df") is not None:
         df_batch = st.session_state["batch_df"]
 
-        # Score Distribution Histogram
         st.markdown("#### Score Distribution")
         fig_hist = go.Figure()
         fig_hist.add_trace(go.Histogram(
@@ -660,7 +624,6 @@ with tab_batch:
         fig_hist.update_layout(get_plotly_layout(title="Batch Authenticity Distribution", height=240))
         st.plotly_chart(fig_hist, use_container_width=True, config={"displayModeBar": False})
 
-        # Results Table
         st.markdown("#### Detailed Results")
         st.dataframe(df_batch, use_container_width=True)
 
@@ -673,9 +636,6 @@ with tab_batch:
         )
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# TAB 3: STRESS LAB (Robustness & Codec Testing)
-# ══════════════════════════════════════════════════════════════════════════════
 with tab_stress:
     st.markdown("### 🔬 Acoustic Stress Lab")
     st.caption("Probe classifier vulnerabilities by injecting compression artifacts, acoustic noise, and reverberation.")
@@ -694,7 +654,6 @@ with tab_stress:
                 ],
             )
 
-            # Retrieve audio
             if "Active Clip" in stress_sample and st.session_state.get("active_audio_bytes"):
                 clean_bytes = st.session_state["active_audio_bytes"]
             else:
@@ -723,12 +682,10 @@ with tab_stress:
         with st.container(border=True):
             st.markdown("#### Before vs After Stress Verification")
 
-            # Load clean audio
             clean_wav, sr_c = sf.read(io.BytesIO(clean_bytes))
             if clean_wav.ndim > 1:
                 clean_wav = clean_wav.mean(axis=1)
 
-            # Apply perturbations
             degraded_wav = clean_wav.copy()
 
             if add_noise:
@@ -742,16 +699,13 @@ with tab_stress:
                 decay = np.exp(-np.linspace(0, 5, int(0.2 * 16000)))
                 degraded_wav = scipy.signal.convolve(degraded_wav, decay, mode="same")
 
-            # Simulate codec cutoff filtering
             if bitrate_kbps <= 24:
                 b, a = scipy.signal.butter(4, 4500.0 / (SAMPLE_RATE / 2.0), btype="low")
                 degraded_wav = scipy.signal.lfilter(b, a, degraded_wav)
 
-            # Peak normalize
             if np.max(np.abs(degraded_wav)) > 0:
                 degraded_wav = degraded_wav / np.max(np.abs(degraded_wav)) * 0.95
 
-            # Predict on clean and degraded
             pred_clean = predictor.predict(clean_wav, sr=sr_c)
             pred_degraded = predictor.predict(degraded_wav, sr=SAMPLE_RATE)
 
@@ -795,14 +749,10 @@ with tab_stress:
             )
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# TAB 4: INSIGHTS & BENCHMARKS
-# ══════════════════════════════════════════════════════════════════════════════
 with tab_insights:
     st.markdown("### 📊 Benchmark Performance & Diagnostic Insights")
     st.caption("Evaluated strictly on the official ASVspoof 2019 LA Eval split and In-The-Wild cross-domain dataset.")
 
-    # Metric HUD
     hud1, hud2, hud3, hud4 = st.columns(4)
     with hud1:
         st.markdown(
@@ -835,7 +785,6 @@ with tab_insights:
 
     st.markdown("---")
 
-    # 1. Main System Comparison Table
     st.markdown("#### 1. Official Evaluation Benchmark: Single Models vs Ensembles")
     main_eval_csv = Path("results/tables/models_and_ensembles_eval.csv")
     if main_eval_csv.exists():
@@ -844,7 +793,6 @@ with tab_insights:
     else:
         st.caption("Run `scripts/evaluate.py` to generate the benchmark table.")
 
-    # Figures: ROC and DET Curves
     roc_fig_p = Path("results/figures/all_models_roc.png")
     det_fig_p = Path("results/figures/all_models_det.png")
     if roc_fig_p.exists() or det_fig_p.exists():
@@ -858,7 +806,6 @@ with tab_insights:
 
     st.markdown("---")
 
-    # 2. Meta-Learner Stacking Contribution
     st.markdown("#### 2. Stacked Ensemble Meta-Learner Feature Importance")
     weights_csv = Path("results/tables/meta_learner_weights.csv")
     cm_fig_p = Path("results/figures/ensemble_confusion_matrix.png")
@@ -874,7 +821,6 @@ with tab_insights:
 
     st.markdown("---")
 
-    # 3. Ablation Studies (Feature, Architecture, Regularization)
     st.markdown("#### 3. Controlled Ablation Experiments")
     abl_col1, abl_col2 = st.columns(2)
     with abl_col1:
@@ -901,7 +847,6 @@ with tab_insights:
 
     st.markdown("---")
 
-    # 4. Per-Attack & Codec Robustness
     st.markdown("#### 4. Diagnostic Stress: Attack Breakdown & Lossy Codecs")
     rob_col1, rob_col2 = st.columns(2)
     with rob_col1:
@@ -925,9 +870,6 @@ with tab_insights:
                 st.dataframe(pd.read_csv(codec_csv), use_container_width=True)
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# TAB 5: ABOUT & DOCUMENTATION
-# ══════════════════════════════════════════════════════════════════════════════
 with tab_about:
     st.markdown("### 📖 About Acoustic Forensics")
     st.caption("Production Synthetic Speech Screener · Indian Institute of Information Technology")
@@ -957,10 +899,7 @@ with tab_about:
         - **VCTK Heritage Caveat:** ASVspoof 2019 LA bona fide audio derives from the VCTK corpus; models must be audited against speaker memorization.
 
         #### 👥 Academic Team & Project Contributions
-        - **Paras Bansal (IIT2024221):** Data protocols, manifest schemas, audio I/O validation, and LFCC/Log-Mel feature extraction.
-        - **Jashan Goyal (IIT2024223):** Classical baselines (GMM, LR, RBF-SVM, RF), PCA variance retention, and statistical pooling.
-        - **Agam Ghotra (IIT2024226):** Regularized CRNNs (LFCC & Log-Mel), score matrix builder, and stacked ensemble meta-learner.
-        - **Chunit Bansal (IIT2024233):** Robustness stress-testing, min-tDCF engine, error audits, and Streamlit product UI design.
+        - **Acoustic Forensics Research Team:** End-to-end deepfake audio detection, spectral feature engineering, neural and classical countermeasure modeling, robustness benchmarking, and interactive forensic laboratory application.
 
         #### 📚 Primary References
         - Wang et al., *"ASVspoof 2019: A large-scale public database of synthesized, converted and replayed speech"*, Computer Speech & Language, 2020.
@@ -971,9 +910,6 @@ with tab_about:
     )
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# Persistent Standard Disclaimer Footer
-# ══════════════════════════════════════════════════════════════════════════════
 st.markdown(
     """
     <div class="af-footer">

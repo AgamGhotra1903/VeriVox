@@ -10,7 +10,6 @@ representations, scaling, and PCA transformations trained in Stages 3 and 4:
 3. Baseline mean fusion score.
 4. Calibrated confidence probability P(bona fide) via meta-learner sigmoid.
 
-Author: Agam Ghotra (IIT2024226)
 """
 
 from pathlib import Path

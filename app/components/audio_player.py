@@ -1,6 +1,5 @@
 """Interactive Canvas Audio Player with Variable Speed and A/B Looping for Forensic Audio.
 
-Author: Agam Ghotra (IIT2024226), Chunit Bansal (IIT2024233)
 """
 
 import base64
@@ -28,7 +27,6 @@ def render_forensic_audio_player(audio_path: Path | str, height: int = 160) -> N
         st.warning("Audio file not found for playback.")
         return
 
-    # Prepare base64 audio data URI
     try:
         suffix = path.suffix.lower()
         if suffix in [".wav", ".mp3", ".ogg"]:
@@ -36,14 +34,12 @@ def render_forensic_audio_player(audio_path: Path | str, height: int = 160) -> N
             with open(path, "rb") as f:
                 b64_audio = base64.b64encode(f.read()).decode("utf-8")
         else:
-            # Transcode in memory to 16-bit PCM WAV for HTML5 compatibility
             data, sr = sf.read(str(path))
             buf = io.BytesIO()
             sf.write(buf, data, sr, format="WAV", subtype="PCM_16")
             b64_audio = base64.b64encode(buf.getvalue()).decode("utf-8")
             mime_type = "audio/wav"
     except Exception as e:
-        # Fallback to standard Streamlit audio if anything fails
         st.audio(str(path))
         return
 

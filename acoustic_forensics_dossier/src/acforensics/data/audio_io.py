@@ -1,6 +1,5 @@
 """Robust audio input/output, validation, resampling, and normalization.
 
-Author: Paras Bansal (IIT2024221)
 """
 
 from dataclasses import dataclass
@@ -28,7 +27,7 @@ logger = get_logger(__name__)
 class AudioValidationResult:
     """Result container for audio loading and verification."""
     is_valid: bool
-    waveform: Optional[torch.Tensor] = None  # 1D tensor shape (samples,)
+    waveform: Optional[torch.Tensor] = None
     sample_rate: int = SAMPLE_RATE
     duration_sec: float = 0.0
     error_reason: Optional[str] = None
@@ -88,7 +87,6 @@ def resample_audio(
     if orig_sr == target_sr:
         return waveform
 
-    # torchaudio.transforms.Resample expects shape (channels, samples)
     resampler = torchaudio.transforms.Resample(orig_freq=orig_sr, new_freq=target_sr)
     resampled = resampler(waveform.unsqueeze(0)).squeeze(0)
     return resampled
@@ -165,7 +163,6 @@ def load_and_validate_audio(
     """
     path = Path(file_path)
 
-    # 1. Existence check
     if not path.exists():
         if log_rejections:
             log_rejected_file(path, "file_not_found", 0.0, rejected_log_path)
@@ -174,7 +171,6 @@ def load_and_validate_audio(
             error_reason=f"File not found: {path}",
         )
 
-    # 2. File read attempt (soundfile first, fallback to torchaudio, fallback to ffmpeg)
     bit_depth_str = "16-bit PCM"
     bitrate_kbps_val = None
     orig_channels = 1
@@ -211,10 +207,8 @@ def load_and_validate_audio(
                     error_reason=f"Corrupt or unreadable audio format: {sf_err} | {ta_err} | {ffmpeg_err}",
                 )
 
-    # Convert to 1D numpy array
     if data.ndim == 2:
         orig_channels = data.shape[1]
-        # Multichannel: average channels down to mono
         data = np.mean(data, axis=1)
     elif data.ndim > 2:
         if log_rejections:
@@ -224,7 +218,6 @@ def load_and_validate_audio(
             error_reason=f"Invalid channel shape: {data.shape}",
         )
 
-    # 3. Empty file check
     if len(data) == 0:
         if log_rejections:
             log_rejected_file(path, "empty_audio_file", 0.0, rejected_log_path)
@@ -233,7 +226,6 @@ def load_and_validate_audio(
             error_reason="Audio file contains 0 samples.",
         )
 
-    # 4. NaN or Inf check
     if np.isnan(data).any() or np.isinf(data).any():
         if log_rejections:
             log_rejected_file(path, "nan_or_inf_detected", len(data) / sr, rejected_log_path)
@@ -243,11 +235,9 @@ def load_and_validate_audio(
             error_reason="Audio contains NaN or Infinite amplitude values.",
         )
 
-    # Compute physical acoustic properties before normalization
     peak_val = float(np.max(np.abs(data)))
     peak_level_db = round(20.0 * np.log10(max(peak_val, 1e-6)), 2)
 
-    # SNR Estimation heuristic (frame RMS 90th percentile vs 10th percentile floor)
     frame_sz = min(1024, max(64, len(data) // 50))
     n_f = len(data) // frame_sz
     if n_f >= 4:
@@ -262,10 +252,8 @@ def load_and_validate_audio(
     else:
         snr_val = 30.0
 
-    # Convert to torch tensor
     waveform = torch.from_numpy(data.astype(np.float32))
 
-    # 5. Resample if necessary
     orig_sr = sr
     if sr != target_sr:
         try:
@@ -281,7 +269,6 @@ def load_and_validate_audio(
 
     duration_sec = len(waveform) / target_sr
 
-    # 6. Minimum duration check
     if duration_sec < min_duration_sec:
         if log_rejections:
             log_rejected_file(path, "duration_under_minimum", duration_sec, rejected_log_path)
@@ -291,7 +278,6 @@ def load_and_validate_audio(
             error_reason=f"Duration ({duration_sec:.2f}s) is shorter than minimum allowed ({min_duration_sec:.2f}s).",
         )
 
-    # 7. Normalization
     waveform = normalize_audio(waveform, method=normalization_method)
 
     return AudioValidationResult(

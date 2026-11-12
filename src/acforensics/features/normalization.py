@@ -1,6 +1,5 @@
 """Feature Normalization: Train-Only Global Mean/Std and Per-Utterance CMVN.
 
-Author: Paras Bansal (IIT2024221), Agam Ghotra (IIT2024226)
 """
 
 from pathlib import Path
@@ -28,12 +27,10 @@ def per_utterance_cmvn(feature: torch.Tensor, eps: float = 1e-8) -> torch.Tensor
         Normalized tensor with same shape.
     """
     if feature.dim() == 2:
-        # Shape: (F, T) -> compute stats across T (dim=-1)
         mean = feature.mean(dim=-1, keepdim=True)
         std = feature.std(dim=-1, keepdim=True)
         return (feature - mean) / (std + eps)
     elif feature.dim() == 3:
-        # Shape: (B, F, T) -> compute stats across T (dim=-1)
         mean = feature.mean(dim=-1, keepdim=True)
         std = feature.std(dim=-1, keepdim=True)
         return (feature - mean) / (std + eps)
@@ -55,7 +52,6 @@ class FeatureNormalizer(nn.Module):
         self.eps = eps
         self.feature_dim = feature_dim
 
-        # Initial dummy buffers; updated when fitted or loaded
         if feature_dim is not None:
             self.register_buffer("mean", torch.zeros(feature_dim, 1))
             self.register_buffer("std", torch.ones(feature_dim, 1))
@@ -69,16 +65,14 @@ class FeatureNormalizer(nn.Module):
         all_frames = []
         for feat in feature_list:
             if feat.dim() == 2:
-                all_frames.append(feat)  # (F, T)
+                all_frames.append(feat)
             elif feat.dim() == 3:
                 for b in range(feat.size(0)):
                     all_frames.append(feat[b])
 
-        # Concatenate along time: (F, Total_T)
         concatenated = torch.cat(all_frames, dim=1)
-        mean = concatenated.mean(dim=1, keepdim=True)  # (F, 1)
-        std = concatenated.std(dim=1, keepdim=True)    # (F, 1)
-        # Clamp std to avoid division by near-zero
+        mean = concatenated.mean(dim=1, keepdim=True)
+        std = concatenated.std(dim=1, keepdim=True)
         std = torch.clamp(std, min=1e-5)
 
         self.mean = mean
@@ -126,7 +120,6 @@ class FeatureNormalizer(nn.Module):
             Normalized tensor of identical shape.
         """
         if not self.is_fitted or self.mean is None:
-            # Fallback to per-utterance CMVN if not fitted
             return per_utterance_cmvn(feature, eps=self.eps)
 
         mean = self.mean.to(feature.device)
@@ -135,7 +128,6 @@ class FeatureNormalizer(nn.Module):
         if feature.dim() == 2:
             return (feature - mean) / (std + self.eps)
         elif feature.dim() == 3:
-            # feature shape (B, F, T), mean shape (F, 1)
             return (feature - mean.unsqueeze(0)) / (std.unsqueeze(0) + self.eps)
         else:
             return feature

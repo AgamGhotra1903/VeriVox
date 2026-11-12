@@ -1,6 +1,5 @@
 """Automated Report Table Builder (Zero Fabricated Numbers).
 
-Author: Chunit Bansal (IIT2024223)
 """
 
 import argparse
@@ -20,7 +19,6 @@ def build_tables(results_dir: Path | str = DEFAULT_RESULTS_DIR) -> None:
     tables_dir = res_dir / "tables"
     tables_dir.mkdir(parents=True, exist_ok=True)
 
-    # 1. Classical Baselines Table
     baselines_file = metrics_dir / "baselines_results.json"
     if baselines_file.exists():
         base_data = load_json(baselines_file)
@@ -39,15 +37,12 @@ def build_tables(results_dir: Path | str = DEFAULT_RESULTS_DIR) -> None:
                     "Applied Threshold": f"{eval_m['applied_threshold']:.4f}",
                 })
         df_base = pd.DataFrame(rows)
-        # Markdown table
         md_base = df_base.to_markdown(index=False)
         safe_write_text(md_base, tables_dir / "table1_baselines.md")
-        # LaTeX table
         latex_base = df_base.to_latex(index=False)
         safe_write_text(latex_base, tables_dir / "table1_baselines.tex")
         logger.info("Generated Table 1: Classical Baselines")
 
-    # 2. Main Model Comparison Table
     crnn_file = metrics_dir / "crnn_results.json"
     if crnn_file.exists():
         crnn_data = load_json(crnn_file)
@@ -65,7 +60,6 @@ def build_tables(results_dir: Path | str = DEFAULT_RESULTS_DIR) -> None:
         safe_write_text(df_main.to_latex(index=False), tables_dir / "table2_main_model.tex")
         logger.info("Generated Table 2: Main Model Benchmark")
 
-    # 3. Robustness Degradation Table
     robust_file = metrics_dir / "robustness_results.json"
     if robust_file.exists():
         rob_data = load_json(robust_file)
@@ -86,7 +80,6 @@ def build_tables(results_dir: Path | str = DEFAULT_RESULTS_DIR) -> None:
             safe_write_text(df_rob.to_latex(index=False), tables_dir / "table3_robustness.tex")
             logger.info("Generated Table 3: Robustness Degradation")
 
-    # 4. Cross-Domain Table
     cross_file = metrics_dir / "crossdomain_results.json"
     if cross_file.exists():
         cd_data = load_json(cross_file)

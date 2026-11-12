@@ -9,7 +9,6 @@ Features:
 - Strict data split leakage protection: asserts eval split is never used for training or early stopping.
 - Reproducibility tracking with deterministic seeds and per-run JSON logging.
 
-Author: Agam Ghotra (IIT2024226)
 """
 
 from pathlib import Path
@@ -84,13 +83,11 @@ def evaluate_on_dev(
 
             if features.ndim == 3:
                 features = features.unsqueeze(1)
-            # features shape: (B, 1, F, T)
             assert features.ndim == 4, f"Dev evaluation expected 4D feature batch, got {features.shape}"
             logits, _ = model(features)
             loss = criterion(logits, labels)
             total_loss += loss.item() * len(labels)
 
-            # Continuous countermeasure score: Log-Likelihood Ratio for bona fide
             scores = (logits[:, BONAFIDE] - logits[:, SPOOF]).cpu().numpy()
             all_scores.extend(scores)
             all_labels.extend(labels.cpu().numpy())
@@ -112,7 +109,6 @@ def plot_training_history(history: list[dict[str, Any]], output_path: Path | str
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4.5), dpi=200)
 
-    # 1. Loss trajectories
     ax1.plot(epochs, train_losses, label="Train Loss", color="#3B82F6", lw=2)
     ax1.plot(epochs, dev_losses, label="Dev Loss", color="#EF4444", lw=2, linestyle="--")
     ax1.set_xlabel("Epoch", fontsize=11)
@@ -121,7 +117,6 @@ def plot_training_history(history: list[dict[str, Any]], output_path: Path | str
     ax1.grid(True, linestyle="--", alpha=0.5)
     ax1.legend(frameon=True)
 
-    # 2. Validation EER progression
     ax2.plot(epochs, dev_eers, label="Dev EER (%)", color="#10B981", lw=2)
     best_idx = np.argmin(dev_eers)
     ax2.scatter(
@@ -153,8 +148,8 @@ def train_crnn(
     epochs: int = 40,
     lr: float = 1e-3,
     weight_decay: float = 1e-4,
-    optimizer_type: str = "adamw",  # 'adamw' or 'adam'
-    scheduler_type: str = "plateau",  # 'plateau' or 'cosine'
+    optimizer_type: str = "adamw",
+    scheduler_type: str = "plateau",
     seed: int = 42,
     device: Optional[torch.device] = None,
     early_stopping_patience: int = 5,
@@ -178,20 +173,17 @@ def train_crnn(
     Returns:
         Tuple of (best_model, fitted_calibrator, training_summary_dict).
     """
-    # Enforce strict zero-leakage assertions
     train_split_name = getattr(getattr(train_loader, "dataset", None), "split", "train")
     dev_split_name = getattr(getattr(dev_loader, "dataset", None), "split", "dev")
     assert str(train_split_name).lower() == "train", f"Train loader split must be 'train', got {train_split_name}"
     assert str(dev_split_name).lower() == "dev", f"Dev loader split must be 'dev', got {dev_split_name}"
 
-    # Set deterministic random seed
     set_seed(seed=seed, deterministic=True)
 
     if device is None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
 
-    # 1. Class Imbalance Handling
     train_labels = []
     for b in train_loader:
         train_labels.extend(b["label"].numpy())
@@ -206,7 +198,6 @@ def train_crnn(
     else:
         criterion = nn.CrossEntropyLoss(weight=class_weights)
 
-    # 2. Optimizer Configuration
     if optimizer_type == "adamw":
         optimizer = torch.optim.AdamW(
             model.parameters(),
@@ -224,7 +215,6 @@ def train_crnn(
             eps=1e-8,
         )
 
-    # 3. Learning Rate Scheduler
     if scheduler_type == "cosine":
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
             optimizer, T_max=epochs, eta_min=1e-6
@@ -236,7 +226,6 @@ def train_crnn(
 
     spec_augment = SpecAugment().to(device) if use_spec_augment else None
 
-    # Mixed precision scaler (GPU only)
     scaler = torch.amp.GradScaler("cuda", enabled=(use_amp and device.type == "cuda"))
 
     ckpt_dir = Path(checkpoint_dir)
@@ -292,11 +281,9 @@ def train_crnn(
 
         train_loss = running_loss / max(1, n_samples)
 
-        # 4. Evaluate on Dev split (model selection strictly on Dev EER)
         dev_loss, dev_eer, dev_thresh, dev_scores, dev_labels = evaluate_on_dev(model, dev_loader, device)
         dev_auc = compute_roc_auc(dev_labels, dev_scores)
 
-        # Step scheduler
         if isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
             scheduler.step(dev_eer)
         else:
@@ -318,7 +305,6 @@ def train_crnn(
             "lr": current_lr,
         })
 
-        # Early stopping & model checkpointing on dev EER (lower is better)
         if dev_eer < best_dev_eer:
             best_dev_eer = dev_eer
             best_dev_thresh = dev_thresh
@@ -327,7 +313,6 @@ def train_crnn(
             best_dev_labels = dev_labels
             patience_counter = 0
 
-            # Save best checkpoint containing full state, configs, and seeds
             torch.save({
                 "epoch": epoch,
                 "model_state_dict": model.state_dict(),
@@ -355,7 +340,6 @@ def train_crnn(
                 logger.info("Early stopping triggered after %d epochs without Dev EER improvement.", early_stopping_patience)
                 break
 
-    # 5. Restore Best Checkpoint before returning or further evaluation
     logger.info("Restoring best checkpoint from epoch %d (Dev EER: %.2f%%)", best_epoch, best_dev_eer)
     best_checkpoint = torch.load(str(best_ckpt_path), map_location=device, weights_only=False)
     model.load_state_dict(best_checkpoint["model_state_dict"])
@@ -370,7 +354,6 @@ def train_crnn(
         best_checkpoint["calibrator_state"] = calibrator
         torch.save(best_checkpoint, str(best_ckpt_path))
 
-    # 7. Persist run log JSON and learning curve plots
     res_dir = Path(results_dir)
     feature_name = (feature_config or {}).get("feature_type", "lfcc")
     run_log_path = res_dir / "metrics" / f"crnn_training_run_{feature_name}_seed{seed}.json"
@@ -398,7 +381,6 @@ def train_crnn(
         json.dump(run_metadata, f, indent=2)
     logger.info("Saved run metadata to %s", run_log_path)
 
-    # Plot and save curves
     plot_training_history(history, res_dir / "figures" / f"crnn_{feature_name}_training_curves.png")
 
     summary = {

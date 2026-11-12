@@ -8,7 +8,6 @@ Features:
 - Hyperparameter tuning strictly on DEV split; EVAL split is evaluated frozen.
 - Supports --smoke mode for fast end-to-end verification.
 
-Author: Jashan Goyal (IIT2024223), Agam Ghotra (IIT2024226)
 """
 
 import argparse
@@ -85,14 +84,12 @@ def extract_classical_data(
             wave = fixed_length_crop_or_pad(res.waveform, target_samples=target_samples, mode="center")
 
         with torch.no_grad():
-            f_lfcc = lfcc_ext(wave).cpu().numpy().astype(np.float64)     # (60, T)
-            f_logmel = logmel_ext(wave).cpu().numpy().astype(np.float64) # (80, T)
+            f_lfcc = lfcc_ext(wave).cpu().numpy().astype(np.float64)
+            f_logmel = logmel_ext(wave).cpu().numpy().astype(np.float64)
 
-        # Transpose to (T, F) for GMM
         lfcc_frames_list.append(f_lfcc.T)
         logmel_frames_list.append(f_logmel.T)
 
-        # Utterance-level mean+std pooling
         lfcc_vecs.append(extract_mean_std_features(f_lfcc))
         logmel_vecs.append(extract_mean_std_features(f_logmel))
 
@@ -120,7 +117,6 @@ def main():
     setup_logging()
     set_seed(args.seed, deterministic=True)
 
-    # 1. Resolve Dataset Paths
     base_dir = Path("data/smoke_test" if args.smoke else "data/raw/LA")
     if not (base_dir / "ASVspoof2019_LA_cm_protocols").exists():
         logger.warning("Dataset not found at %s. Falling back to data/smoke_test.", base_dir)
@@ -135,7 +131,6 @@ def main():
     dev_df = load_asvspoof_protocol(dev_proto, audio_dir=base_dir / "ASVspoof2019_LA_dev" / "flac", split_name="dev")
     eval_df = load_asvspoof_protocol(eval_proto, audio_dir=base_dir / "ASVspoof2019_LA_eval" / "flac", split_name="eval")
 
-    # Strict leakage assertion: disjoint utterance IDs
     train_ids = set(train_df["file_id"])
     dev_ids = set(dev_df["file_id"])
     eval_ids = set(eval_df["file_id"])
@@ -143,7 +138,6 @@ def main():
     assert len(train_ids.intersection(eval_ids)) == 0, "DATA LEAKAGE: Overlapping IDs between train and eval!"
     assert len(dev_ids.intersection(eval_ids)) == 0, "DATA LEAKAGE: Overlapping IDs between dev and eval!"
 
-    # 2. Extract Features
     lfcc_ext = LFCCExtractor(sample_rate=SAMPLE_RATE, n_fft=512, win_length=400, hop_length=160, n_lfcc=20, with_deltas=True)
     logmel_ext = LogMelExtractor(sample_rate=SAMPLE_RATE, n_fft=512, win_length=400, hop_length=160, n_mels=80)
 
@@ -167,9 +161,6 @@ def main():
     asv_score_file = base_dir / "ASVspoof2019_LA_asv_scores" / "ASVspoof2019.LA.asv.eval.gi.trl.scores.txt"
     asv_path_str = str(asv_score_file) if asv_score_file.exists() else None
 
-    # =========================================================================
-    # 3. GMM Baseline (64 components, diagonal, LFCC frames)
-    # =========================================================================
     logger.info(">>> Training GMM Baseline on LFCC frames...")
     n_components = 16 if args.smoke else 64
     gmm_model = GMMForensics(n_components=n_components, covariance_type="diag", max_iter=100, random_state=args.seed)
@@ -178,12 +169,10 @@ def main():
     gmm_path = checkpoints_dir / "gmm_lfcc.joblib"
     gmm_model.save(gmm_path)
 
-    # Evaluate GMM on Dev to determine threshold
     dev_llr_scores = gmm_model.predict_score(dev_data["lfcc_frames"])
     dev_gmm_metrics = full_evaluation(dev_data["labels"], dev_llr_scores)
     dev_gmm_thresh = dev_gmm_metrics["eer_threshold"]
 
-    # Evaluate GMM on Eval using dev threshold
     eval_llr_scores = gmm_model.predict_score(eval_data["lfcc_frames"])
     eval_gmm_metrics = full_evaluation(
         eval_data["labels"],
@@ -211,9 +200,6 @@ def main():
         "Applied Threshold": f"{dev_gmm_thresh:.4f} (from Dev)",
     })
 
-    # =========================================================================
-    # 4. Classical Models: Logistic Regression, RBF-SVM, Random Forest (with PCA)
-    # =========================================================================
     classical_models = {
         "Logistic Regression": train_logistic_regression,
         "RBF-SVM": train_rbf_svm,
@@ -237,16 +223,13 @@ def main():
                 seed=args.seed,
             )
 
-            # Save model
             model_slug = m_name.lower().replace(" ", "_").replace("-", "_")
             joblib_path = checkpoints_dir / f"{model_slug}_{f_name}.joblib"
             joblib.dump(model_pipe, str(joblib_path))
 
-            # Dev evaluation
             dev_scores, dev_metrics = evaluate_classical_model(model_pipe, X_dv, dev_data["labels"])
             dev_thresh = dev_metrics["eer_threshold"]
 
-            # Eval evaluation strictly using dev threshold
             eval_scores, eval_metrics = evaluate_classical_model(
                 model_pipe,
                 X_ev,
@@ -279,7 +262,6 @@ def main():
                 "Applied Threshold": f"{dev_thresh:.4f} (from Dev)",
             })
 
-    # Save results JSON and Table CSV
     metrics_path = results_dir / "metrics" / "baselines_results.json"
     save_json(results, metrics_path)
     logger.info("Saved baseline metrics to %s", metrics_path)
@@ -289,14 +271,12 @@ def main():
     summary_df.to_csv(csv_path, index=False)
     logger.info("Saved baselines summary table to %s", csv_path)
 
-    # Print summary table
     print("\n" + "=" * 95)
     print("CLASSICAL BASELINES & GMM BENCHMARK RESULTS (ASVspoof 2019 LA)")
     print("=" * 95)
     print(summary_df.to_string(index=False))
     print("=" * 95 + "\n")
 
-    # Save ROC & DET plots
     plot_roc_curve(roc_curves, figures_dir / "baselines_roc.png", title="Classical Baselines ROC on Eval Split")
     plot_det_curve(roc_curves, figures_dir / "baselines_det.png", title="Classical Baselines DET on Eval Split")
 

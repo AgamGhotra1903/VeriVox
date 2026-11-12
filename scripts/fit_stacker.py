@@ -8,7 +8,6 @@ Features:
 - Outputs meta-learner coefficient table to results/tables/.
 - Saves fitted StackedEnsemble pipeline to checkpoints/ensemble/stacked_ensemble.joblib.
 
-Author: Agam Ghotra (IIT2024226)
 """
 
 import argparse
@@ -51,14 +50,11 @@ def main():
     assert (scores_dir / "dev_scores.npy").exists(), f"Dev scores missing at {scores_dir / 'dev_scores.npy'}. Run scripts/build_scores.py first."
     assert (scores_dir / "eval_scores.npy").exists(), f"Eval scores missing at {scores_dir / 'eval_scores.npy'}. Run scripts/build_scores.py first."
 
-    # 1. Load DEV and EVAL score matrices
     dev_scores, dev_labels, dev_ids, model_names = load_score_matrix(scores_dir, "dev")
     eval_scores, eval_labels, eval_ids, _ = load_score_matrix(scores_dir, "eval")
 
-    # Strict leakage assertion: disjoint IDs
     assert len(set(dev_ids).intersection(set(eval_ids))) == 0, "CRITICAL: dev_ids and eval_ids overlap!"
 
-    # 2. Fit Stacked Ensemble strictly on DEV
     logger.info("Fitting StackedEnsemble on DEV scores only (zero leakage into eval)...")
     stacker = StackedEnsemble(model_names=model_names, seed=args.seed)
     stacker.fit(dev_scores, dev_labels)
@@ -67,7 +63,6 @@ def main():
     ckpt_dir.mkdir(parents=True, exist_ok=True)
     stacker.save(ckpt_dir / "stacked_ensemble.joblib")
 
-    # 3. Save Meta-Learner Weights Table
     tables_dir = Path("results/tables")
     tables_dir.mkdir(parents=True, exist_ok=True)
     weights_df = stacker.get_coefficients_table()
@@ -75,22 +70,17 @@ def main():
     weights_df.to_markdown(tables_dir / "meta_learner_weights.md", index=False)
     logger.info("Saved meta-learner weights to %s", tables_dir / "meta_learner_weights.csv")
 
-    # 4. Dev Evaluation to determine operating thresholds
-    # A. Stacked Ensemble
     dev_fused_scores = stacker.predict_score(dev_scores)
     dev_stacker_report = full_evaluation(dev_labels, dev_fused_scores, compute_ci=False)
     dev_stacker_thresh = dev_stacker_report["eer_threshold"]
 
-    # B. Mean Baseline Fusion
     dev_mean_scores = stacker.predict_baseline_mean(dev_scores)
     dev_mean_report = full_evaluation(dev_labels, dev_mean_scores, compute_ci=False)
     dev_mean_thresh = dev_mean_report["eer_threshold"]
 
-    # 5. Eval Evaluation strictly using Dev Thresholds
     asv_eval_file = Path("data/raw/LA/ASVspoof2019_LA_asv_scores/ASVspoof2019.LA.asv.eval.gi.trl.scores.txt")
     asv_path_str = str(asv_eval_file) if asv_eval_file.exists() else None
 
-    # Base models single evaluation on Eval
     summary_rows = []
     roc_dict = {}
 
@@ -113,7 +103,6 @@ def main():
             "Applied Threshold": f"{m_dev_th:.4f} (Dev)",
         })
 
-    # Baseline Mean Fusion evaluation on Eval
     eval_mean_scores = stacker.predict_baseline_mean(eval_scores)
     eval_mean_rep = full_evaluation(eval_labels, eval_mean_scores, dev_threshold=dev_mean_thresh, asv_score_file=asv_path_str)
     roc_dict["Mean Fusion (Z-Score)"] = (eval_labels, eval_mean_scores)
@@ -128,7 +117,6 @@ def main():
         "Applied Threshold": f"{dev_mean_thresh:.4f} (Dev)",
     })
 
-    # Stacked Ensemble evaluation on Eval
     eval_fused_scores = stacker.predict_score(eval_scores)
     eval_stacker_rep = full_evaluation(eval_labels, eval_fused_scores, dev_threshold=dev_stacker_thresh, asv_score_file=asv_path_str)
     roc_dict["Stacked Ensemble (Proposed)"] = (eval_labels, eval_fused_scores)
@@ -151,14 +139,12 @@ def main():
     figures_dir.mkdir(parents=True, exist_ok=True)
     plot_roc_curve(roc_dict, figures_dir / "ensemble_roc_curves.png", title="Base Models vs Fusions on Eval Split")
 
-    # Confusion matrix of Stacked Ensemble at EER threshold
     cm_eval = np.array([
         [eval_stacker_rep["at_applied_threshold"]["tn"], eval_stacker_rep["at_applied_threshold"]["fp"]],
         [eval_stacker_rep["at_applied_threshold"]["fn"], eval_stacker_rep["at_applied_threshold"]["tp"]],
     ])
     plot_confusion_matrix(cm_eval, figures_dir / "stacked_ensemble_confusion_matrix.png", title="Stacked Ensemble Confusion Matrix")
 
-    # Print summary tables
     print("\n" + "=" * 95)
     print("META-LEARNER BASE MODEL COEFFICIENTS (STACKED ENSEMBLE)")
     print("=" * 95)

@@ -3,7 +3,6 @@
 Delegates to train_classical.py for training GMM, SVM, Random Forest, and Logistic Regression
 with PCA on train-only features and DEV-set hyperparameter tuning.
 
-Author: Jashan Goyal (IIT2024223)
 """
 
 from pathlib import Path

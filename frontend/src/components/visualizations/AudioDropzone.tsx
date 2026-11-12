@@ -30,7 +30,6 @@ export const AudioDropzone: React.FC<AudioDropzoneProps> = ({
   const animFrameRef = useRef<number | null>(null);
   const timerRef = useRef<any>(null);
 
-  // Keyboard shortcut: Press U to trigger file selection
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.key === 'u' || e.key === 'U') && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
@@ -80,7 +79,6 @@ export const AudioDropzone: React.FC<AudioDropzoneProps> = ({
     onFileSelected(file);
   };
 
-  // Microphone recording
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -149,7 +147,7 @@ export const AudioDropzone: React.FC<AudioDropzoneProps> = ({
 
   return (
     <div className={clsx('flex flex-col gap-4', className)}>
-      {/* Hidden Native File Input */}
+      {}
       <input
         ref={fileInputRef}
         type="file"
@@ -158,7 +156,7 @@ export const AudioDropzone: React.FC<AudioDropzoneProps> = ({
         onChange={handleFileInputChange}
       />
 
-      {/* Main Drag & Drop Card */}
+      {}
       <div
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -187,7 +185,7 @@ export const AudioDropzone: React.FC<AudioDropzoneProps> = ({
         </span>
       </div>
 
-      {/* Action Row: Microphone Recorder */}
+      {}
       <div className="flex items-center gap-2">
         {!isRecording ? (
           <Button
@@ -209,7 +207,7 @@ export const AudioDropzone: React.FC<AudioDropzoneProps> = ({
               </span>
             </div>
 
-            {/* Live Audio Level Meter */}
+            {}
             <div className="w-24 h-2 bg-elevated rounded-full overflow-hidden border border-borderSubtle">
               <div
                 className="h-full bg-primary transition-all duration-75"
@@ -224,7 +222,7 @@ export const AudioDropzone: React.FC<AudioDropzoneProps> = ({
         )}
       </div>
 
-      {/* Reference Preset Samples */}
+      {}
       {samples.length > 0 && (
         <div className="flex flex-col gap-2 pt-2 border-t border-borderSubtle">
           <span className="text-xs uppercase tracking-wide font-medium text-txt-secondary">

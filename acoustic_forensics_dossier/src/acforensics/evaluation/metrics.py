@@ -1,6 +1,5 @@
 """Evaluation metrics suite: EER, ROC-AUC, min-tDCF, and bootstrap confidence intervals.
 
-Author: Chunit Bansal (IIT2024223)
 """
 
 from pathlib import Path
@@ -136,9 +135,6 @@ def compute_metrics_at_threshold(
     f1 = float(metrics.f1_score(labels, preds, zero_division=0))
 
     cm = metrics.confusion_matrix(labels, preds, labels=[SPOOF, BONAFIDE])
-    # cm layout:
-    # [[TN (spoof correct),   FP (spoof called genuine)],
-    #  [FN (genuine called spoof), TP (genuine correct)]]
     tn, fp, fn, tp = cm.ravel()
 
     return {
@@ -215,7 +211,6 @@ def full_evaluation(
     auc = compute_roc_auc(labels, scores)
     min_tdcf, _ = compute_min_tdcf(labels, scores, asv_score_file=asv_score_file)
 
-    # Use dev threshold if provided, else optimal threshold
     eval_th = dev_threshold if dev_threshold is not None else opt_th
     at_eval_th = compute_metrics_at_threshold(labels, scores, eval_th)
     at_half_th = compute_metrics_at_threshold(labels, scores, 0.5)

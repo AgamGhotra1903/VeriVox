@@ -3,7 +3,6 @@
 Produces score matrices of shape (n_utterances, n_models) across dev, eval, and In-The-Wild
 splits, persisting to disk as .npy files with accompanying utterance IDs and labels.
 
-Author: Agam Ghotra (IIT2024226)
 """
 
 import json
@@ -76,11 +75,9 @@ def build_score_matrix(
 
     logger.info("Building (%d x %d) score matrix for split '%s'...", n_samples, n_models, split_name)
 
-    # Feature extractors
     lfcc_ext = LFCCExtractor(sample_rate=SAMPLE_RATE, n_fft=512, win_length=400, hop_length=160, n_lfcc=20, with_deltas=True)
     logmel_ext = LogMelExtractor(sample_rate=SAMPLE_RATE, n_fft=512, win_length=400, hop_length=160, n_mels=80)
 
-    # Normalizers
     norm_lfcc_file = Path("checkpoints/normalization_stats_lfcc.json")
     if not norm_lfcc_file.exists():
         norm_lfcc_file = Path("checkpoints/normalization_stats.json")
@@ -105,23 +102,19 @@ def build_score_matrix(
         else:
             wave = fixed_length_crop_or_pad(res.waveform, target_samples=target_samples, mode="center")
 
-        # 1. Extract raw features
         with torch.no_grad():
-            f_lfcc = lfcc_ext(wave)     # (60, T)
-            f_logmel = logmel_ext(wave) # (80, T)
+            f_lfcc = lfcc_ext(wave)
+            f_logmel = logmel_ext(wave)
 
-            # Normalization for CRNN inputs
             f_lfcc_norm = norm_lfcc(f_lfcc) if norm_lfcc.is_fitted else per_utterance_cmvn(f_lfcc)
             f_logmel_norm = norm_logmel(f_logmel) if norm_logmel.is_fitted else per_utterance_cmvn(f_logmel)
 
         f_lfcc_np = f_lfcc.cpu().numpy()
         f_logmel_np = f_logmel.cpu().numpy()
 
-        # Classical utterance vectors (mean + std)
         stat_lfcc = extract_mean_std_features(f_lfcc_np).reshape(1, -1)
         stat_logmel = extract_mean_std_features(f_logmel_np).reshape(1, -1)
 
-        # 2. Query each base model for its continuous score
         utterance_scores = []
         for m_name in model_names:
             model = models_dict[m_name]
@@ -129,19 +122,17 @@ def build_score_matrix(
 
             if m_name == "CRNN-LFCC":
                 with torch.no_grad():
-                    inp = f_lfcc_norm.unsqueeze(0).unsqueeze(0).to(device) # (1, 1, 60, T)
+                    inp = f_lfcc_norm.unsqueeze(0).unsqueeze(0).to(device)
                     score_val = float(model.predict_score(inp).cpu().item())
             elif m_name == "CRNN-LogMel":
                 with torch.no_grad():
-                    inp = f_logmel_norm.unsqueeze(0).unsqueeze(0).to(device) # (1, 1, 80, T)
+                    inp = f_logmel_norm.unsqueeze(0).unsqueeze(0).to(device)
                     score_val = float(model.predict_score(inp).cpu().item())
             elif m_name == "GMM":
-                # GMM expects frames of shape (T, 60)
                 score_val = float(model.score_utterance(f_lfcc_np.T))
             elif "LogMel" in m_name:
                 score_val = float(predict_classical_score(model, stat_logmel)[0])
             else:
-                # Classical models defaulting to LFCC mean+std
                 score_val = float(predict_classical_score(model, stat_lfcc)[0])
 
             utterance_scores.append(score_val)
@@ -164,7 +155,6 @@ def build_score_matrix(
         "model_names": model_names,
     }
 
-    # Save to disk as .npy and .json
     if output_dir is not None:
         out_p = Path(output_dir)
         out_p.mkdir(parents=True, exist_ok=True)

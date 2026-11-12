@@ -1,6 +1,5 @@
 """Unit tests for PyTorch Dataset implementations, collate_fn, and balanced sampler.
 
-Author: Paras Bansal (IIT2024221), Agam Ghotra (IIT2024226)
 """
 
 import pytest
@@ -28,7 +27,7 @@ def mock_dataset_files(tmp_path: Path):
     for i in range(10):
         file_id = f"test_{i}"
         audio_file = audio_dir / f"{file_id}.flac"
-        sig = np.random.uniform(-0.5, 0.5, 32000).astype(np.float32)  # 2.0s
+        sig = np.random.uniform(-0.5, 0.5, 32000).astype(np.float32)
         sf.write(str(audio_file), sig, 16000)
 
         label = BONAFIDE if i < 2 else SPOOF

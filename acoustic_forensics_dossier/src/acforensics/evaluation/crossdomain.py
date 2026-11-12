@@ -1,6 +1,5 @@
 """In-The-Wild Cross-Domain Evaluation Suite (Müller et al., Interspeech 2022).
 
-Author: Chunit Bansal (IIT2024223)
 """
 
 from pathlib import Path
@@ -68,7 +67,6 @@ def evaluate_in_the_wild(
         if not res.is_valid or res.waveform is None:
             continue
 
-        # Generate overlapping 4.0s windows
         windows = generate_multi_crop_windows(res.waveform, window_samples=TARGET_SAMPLES, hop_ratio=0.5)
 
         window_scores = []
@@ -78,7 +76,7 @@ def evaluate_in_the_wild(
                 if feature_extractor is not None:
                     feat = feature_extractor(wave_chunk)
                     if feat.dim() == 2:
-                        feat = feat.unsqueeze(0).unsqueeze(0)  # (1, 1, F, T)
+                        feat = feat.unsqueeze(0).unsqueeze(0)
                     elif feat.dim() == 3:
                         feat = feat.unsqueeze(1)
                     feat = feat.to(device)
@@ -90,7 +88,6 @@ def evaluate_in_the_wild(
                 score = (logits[:, BONAFIDE] - logits[:, SPOOF]).item()
                 window_scores.append(score)
 
-        # Average window logits
         mean_score = float(np.mean(window_scores))
         all_scores.append(mean_score)
         all_labels.append(row["label"])
@@ -98,7 +95,6 @@ def evaluate_in_the_wild(
     scores_arr = np.array(all_scores, dtype=np.float64)
     labels_arr = np.array(all_labels, dtype=np.int64)
 
-    # 1. Optimal ITW threshold
     itw_eer, itw_opt_thresh = compute_eer(labels_arr, scores_arr)
     itw_auc = compute_roc_auc(labels_arr, scores_arr)
 

@@ -1,6 +1,5 @@
 """Interactive Plotly visualizers for forensic inspection and benchmark dashboards.
 
-Author: Chunit Bansal (IIT2024223)
 """
 
 import numpy as np
@@ -63,12 +62,10 @@ def create_attention_waveform_plot(
     duration = len(waveform) / sr
     time_wave = np.linspace(0, duration, len(waveform))
 
-    # Downsample waveform for snappy Plotly rendering
     stride = max(1, len(waveform) // 4000)
     time_sub = time_wave[::stride]
     wave_sub = waveform[::stride]
 
-    # Attention weights: shape (T_frames,)
     time_attn = np.linspace(0, duration, len(attention_weights))
 
     fig = make_subplots(
@@ -79,7 +76,6 @@ def create_attention_waveform_plot(
         subplot_titles=["Waveform Amplitude with Anomaly Regions", "Frame Attention Weights (Model Decision Focus)"],
     )
 
-    # Waveform trace
     fig.add_trace(
         go.Scatter(
             x=time_sub,
@@ -92,7 +88,6 @@ def create_attention_waveform_plot(
         row=1, col=1,
     )
 
-    # Attention heat-strip trace
     fig.add_trace(
         go.Scatter(
             x=time_attn,
@@ -106,7 +101,6 @@ def create_attention_waveform_plot(
         row=2, col=1,
     )
 
-    # Add anomaly segment highlight boxes if present
     if anomaly_segments:
         for seg in anomaly_segments:
             s_start = seg.get("start_sec", 0.0)
@@ -193,7 +187,6 @@ def create_robustness_chart(df_rob: pd.DataFrame) -> go.Figure:
     """Builds interactive Plotly dark chart for Lossy Codec Degradation."""
     fig = go.Figure()
 
-    # Baseline line at Clean EER (0.00%)
     fig.add_trace(go.Scatter(
         x=[16, 64],
         y=[0.0, 0.0],
@@ -204,9 +197,9 @@ def create_robustness_chart(df_rob: pd.DataFrame) -> go.Figure:
     ))
 
     color_map = {
-        "MP3": "#EF4444",   # Rose
-        "AAC": "#38BDF8",   # Sky
-        "OPUS": "#10B981",  # Emerald
+        "MP3": "#EF4444",
+        "AAC": "#38BDF8",
+        "OPUS": "#10B981",
     }
 
     for codec in ["MP3", "AAC", "OPUS"]:
@@ -253,7 +246,6 @@ def create_per_attack_chart(attack_dict: dict[str, float]) -> go.Figure:
     attacks = sorted(attack_dict.keys())
     eers = [float(attack_dict[a]) for a in attacks]
 
-    # Known training variants: A16, A17, A19 -> amber, others -> cyan
     colors = ["#F59E0B" if a in ["A16", "A17", "A19"] else "#06B6D4" for a in attacks]
 
     fig = go.Figure(go.Bar(

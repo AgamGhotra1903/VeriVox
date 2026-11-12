@@ -1,6 +1,5 @@
 """Unit tests for standardized Parquet manifest creation, validation, and storage.
 
-Author: Paras Bansal (IIT2024221), Agam Ghotra (IIT2024226)
 """
 
 from pathlib import Path

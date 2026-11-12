@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 
 export interface AttentionHeatstripProps {
-  attentionWeights: number[]; // normalized [0, 1] per frame
+  attentionWeights: number[]; 
   durationSec: number;
   currentTime?: number;
   className?: string;
@@ -64,7 +64,7 @@ export const AttentionHeatstrip: React.FC<AttentionHeatstripProps> = ({
         className="relative border border-borderSubtle bg-elevated/40 rounded-[8px] overflow-hidden cursor-crosshair"
         style={{ height }}
       >
-        {/* Render horizontal gradient heatstrip with calm indigo palette */}
+        {}
         <div className="w-full h-full flex">
           {attentionWeights.map((w, idx) => {
             const alpha = Math.max(0.1, w);
@@ -83,7 +83,7 @@ export const AttentionHeatstrip: React.FC<AttentionHeatstripProps> = ({
           })}
         </div>
 
-        {/* Hover Tooltip Overlay with rounded tooltip */}
+        {}
         {hoverInfo && (
           <div
             className="absolute top-0 bottom-0 pointer-events-none border-l border-txt-primary shadow-sm"

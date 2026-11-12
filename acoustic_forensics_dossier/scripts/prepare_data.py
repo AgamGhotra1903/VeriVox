@@ -1,6 +1,5 @@
 """Data preparation, validation, and synthetic smoke-test dataset generator.
 
-Author: Paras Bansal (IIT2024221), Agam Ghotra (IIT2024226)
 """
 
 import argparse
@@ -49,30 +48,23 @@ def generate_synthetic_audio(
     file_path.parent.mkdir(parents=True, exist_ok=True)
     t = np.linspace(0, duration_sec, int(sample_rate * duration_sec), endpoint=False, dtype=np.float32)
 
-    # Fundamental voice frequency (120 Hz to 240 Hz)
     f0 = random.uniform(120.0, 220.0)
 
-    # Harmonic series simulating vowel formants
     signal = 0.5 * np.sin(2 * np.pi * f0 * t)
     signal += 0.25 * np.sin(2 * np.pi * 2 * f0 * t)
     signal += 0.15 * np.sin(2 * np.pi * 3 * f0 * t)
     signal += 0.10 * np.sin(2 * np.pi * 4 * f0 * t)
 
-    # Low-frequency amplitude envelope simulating speech syllables
     envelope = 0.5 * (1.0 + np.sin(2 * np.pi * 3.0 * t))
     signal *= envelope
 
     if is_spoof:
-        # Inject vocoder buzz and synthetic phase distortion
         buzz = 0.08 * np.sin(2 * np.pi * 3800.0 * t + np.random.uniform(0, np.pi))
         signal += buzz
-        # Slight spectral roughness
         signal += 0.02 * np.random.normal(0, 1, size=len(t)).astype(np.float32)
     else:
-        # Natural subtle room noise
         signal += 0.005 * np.random.normal(0, 1, size=len(t)).astype(np.float32)
 
-    # Peak normalize
     max_val = np.max(np.abs(signal))
     if max_val > 0:
         signal = signal / max_val * 0.95
@@ -130,19 +122,14 @@ def generate_smoke_test_dataset(root_dir: Path | str) -> dict[str, Path]:
                     attack_id = random.choice(attacks_pool)
                     is_spoof = True
 
-                # Generate FLAC file
                 duration = random.uniform(2.5, 4.5)
                 generate_synthetic_audio(audio_file, duration_sec=duration, is_spoof=is_spoof)
 
-                # Write protocol entry: SPEAKER_ID FILE_ID - ATTACK_ID KEY
                 pf.write(f"{speaker_id} {file_id} - {attack_id} {key}\n")
 
-                # Mock ASV score line for min-tDCF calculation
-                # Format: SPEAKER_ID FILE_ID ASV_SCORE KEY
                 mock_asv_score = random.gauss(2.5 if is_bonafide else -1.5, 1.0)
                 asv_score_lines.append(f"{speaker_id} {file_id} target {mock_asv_score:.4f} {key}\n")
 
-        # Save ASV score files for dev and eval
         if split_name in ("dev", "eval"):
             asv_score_file = asv_scores_dir / f"ASVspoof2019.LA.asv.{split_name}.gi.trl.scores.txt"
             with open(asv_score_file, "w", encoding="utf-8") as asv_f:
@@ -225,7 +212,6 @@ def main():
         smoke_dir = Path(args.smoke_dir)
         protocol_paths = generate_smoke_test_dataset(smoke_dir)
 
-        # Inspect and print summaries
         for split_name in ["train", "dev", "eval"]:
             p_path = protocol_paths[split_name]
             a_dir = smoke_dir / f"ASVspoof2019_LA_{split_name}" / "flac"
@@ -233,7 +219,6 @@ def main():
             stats = get_protocol_statistics(df)
             print_protocol_summary(split_name, stats)
 
-        # Verify batch loading
         verify_batch_loading(
             config,
             protocol_paths["train"],

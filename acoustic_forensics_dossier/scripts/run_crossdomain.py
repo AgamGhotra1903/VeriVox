@@ -1,6 +1,5 @@
 """In-The-Wild Cross-Domain Evaluation CLI.
 
-Author: Chunit Bansal (IIT2024223)
 """
 
 import argparse
@@ -32,7 +31,6 @@ def main():
 
     meta_path = Path(args.meta)
     if not meta_path.exists():
-        # Fallback to smoke test in the wild
         meta_path = Path("data/smoke_test/in_the_wild/meta.csv")
         audio_dir = Path("data/smoke_test/in_the_wild/audio")
     else:
@@ -42,7 +40,6 @@ def main():
         logger.error("In-The-Wild metadata not found at %s. Run python scripts/prepare_data.py --generate-smoke-data first.", meta_path)
         return
 
-    # Load CRNN model
     device = torch.device("cpu")
     ckpt_path = Path("checkpoints/crnn_best.pt")
     if not ckpt_path.exists():
@@ -56,7 +53,6 @@ def main():
 
     dev_thresh = ckpt.get("dev_threshold", 0.0)
 
-    # Feature extractor & normalizer
     extractor = LFCCExtractor(sample_rate=16000, n_fft=512, win_length=400, hop_length=160, n_lfcc=20, with_deltas=True)
     norm_file = Path("checkpoints/normalization_stats.json")
     normalizer = FeatureNormalizer().load(norm_file) if norm_file.exists() else FeatureNormalizer()

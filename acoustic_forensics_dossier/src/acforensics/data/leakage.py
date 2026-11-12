@@ -7,7 +7,6 @@ Audits:
 4. VCTK heritage overlap warnings (ASVspoof 2019 LA bona fide speech derives from VCTK,
    so any extension dataset using VCTK shares speakers/utterances).
 
-Author: Paras Bansal (IIT2024221), Agam Ghotra (IIT2024226)
 """
 
 from hashlib import sha256
@@ -20,7 +19,6 @@ from acforensics.utils.logging import get_logger
 
 logger = get_logger(__name__)
 
-# Known VCTK speaker ID pattern (p225, p226, ..., p376)
 VCTK_SPEAKER_PREFIXES = ("p2", "p3")
 
 
@@ -71,7 +69,6 @@ def audit_speaker_disjointness(
         col = speaker_col if speaker_col in df.columns else ("speaker_id" if "speaker_id" in df.columns else None)
         if col and len(df) > 0:
             speakers = set(df[col].astype(str).unique())
-            # Exclude generic 'unknown' or empty markers from collision checks
             speakers.discard("unknown")
             speakers.discard("-")
             speakers.discard("")
@@ -87,7 +84,6 @@ def audit_speaker_disjointness(
         check_key = f"{s1}_vs_{s2}"
         is_disjoint = len(overlap) == 0
 
-        # Define which pairs are strictly required to be disjoint
         strict_pairs = [
             ("train", "dev"),
             ("train", "eval"),
@@ -201,7 +197,6 @@ def audit_audio_hash_collisions(
                 hash_to_origin[h] = []
             hash_to_origin[h].append((split_name, str(fpath)))
 
-    # Detect cross-split collisions
     for h, occurrences in hash_to_origin.items():
         splits_involved = {occ[0] for occ in occurrences}
         if len(splits_involved) > 1:
@@ -240,7 +235,6 @@ def check_vctk_heritage_warnings(
             speakers = set(df[col].astype(str).unique())
             all_speakers.update(speakers)
 
-            # Check if VCTK prefixes like 'p225', 'p226' are present
             vctk_like = [s for s in speakers if s.startswith(VCTK_SPEAKER_PREFIXES) and len(s) == 4 and s[1:].isdigit()]
             if vctk_like:
                 msg = (

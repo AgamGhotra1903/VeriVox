@@ -1,6 +1,5 @@
 """Protocol parsers and metadata handlers for ASVspoof 2019 LA and In-The-Wild.
 
-Author: Paras Bansal (IIT2024221)
 """
 
 from pathlib import Path
@@ -86,7 +85,6 @@ def load_asvspoof_protocol(
             parsed = parse_asvspoof_line(line)
             if parsed is not None:
                 parsed["split"] = split_name
-                # Determine audio file path if audio_dir is provided
                 if audio_dir is not None:
                     audio_root = Path(audio_dir)
                     # ASVspoof audio files are typically .flac, but support .wav fallback
@@ -136,11 +134,9 @@ def load_in_the_wild_protocol(
 
     raw_df = pd.read_csv(path)
 
-    # Normalize column names
     col_map = {c: c.strip().lower() for c in raw_df.columns}
     raw_df = raw_df.rename(columns=col_map)
 
-    # Determine speaker and file columns
     file_col = "file" if "file" in raw_df.columns else raw_df.columns[0]
     speaker_col = "speaker" if "speaker" in raw_df.columns else "speaker_id"
     label_col = "label" if "label" in raw_df.columns else "key"
@@ -201,7 +197,6 @@ def get_protocol_statistics(df: pd.DataFrame) -> dict[str, Any]:
     spoof_count = int((df["label"] == SPOOF).sum())
     unique_speakers = int(df["speaker_id"].nunique())
 
-    # Attack breakdown
     attack_counts = df[df["label"] == SPOOF]["attack_id"].value_counts().to_dict()
 
     return {

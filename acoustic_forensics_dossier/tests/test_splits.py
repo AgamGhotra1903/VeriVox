@@ -1,6 +1,5 @@
 """Unit tests for dataset splitting and speaker disjointness isolation ("AF-Split v1").
 
-Author: Paras Bansal (IIT2024221), Agam Ghotra (IIT2024226)
 """
 
 import pandas as pd
@@ -32,9 +31,7 @@ def test_split_in_the_wild_speaker_disjointness():
     cal_speakers = set(cal_df["speaker_id"])
     test_speakers = set(test_df["speaker_id"])
 
-    # Strict disjointness check
     assert len(cal_speakers.intersection(test_speakers)) == 0, "Speaker overlap detected between ITW-CAL and ITW-TEST!"
-    # Check that ~20% of speakers were assigned to CAL (4 of 20)
     assert len(cal_speakers) == 4
     assert len(test_speakers) == 16
     assert len(cal_df) + len(test_df) == len(df)
@@ -55,7 +52,6 @@ def test_split_in_the_wild_single_speaker_fallback():
 def test_split_extension_by_generator():
     """Verifies holding out unseen synthesis generators for multi-domain benchmark."""
     records = []
-    # 4 generators
     for gen in ["vocoder_a", "vocoder_b", "diffusion_c", "flow_d"]:
         for i in range(15):
             records.append({
@@ -64,7 +60,6 @@ def test_split_extension_by_generator():
                 "label": SPOOF,
                 "speaker_id": f"spk_{i % 5}",
             })
-    # Add some bona fide speech
     for spk in [f"real_spk_{i}" for i in range(6)]:
         for j in range(5):
             records.append({
@@ -85,12 +80,10 @@ def test_split_extension_by_generator():
         seed=42,
     )
 
-    # flow_d must appear ONLY in test_x
     assert (test_x[test_x["label"] == SPOOF]["attack_id"] == "flow_d").all()
     assert "flow_d" not in train_x["attack_id"].values
     assert "flow_d" not in val_x["attack_id"].values
 
-    # diffusion_c must appear ONLY in val_x
     assert (val_x[val_x["label"] == SPOOF]["attack_id"] == "diffusion_c").all()
     assert "diffusion_c" not in train_x["attack_id"].values
     assert "diffusion_c" not in test_x["attack_id"].values
