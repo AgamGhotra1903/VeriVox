@@ -15,6 +15,7 @@ Provides endpoints for:
 from contextlib import asynccontextmanager
 import os
 from pathlib import Path
+import re
 import uuid
 from typing import Optional
 
@@ -35,7 +36,11 @@ from acforensics.api.models import (
     AnalysisResult,
     AnalyzeResponse,
     BenchmarksResponse,
+    DatasetSampleItem,
+    DatasetSamplesResponse,
+    DatasetSummaryResponse,
     HealthResponse,
+    ModelInfoItem,
     SampleItem,
     StressTestResponse,
 )
@@ -104,15 +109,96 @@ async def stream_sample_audio(filename: str):
     return FileResponse(file_path, media_type=media_type, filename=filename)
 
 
+@app.get("/api/models", response_model=list[ModelInfoItem])
+async def list_models():
+    """Lists available neural and classical screening models with metadata."""
+    service = get_forensic_service()
+    return service.list_models()
+
+
+@app.get("/api/dataset/summary", response_model=DatasetSummaryResponse)
+async def get_dataset_summary():
+    """Returns overview counts and attack breakdowns for ASVspoof 2019 LA evaluation corpus."""
+    service = get_forensic_service()
+    return service.get_dataset_summary()
+
+
+@app.get("/api/dataset/samples", response_model=DatasetSamplesResponse)
+async def query_dataset_samples(
+    page: int = 1,
+    page_size: int = 15,
+    label: Optional[str] = None,
+    attack_id: Optional[str] = None,
+    search: Optional[str] = None,
+    random_sample: bool = False,
+):
+    """Searches, filters, and paginates samples from the evaluation set."""
+    service = get_forensic_service()
+    return service.query_dataset_samples(
+        page=page,
+        page_size=page_size,
+        label=label,
+        attack_id=attack_id,
+        search=search,
+        random_sample=random_sample,
+    )
+
+
+@app.get("/api/dataset/audio/{file_id}")
+async def stream_dataset_audio(file_id: str):
+    """Streams a sample audio clip from the evaluation dataset."""
+    if not re.match(r"^[A-Za-z0-9_]+$", file_id):
+        raise HTTPException(status_code=400, detail="Invalid sample file ID format.")
+    service = get_forensic_service()
+    path = service.get_dataset_audio_path(file_id)
+    if not path or not path.exists():
+        raise HTTPException(status_code=404, detail=f"Audio clip '{file_id}' not found.")
+    return FileResponse(path, media_type="audio/flac", filename=f"{file_id}.flac")
+
+
+@app.post("/api/dataset/evaluate/{file_id}", response_model=AnalyzeResponse)
+async def evaluate_dataset_sample(
+    file_id: str,
+    model: Optional[str] = None,
+):
+    """Initializes evaluation job for a dataset sample with ground truth metadata."""
+    if not re.match(r"^[A-Za-z0-9_]+$", file_id):
+        raise HTTPException(status_code=400, detail="Invalid sample file ID format.")
+    service = get_forensic_service()
+    try:
+        job_id, filename = await service.evaluate_dataset_sample(file_id, model=model)
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to load dataset sample: {e}")
+
+    return AnalyzeResponse(
+        job_id=job_id,
+        status="processing",
+        filename=filename,
+        stream_url=f"/api/analyze/{job_id}/events",
+        result_url=f"/api/result/{job_id}",
+    )
+
+
 @app.post("/api/analyze", response_model=AnalyzeResponse)
 async def analyze_audio_upload(
-    audio: UploadFile = File(...),
+    audio: Optional[UploadFile] = File(None),
+    audio_file: Optional[UploadFile] = File(None),
+    model: Optional[str] = Form(None),
 ):
     """Uploads an audio file and initializes the forensic analysis job pipeline.
 
     Validates format and size, assigns a unique Job ID, and prepares the SSE stream.
     """
-    filename = audio.filename or "upload.wav"
+    upload_file = audio or audio_file
+    if upload_file is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No audio file provided. Please submit an 'audio' or 'audio_file' field.",
+        )
+
+    filename = upload_file.filename or "upload.wav"
     ext = Path(filename).suffix.lower()
     if ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(
@@ -120,7 +206,7 @@ async def analyze_audio_upload(
             detail=f"Unsupported audio format '{ext}'. Allowed: {', '.join(sorted(ALLOWED_EXTENSIONS))}",
         )
 
-    content = await audio.read()
+    content = await upload_file.read()
     if len(content) > MAX_UPLOAD_BYTES:
         raise HTTPException(
             status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
@@ -134,7 +220,7 @@ async def analyze_audio_upload(
 
     job_id = uuid.uuid4().hex
     service = get_forensic_service()
-    await service.register_audio_upload(job_id, content, filename)
+    await service.register_audio_upload(job_id, content, filename, selected_model=model)
 
     return AnalyzeResponse(
         job_id=job_id,

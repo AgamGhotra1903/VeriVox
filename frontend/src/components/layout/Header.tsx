@@ -41,7 +41,7 @@ export const Header: React.FC<HeaderProps> = ({
                 Acoustic Forensics
               </span>
               <span className="text-[11px] font-medium px-2 py-0.5 bg-elevated border border-borderSubtle text-txt-secondary rounded-full">
-                v2.4
+                v0.1.0
               </span>
             </div>
             <p className="text-xs text-txt-secondary hidden sm:block">

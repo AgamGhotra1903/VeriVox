@@ -1,5 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Pause, RotateCcw, AlertCircle, AudioWaveform as WaveformIcon } from 'lucide-react';
+import {
+  Play,
+  Pause,
+  RotateCcw,
+  AlertCircle,
+  AudioWaveform as WaveformIcon,
+  Upload,
+  Bookmark,
+  Database,
+  Layers,
+  ChevronDown,
+  ChevronUp,
+} from 'lucide-react';
+import { clsx } from 'clsx';
 import { Button } from '../components/ui/Button';
 import { Panel } from '../components/ui/Panel';
 import { Readout } from '../components/ui/Readout';
@@ -10,7 +23,16 @@ import { WaveformCanvas } from '../components/visualizations/WaveformCanvas';
 import { AttentionHeatstrip } from '../components/visualizations/AttentionHeatstrip';
 import { SpectrogramCanvas } from '../components/visualizations/SpectrogramCanvas';
 import { ModelBreakdownChart } from '../components/visualizations/ModelBreakdownChart';
-import { AnalysisResult, PipelineEvent, SampleItem } from '../types/api';
+import { GroundTruthCard } from '../components/visualizations/GroundTruthCard';
+import { DatasetBrowser } from '../components/dataset/DatasetBrowser';
+import { ModelSelector } from '../components/layout/ModelSelector';
+import {
+  AnalysisResult,
+  DatasetSampleItem,
+  ModelInfoItem,
+  PipelineEvent,
+  SampleItem,
+} from '../types/api';
 
 export interface AnalyseScreenProps {
   samples: SampleItem[];
@@ -28,12 +50,36 @@ export const AnalyseScreen: React.FC<AnalyseScreenProps> = ({
   const [events, setEvents] = useState<PipelineEvent[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  const [models, setModels] = useState<ModelInfoItem[]>([]);
+  const [selectedModelId, setSelectedModelId] = useState<string>('CRNN-LFCC');
+
+  const [inputTab, setInputTab] = useState<'dataset' | 'upload' | 'reference'>('dataset');
+  const [selectedDatasetSampleId, setSelectedDatasetSampleId] = useState<string | null>(null);
+
+  const [sessionTally, setSessionTally] = useState({
+    total: 0,
+    correct: 0,
+    incorrect: 0,
+    inconclusive: 0,
+  });
+
+  const [showModelComparisonTable, setShowModelComparisonTable] = useState(false);
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
+
+  useEffect(() => {
+    fetch('/api/models')
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data: ModelInfoItem[]) => {
+        if (data.length > 0) setModels(data);
+      })
+      .catch((err) => console.error('Failed to load models list:', err));
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -48,7 +94,7 @@ export const AnalyseScreen: React.FC<AnalyseScreenProps> = ({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.code === 'Space' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
+      if (e.code === 'Space' && !['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName)) {
         e.preventDefault();
         togglePlayPause();
       }
@@ -91,13 +137,16 @@ export const AnalyseScreen: React.FC<AnalyseScreenProps> = ({
     setEvents([]);
     setErrorMessage(null);
     setResult(null);
+    setSelectedDatasetSampleId(null);
 
     const blobUrl = URL.createObjectURL(file);
     setAudioUrl(blobUrl);
 
     try {
       const formData = new FormData();
+      formData.append('audio', file);
       formData.append('audio_file', file);
+      formData.append('model', selectedModelId);
 
       const resp = await fetch('/api/analyze', {
         method: 'POST',
@@ -122,17 +171,45 @@ export const AnalyseScreen: React.FC<AnalyseScreenProps> = ({
     setEvents([]);
     setErrorMessage(null);
     setResult(null);
+    setSelectedDatasetSampleId(null);
 
     try {
-      const sampleAudioUrl = `/api/samples/${sample.id}/audio`;
+      const sampleAudioUrl = `/api/samples/${sample.filename}`;
       const resp = await fetch(sampleAudioUrl);
       if (!resp.ok) throw new Error('Could not fetch reference audio.');
       const blob = await resp.blob();
-      const file = new File([blob], sample.filename, { type: 'audio/flac' });
-
+      const file = new File([blob], sample.filename, { type: 'audio/wav' });
       handleFileSelected(file);
     } catch (err: any) {
-      setErrorMessage(err.message || 'Error loading sample clip.');
+      setErrorMessage(err.message || 'Error loading reference clip.');
+      setIsProcessing(false);
+    }
+  };
+
+  const handleDatasetSampleSelected = async (sample: DatasetSampleItem) => {
+    setIsProcessing(true);
+    setEvents([]);
+    setErrorMessage(null);
+    setResult(null);
+    setSelectedDatasetSampleId(sample.file_id);
+
+    const streamUrl = `/api/dataset/audio/${sample.file_id}`;
+    setAudioUrl(streamUrl);
+
+    try {
+      const resp = await fetch(
+        `/api/dataset/evaluate/${sample.file_id}?model=${encodeURIComponent(selectedModelId)}`,
+        { method: 'POST' }
+      );
+      if (!resp.ok) {
+        const errData = await resp.json().catch(() => ({ detail: 'Dataset evaluation request failed.' }));
+        throw new Error(errData.detail || 'Failed to start evaluation on dataset sample.');
+      }
+
+      const { job_id } = await resp.json();
+      connectSseStream(job_id);
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Error evaluating dataset clip.');
       setIsProcessing(false);
     }
   };
@@ -179,15 +256,31 @@ export const AnalyseScreen: React.FC<AnalyseScreenProps> = ({
       if (onAnalysisComplete) {
         onAnalysisComplete(data);
       }
+
+      if (data.ground_truth) {
+        setSessionTally((prev) => {
+          if (data.is_correct === true) {
+            return { ...prev, total: prev.total + 1, correct: prev.correct + 1 };
+          } else if (data.is_correct === false) {
+            return { ...prev, total: prev.total + 1, incorrect: prev.incorrect + 1 };
+          } else {
+            return { ...prev, total: prev.total + 1, inconclusive: prev.inconclusive + 1 };
+          }
+        });
+      }
     } catch (err) {
       console.error('Error fetching result:', err);
     }
   };
 
+  const handleResetTally = () => {
+    setSessionTally({ total: 0, correct: 0, incorrect: 0, inconclusive: 0 });
+  };
+
   const duration = result?.quality?.duration_sec || 4.0;
 
   return (
-    <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-6 flex flex-col gap-6">
+    <div className="max-w-[1240px] mx-auto px-4 sm:px-6 py-6 flex flex-col gap-6">
       {}
       {audioUrl && (
         <audio
@@ -200,16 +293,123 @@ export const AnalyseScreen: React.FC<AnalyseScreenProps> = ({
       )}
 
       {}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+      {models.length > 0 && (
+        <ModelSelector
+          models={models}
+          selectedModelId={selectedModelId}
+          onSelectModel={setSelectedModelId}
+          disabled={isProcessing}
+        />
+      )}
+
+      {}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {}
-        <div className="md:col-span-5 lg:col-span-4 flex flex-col gap-6">
-          <Panel title="Audio Recording">
-            <AudioDropzone
-              onFileSelected={handleFileSelected}
-              onSampleSelected={handleSampleSelected}
-              samples={samples}
-              isProcessing={isProcessing}
-            />
+        <div className="lg:col-span-5 flex flex-col gap-6">
+          <Panel
+            title="Audio Input Source"
+            actions={
+              <div className="flex items-center gap-1 p-0.5 bg-inset border border-borderSubtle rounded-[8px]">
+                <button
+                  onClick={() => setInputTab('dataset')}
+                  className={clsx(
+                    'px-2.5 py-1 rounded-[6px] text-xs font-medium flex items-center gap-1.5 transition-colors',
+                    inputTab === 'dataset'
+                      ? 'bg-surface text-txt-primary shadow-sm font-semibold'
+                      : 'text-txt-secondary hover:text-txt-primary'
+                  )}
+                >
+                  <Database className="w-3.5 h-3.5 text-primary" />
+                  <span>Test Dataset</span>
+                </button>
+                <button
+                  onClick={() => setInputTab('upload')}
+                  className={clsx(
+                    'px-2.5 py-1 rounded-[6px] text-xs font-medium flex items-center gap-1.5 transition-colors',
+                    inputTab === 'upload'
+                      ? 'bg-surface text-txt-primary shadow-sm font-semibold'
+                      : 'text-txt-secondary hover:text-txt-primary'
+                  )}
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  <span>Upload / Mic</span>
+                </button>
+                <button
+                  onClick={() => setInputTab('reference')}
+                  className={clsx(
+                    'px-2.5 py-1 rounded-[6px] text-xs font-medium flex items-center gap-1.5 transition-colors',
+                    inputTab === 'reference'
+                      ? 'bg-surface text-txt-primary shadow-sm font-semibold'
+                      : 'text-txt-secondary hover:text-txt-primary'
+                  )}
+                >
+                  <Bookmark className="w-3.5 h-3.5" />
+                  <span>Reference</span>
+                </button>
+              </div>
+            }
+          >
+            {inputTab === 'dataset' && (
+              <DatasetBrowser
+                onSelectSample={handleDatasetSampleSelected}
+                selectedSampleId={selectedDatasetSampleId}
+                isProcessing={isProcessing}
+                sessionTally={sessionTally}
+                onResetTally={handleResetTally}
+              />
+            )}
+
+            {inputTab === 'upload' && (
+              <AudioDropzone
+                onFileSelected={handleFileSelected}
+                onSampleSelected={handleSampleSelected}
+                samples={[]}
+                isProcessing={isProcessing}
+              />
+            )}
+
+            {inputTab === 'reference' && (
+              <div className="flex flex-col gap-2">
+                <p className="text-xs text-txt-secondary mb-1">
+                  Curated voice samples with confirmed ground truth for immediate validation:
+                </p>
+                <div className="grid grid-cols-1 gap-2">
+                  {samples.map((sample) => (
+                    <button
+                      key={sample.id}
+                      onClick={() => handleSampleSelected(sample)}
+                      disabled={isProcessing}
+                      className="flex items-center justify-between p-3 rounded-[10px] bg-surface hover:bg-elevated border border-borderSubtle text-left transition-colors duration-150 group disabled:opacity-50 min-h-[44px]"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-7 h-7 rounded-[6px] bg-elevated border border-borderSubtle flex items-center justify-center flex-shrink-0 text-txt-secondary group-hover:text-primary transition-colors">
+                          <Play className="w-3.5 h-3.5" />
+                        </div>
+                        <div className="truncate">
+                          <p className="text-xs font-medium text-txt-primary truncate group-hover:text-primary transition-colors">
+                            {sample.name}
+                          </p>
+                          <p className="text-[11px] text-txt-secondary truncate">
+                            {sample.description}
+                          </p>
+                        </div>
+                      </div>
+
+                      <span
+                        className={clsx(
+                          'text-[11px] font-medium px-2 py-0.5 rounded-full border flex-shrink-0 ml-2',
+                          sample.ground_truth === 'bonafide'
+                            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                            : 'bg-rose-500/10 border-rose-500/30 text-rose-400'
+                        )}
+                      >
+                        {sample.ground_truth === 'bonafide' ? 'Genuine' : 'Deepfake'}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </Panel>
 
           {}
@@ -229,7 +429,7 @@ export const AnalyseScreen: React.FC<AnalyseScreenProps> = ({
                   label="Duration"
                   value={result.quality.duration_sec.toFixed(2)}
                   unit="sec"
-                  sublabel="4.0s normalized"
+                  sublabel="4.0s normalized window"
                 />
                 <Readout
                   label="Sample Rate"
@@ -255,7 +455,7 @@ export const AnalyseScreen: React.FC<AnalyseScreenProps> = ({
                   label="Bandwidth"
                   value={Math.round(result.quality.bandwidth_hz)}
                   unit="Hz"
-                  sublabel="Spectral boundary"
+                  sublabel={result.quality.bandwidth_hz >= 6000 ? 'Wideband Nyquist' : 'Band-limited'}
                 />
                 <Readout
                   label="Vocal Energy"
@@ -269,7 +469,17 @@ export const AnalyseScreen: React.FC<AnalyseScreenProps> = ({
         </div>
 
         {}
-        <div className="md:col-span-7 lg:col-span-8 flex flex-col gap-6">
+        <div className="lg:col-span-7 flex flex-col gap-6">
+          {}
+          {result && result.ground_truth && (
+            <GroundTruthCard
+              groundTruth={result.ground_truth}
+              attackId={result.attack_id}
+              verdict={result.verdict}
+              isCorrect={result.is_correct}
+            />
+          )}
+
           {}
           {result ? (
             <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-stretch animate-card-mount">
@@ -288,10 +498,10 @@ export const AnalyseScreen: React.FC<AnalyseScreenProps> = ({
                 <div>
                   <div className="flex items-center justify-between pb-3 border-b border-borderSubtle mb-3">
                     <span className="text-xs uppercase tracking-wide font-semibold text-txt-secondary">
-                      Forensic Findings
+                      Forensic Findings ({result.primary_system || 'Active Model'})
                     </span>
                     <span className="text-xs font-mono text-txt-secondary tabular-nums">
-                      Inference: {result.latency_ms.toFixed(0)} ms
+                      Latency: {result.latency_ms.toFixed(0)} ms
                     </span>
                   </div>
 
@@ -313,10 +523,10 @@ export const AnalyseScreen: React.FC<AnalyseScreenProps> = ({
                 <WaveformIcon className="w-6 h-6" />
               </div>
               <h3 className="text-base font-semibold text-txt-primary">
-                Ready for Voice Analysis
+                Ready for Voice Screening
               </h3>
               <p className="text-sm text-txt-secondary max-w-md leading-relaxed">
-                Upload any spoken voice recording or pick a reference sample from the left panel. The stacked ensemble will evaluate genuine acoustic resonance versus synthetic speech artifacts.
+                Select an audio clip from our ASVspoof 2019 test corpus, pick a reference sample, or upload your own recording to begin real-time acoustic forensic evaluation.
               </p>
             </div>
           )}
@@ -388,11 +598,74 @@ export const AnalyseScreen: React.FC<AnalyseScreenProps> = ({
 
           {}
           {result && (
-            <ModelBreakdownChart
-              models={result.models}
-              fusedScore={result.fused_score}
-              finalVerdict={result.verdict}
-            />
+            <div className="flex flex-col gap-3">
+              <ModelBreakdownChart
+                models={result.models}
+                fusedScore={result.fused_score}
+                finalVerdict={result.verdict}
+              />
+
+              <div className="p-3.5 rounded-[10px] bg-surface border border-borderSubtle flex flex-col gap-3">
+                <button
+                  onClick={() => setShowModelComparisonTable((prev) => !prev)}
+                  className="flex items-center justify-between text-xs font-semibold text-txt-primary hover:text-primary transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <Layers className="w-4 h-4 text-primary" />
+                    <span>Multi-Model Decision Comparison Matrix ({result.models.length} Systems)</span>
+                  </div>
+                  {showModelComparisonTable ? (
+                    <ChevronUp className="w-4 h-4 text-txt-secondary" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-txt-secondary" />
+                  )}
+                </button>
+
+                {showModelComparisonTable && (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs font-mono">
+                      <thead>
+                        <tr className="border-b border-borderSubtle text-[11px] text-txt-muted uppercase">
+                          <th className="py-2 px-3">System Name</th>
+                          <th className="py-2 px-3">Raw Continuous Score</th>
+                          <th className="py-2 px-3">Stacker Weight</th>
+                          <th className="py-2 px-3">System Verdict</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-borderSubtle">
+                        {result.models.map((m) => (
+                          <tr key={m.name} className="hover:bg-elevated/40 transition-colors">
+                            <td className="py-2 px-3 font-sans font-medium text-txt-primary">
+                              {m.name}
+                            </td>
+                            <td className="py-2 px-3 text-txt-primary tabular-nums">
+                              {m.score > 0 ? `+${m.score.toFixed(4)}` : m.score.toFixed(4)}
+                            </td>
+                            <td className="py-2 px-3 text-txt-secondary tabular-nums">
+                              {m.ensemble_weight.toFixed(4)}
+                            </td>
+                            <td className="py-2 px-3">
+                              <span
+                                className={clsx(
+                                  'px-2 py-0.5 rounded-full text-[10px] font-sans font-semibold border',
+                                  m.verdict === 'BONA FIDE (GENUINE)'
+                                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                                    : m.verdict === 'SPOOF (SYNTHETIC)'
+                                    ? 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+                                    : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                                )}
+                              >
+                                {m.verdict}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
           )}
         </div>
       </div>

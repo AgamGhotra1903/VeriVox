@@ -36,15 +36,19 @@ def build_zip(group_num: str, title: str, out_dir: Path) -> Path:
     zip_path = out_dir / f"{group_num}_code_{title}.zip"
     print(f"--> Creating submission ZIP: {zip_path}")
     
-    include_dirs = ['src', 'scripts', 'configs', 'tests', 'app', 'frontend', 'docs', 'results', 'checkpoints']
+    include_dirs = ['src', 'scripts', 'configs', 'tests', 'frontend', 'docs', 'results', 'checkpoints', 'data/manifests']
     include_files = ['README.md', 'requirements.txt', 'pyproject.toml', 'Makefile', 'Dockerfile', 'pytest.ini', '.gitignore', 'FIXES_LOG.md', 'FINAL_NOTES.md']
 
     def should_exclude(rel_path):
         parts = Path(rel_path).parts
         for p in parts:
-            if p in ['node_modules', '.venv', '__pycache__', '.pytest_cache', '.git', '.vite', 'dist', 'submission']:
+            if p in ['node_modules', '.venv', '__pycache__', '.pytest_cache', '.git', '.vite', 'submission', 'temp_uploads']:
                 return True
-        if any(pattern in rel_path for pattern in ['data/raw', 'handover', 'review_pack']):
+        if rel_path.startswith('app/') or rel_path == 'app':
+            return True
+        if rel_path == 'tests/test_ui_helpers.py':
+            return True
+        if any(pattern in rel_path for pattern in ['data/raw', 'data/temp_uploads', 'handover', 'review_pack']):
             return True
         if rel_path.endswith(('.pyc', '.DS_Store')):
             return True

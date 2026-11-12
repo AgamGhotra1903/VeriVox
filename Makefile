@@ -126,8 +126,7 @@ docker-up:
 docker-down:
 	docker compose down
 
-demo:
-	PYTHONPATH=. $(PYTHON) -m streamlit run app/streamlit_app.py
+demo: app
 
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} +

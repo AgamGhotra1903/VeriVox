@@ -105,7 +105,7 @@ export const App: React.FC = () => {
             <span className="w-1 h-1 rounded-full bg-borderStrong" />
             <span>CRNN + GMM + L2-STACKING</span>
             <span className="w-1 h-1 rounded-full bg-borderStrong" />
-            <span>ASVSPOOF 2019 LA CERTIFIED</span>
+            <span>TRAINED ON ASVSPOOF 2019 LA</span>
           </div>
 
           <div className="flex items-center gap-4">

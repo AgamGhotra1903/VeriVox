@@ -12,6 +12,8 @@ import shutil
 import tempfile
 import threading
 import time
+import uuid
+import re
 from typing import Any, AsyncGenerator, Optional
 import numpy as np
 import pandas as pd
@@ -42,6 +44,7 @@ from acforensics.utils.logging import get_logger
 from acforensics.api.models import (
     AnalysisResult,
     AnalyzeResponse,
+    AttackCountItem,
     AttackEERRow,
     AudioQualityProfile,
     BenchmarkAblationRow,
@@ -49,7 +52,11 @@ from acforensics.api.models import (
     BenchmarkTableRow,
     CodecRobustnessRow,
     CrossDomainRow,
+    DatasetSampleItem,
+    DatasetSamplesResponse,
+    DatasetSummaryResponse,
     HealthResponse,
+    ModelInfoItem,
     ModelScoreItem,
     PipelineEvent,
     SampleItem,
@@ -58,6 +65,24 @@ from acforensics.api.models import (
 )
 
 logger = get_logger(__name__)
+
+
+ATTACK_NAMES: dict[str, str] = {
+    "-": "Authentic Human Speech (Bona Fide)",
+    "A07": "Vocoder: WORLD (Speech Synthesis / TTS)",
+    "A08": "Vocoder: Neural Source-Filter (NSF)",
+    "A09": "Vocoder: STRAIGHT",
+    "A10": "Neural TTS: Tacotron 2 + WaveRNN",
+    "A11": "Neural TTS: Tacotron 2 + Griffin-Lim",
+    "A12": "Voice Conversion: Neural WaveNet VC",
+    "A13": "Voice Conversion: CycleGAN VC",
+    "A14": "Voice Conversion: VAE-based VC",
+    "A15": "Voice Conversion: StarGAN VC",
+    "A16": "Voice Conversion: Spectral Filtering VC",
+    "A17": "WaveNet Vocoder (Acoustic Model)",
+    "A18": "Neural Vocoder (Mel Inversion)",
+    "A19": "Waveform Concatenation Synthesis",
+}
 
 
 class ForensicService:
@@ -74,6 +99,8 @@ class ForensicService:
         self.active_jobs: dict[str, dict[str, Any]] = {}
         self.results: dict[str, AnalysisResult] = {}
         self.cached_audio: dict[str, Path] = {}
+        self._eval_df: Optional[pd.DataFrame] = None
+        self._eval_df_by_id: Optional[pd.DataFrame] = None
 
         self.meta_weights: dict[str, float] = {}
         self.dev_threshold: float = 0.1795
@@ -109,7 +136,25 @@ class ForensicService:
         if self.primary_checkpoint_path.exists():
             with open(self.primary_checkpoint_path, "rb") as f:
                 self.primary_checkpoint_sha256 = hashlib.sha256(f.read()).hexdigest()
-        self.crnn_dev_threshold: float = 0.50
+        self.crnn_dev_threshold: float = -1.0513
+        crnn_lfcc_json = self.repo_root / "results" / "metrics" / "crnn_lfcc_results.json"
+        if crnn_lfcc_json.exists():
+            try:
+                with open(crnn_lfcc_json) as f:
+                    mj = json.load(f)
+                    self.crnn_dev_threshold = float(mj.get("dev", {}).get("eer_threshold", -1.0513))
+            except Exception:
+                pass
+
+        self.crnn_logmel_dev_threshold: float = -2.5856
+        crnn_logmel_json = self.repo_root / "results" / "metrics" / "crnn_logmel_results.json"
+        if crnn_logmel_json.exists():
+            try:
+                with open(crnn_logmel_json) as f:
+                    mj = json.load(f)
+                    self.crnn_logmel_dev_threshold = float(mj.get("dev", {}).get("eer_threshold", -2.5856))
+            except Exception:
+                pass
 
     def get_health(self) -> HealthResponse:
         """Reports system operational status and memory."""
@@ -119,7 +164,7 @@ class ForensicService:
 
         return HealthResponse(
             status="healthy",
-            version="2.4.0",
+            version="0.1.0",
             device=str(self.device),
             primary_system="CRNN-LFCC",
             primary_checkpoint=str(self.primary_checkpoint_path),
@@ -197,7 +242,223 @@ class ForensicService:
         p = self.repo_root / "app" / "assets" / "samples" / filename
         return p if p.exists() else None
 
-    async def register_audio_upload(self, job_id: str, audio_bytes: bytes, filename: str) -> Path:
+    def _load_eval_manifest(self) -> Optional[pd.DataFrame]:
+        """Loads and indexes the ASVspoof 2019 LA evaluation parquet manifest."""
+        if self._eval_df is not None:
+            return self._eval_df
+        parquet_path = self.repo_root / "data" / "manifests" / "eval.parquet"
+        if not parquet_path.exists():
+            return None
+        df = pd.read_parquet(parquet_path)
+        df["file_id"] = df["path"].apply(lambda p: Path(p).stem)
+        self._eval_df = df
+        self._eval_df_by_id = df.set_index("file_id")
+        return self._eval_df
+
+    def list_models(self) -> list[ModelInfoItem]:
+        """Catalog of all neural and classical screening architectures."""
+        return [
+            ModelInfoItem(
+                id="CRNN-LFCC",
+                name="CRNN-LFCC (Primary Production Model)",
+                description="Convolutional Recurrent Neural Network trained on Linear Frequency Cepstral Coefficients with self-attention.",
+                is_primary=True,
+                architecture="CNN-2D + BiGRU + Self-Attention",
+                feature="LFCC (60-dim)",
+                operating_threshold=round(self.crnn_dev_threshold, 4),
+            ),
+            ModelInfoItem(
+                id="CRNN-LogMel",
+                name="CRNN-LogMel (Feature Ablation)",
+                description="Ablation model replacing LFCC with 80-channel log-mel filterbanks to measure spectral vs cepstral sensitivity.",
+                is_primary=False,
+                architecture="CNN-2D + BiGRU + Self-Attention",
+                feature="Log-Mel (80-dim)",
+                operating_threshold=round(self.crnn_logmel_dev_threshold, 4),
+            ),
+            ModelInfoItem(
+                id="GMM",
+                name="GMM-LFCC (Classical Baseline)",
+                description="64-component diagonal Gaussian Mixture Model scoring log-likelihood ratios.",
+                is_primary=False,
+                architecture="GMM (64 components)",
+                feature="Pooled LFCC stats (120-dim)",
+                operating_threshold=0.0,
+            ),
+            ModelInfoItem(
+                id="SVM",
+                name="RBF-SVM (Classical Baseline)",
+                description="Support Vector Machine with Radial Basis Function kernel on PCA-reduced features (95% variance).",
+                is_primary=False,
+                architecture="RBF-SVM",
+                feature="PCA-reduced LFCC",
+                operating_threshold=0.0,
+            ),
+            ModelInfoItem(
+                id="Random Forest",
+                name="Random Forest (Classical Baseline)",
+                description="Ensemble of 100 decision trees trained on PCA feature representations.",
+                is_primary=False,
+                architecture="Random Forest (100 trees)",
+                feature="PCA-reduced LFCC",
+                operating_threshold=0.50,
+            ),
+            ModelInfoItem(
+                id="Logistic Regression",
+                name="Logistic Regression (Linear Baseline)",
+                description="L2-regularized linear discriminant baseline on PCA features.",
+                is_primary=False,
+                architecture="Logistic Regression",
+                feature="PCA-reduced LFCC",
+                operating_threshold=0.50,
+            ),
+            ModelInfoItem(
+                id="Stacked Ensemble",
+                name="Stacked Meta-Learner (Experimental Ablation)",
+                description="L2 logistic regression meta-learner fusing scores from all 6 base models.",
+                is_primary=False,
+                architecture="L2 Logistic Regression Stacker",
+                feature="Base model score vector (6-dim)",
+                operating_threshold=round(self.dev_threshold, 4),
+            ),
+        ]
+
+    def get_dataset_summary(self) -> DatasetSummaryResponse:
+        """Overview metrics and attack breakdowns for the ASVspoof 2019 LA evaluation corpus."""
+        df = self._load_eval_manifest()
+        if df is None:
+            return DatasetSummaryResponse(total_samples=0, bonafide_count=0, spoof_count=0, attacks=[])
+        total = len(df)
+        bonafide_count = int((df["label"] == 1).sum())
+        spoof_count = int((df["label"] == 0).sum())
+        attack_counts = df["attack_id"].value_counts().to_dict()
+        attacks = []
+        for atk, count in sorted(attack_counts.items(), key=lambda x: (x[0] != "-", x[0])):
+            attacks.append(
+                AttackCountItem(
+                    attack_id=atk,
+                    name=ATTACK_NAMES.get(atk, f"Attack {atk}"),
+                    count=int(count),
+                )
+            )
+        return DatasetSummaryResponse(
+            total_samples=total,
+            bonafide_count=bonafide_count,
+            spoof_count=spoof_count,
+            attacks=attacks,
+        )
+
+    def query_dataset_samples(
+        self,
+        page: int = 1,
+        page_size: int = 15,
+        label: Optional[str] = None,
+        attack_id: Optional[str] = None,
+        search: Optional[str] = None,
+        random_sample: bool = False,
+    ) -> DatasetSamplesResponse:
+        """Searches, filters, and paginates samples from the evaluation set."""
+        df = self._load_eval_manifest()
+        if df is None:
+            return DatasetSamplesResponse(total=0, page=1, page_size=page_size, samples=[])
+
+        filtered = df
+        if label in ("bonafide", "bona fide"):
+            filtered = filtered[filtered["label"] == 1]
+        elif label == "spoof":
+            filtered = filtered[filtered["label"] == 0]
+
+        if attack_id and attack_id != "all":
+            filtered = filtered[filtered["attack_id"] == attack_id]
+
+        if search:
+            search_clean = search.strip().upper()
+            filtered = filtered[filtered["file_id"].str.contains(search_clean, na=False)]
+
+        total = len(filtered)
+        if total == 0:
+            return DatasetSamplesResponse(total=0, page=page, page_size=page_size, samples=[])
+
+        if random_sample:
+            row = filtered.sample(n=1).iloc[0]
+            samples = [
+                DatasetSampleItem(
+                    file_id=row["file_id"],
+                    label="bonafide" if row["label"] == 1 else "spoof",
+                    attack_id=str(row["attack_id"]),
+                    speaker=str(row["speaker"]),
+                    audio_url=f"/api/dataset/audio/{row['file_id']}",
+                )
+            ]
+            return DatasetSamplesResponse(total=total, page=1, page_size=1, samples=samples)
+
+        start = (page - 1) * page_size
+        end = start + page_size
+        page_df = filtered.iloc[start:end]
+
+        samples = []
+        for _, row in page_df.iterrows():
+            samples.append(
+                DatasetSampleItem(
+                    file_id=row["file_id"],
+                    label="bonafide" if row["label"] == 1 else "spoof",
+                    attack_id=str(row["attack_id"]),
+                    speaker=str(row["speaker"]),
+                    audio_url=f"/api/dataset/audio/{row['file_id']}",
+                )
+            )
+
+        return DatasetSamplesResponse(total=total, page=page, page_size=page_size, samples=samples)
+
+    def get_dataset_audio_path(self, file_id: str) -> Optional[Path]:
+        """Resolves filesystem path for a specific evaluation dataset audio clip."""
+        df = self._load_eval_manifest()
+        if df is None or self._eval_df_by_id is None:
+            return None
+        if file_id not in self._eval_df_by_id.index:
+            return None
+        rel_path = self._eval_df_by_id.loc[file_id, "path"]
+        if isinstance(rel_path, pd.Series):
+            rel_path = rel_path.iloc[0]
+        full_path = self.repo_root / str(rel_path)
+        return full_path if full_path.exists() else None
+
+    async def evaluate_dataset_sample(
+        self,
+        file_id: str,
+        model: Optional[str] = None,
+    ) -> tuple[str, str]:
+        """Initializes forensic evaluation for a dataset clip with ground truth metadata."""
+        path = self.get_dataset_audio_path(file_id)
+        if not path or not path.exists():
+            raise FileNotFoundError(f"Sample audio for '{file_id}' not found.")
+        row = self._eval_df_by_id.loc[file_id]
+        if isinstance(row, pd.DataFrame):
+            row = row.iloc[0]
+        gt_label = "bonafide" if row["label"] == 1 else "spoof"
+        attack_id = str(row["attack_id"])
+
+        with open(path, "rb") as f:
+            content = f.read()
+
+        job_id = uuid.uuid4().hex
+        await self.register_audio_upload(
+            job_id=job_id,
+            audio_bytes=content,
+            filename=path.name,
+            selected_model=model,
+        )
+        self.active_jobs[job_id]["ground_truth"] = gt_label
+        self.active_jobs[job_id]["attack_id"] = attack_id
+        return job_id, path.name
+
+    async def register_audio_upload(
+        self,
+        job_id: str,
+        audio_bytes: bytes,
+        filename: str,
+        selected_model: Optional[str] = None,
+    ) -> Path:
         """Stores uploaded audio securely in temporary scratch space."""
         suffix = Path(filename).suffix.lower()
         if not suffix:
@@ -215,6 +476,7 @@ class ForensicService:
             "filename": filename,
             "path": temp_path,
             "status": "queued",
+            "selected_model": selected_model or "CRNN-LFCC",
             "created_at": datetime.now(timezone.utc).isoformat(),
         }
         return temp_path
@@ -234,6 +496,7 @@ class ForensicService:
             return
 
         audio_path = self.cached_audio[job_id]
+        job_info = self.active_jobs.get(job_id, {})
         t_start = time.perf_counter()
 
         def elapsed():
@@ -417,18 +680,61 @@ class ForensicService:
             )
             await asyncio.sleep(0.01)
 
-            if 0.40 <= proba_bonafide <= 0.60:
-                verdict = "INCONCLUSIVE"
-                confidence_band = "uncertainty_band"
-                confidence_note = "Score falls within the indeterminate uncertainty band [0.40, 0.60]. Forensic certainty is diminished."
-            elif proba_bonafide > 0.60:
+            crnn_prob = float(1.0 / (1.0 + np.exp(-np.clip(s_crnn_lfcc - self.crnn_dev_threshold, -30.0, 30.0))))
+            crnn_verdict = "BONA FIDE (GENUINE)" if crnn_prob > 0.60 else ("SPOOF (SYNTHETIC)" if crnn_prob < 0.40 else "INCONCLUSIVE")
+
+            logmel_prob = float(1.0 / (1.0 + np.exp(-np.clip(s_crnn_logmel - self.crnn_logmel_dev_threshold, -30.0, 30.0))))
+            logmel_verdict = "BONA FIDE (GENUINE)" if logmel_prob > 0.60 else ("SPOOF (SYNTHETIC)" if logmel_prob < 0.40 else "INCONCLUSIVE")
+
+            selected_model = self.active_jobs.get(job_id, {}).get("selected_model", "CRNN-LFCC")
+            if selected_model == "CRNN-LogMel":
+                active_system = "CRNN-LogMel"
+                active_score = s_crnn_logmel
+                active_prob = logmel_prob
+                active_threshold = 0.50
+            elif selected_model in ("Stacked Ensemble", "Ensemble"):
+                active_system = "Stacked Ensemble"
+                active_score = fused_score
+                active_prob = proba_bonafide
+                active_threshold = self.dev_threshold
+            elif selected_model in ("GMM", "GMM-LFCC"):
+                active_system = "GMM-LFCC"
+                active_score = s_gmm
+                active_prob = float(1.0 / (1.0 + np.exp(-np.clip(s_gmm, -30.0, 30.0))))
+                active_threshold = 0.50
+            elif selected_model in ("SVM", "SVM-LFCC"):
+                active_system = "SVM-LFCC"
+                active_score = s_svm
+                active_prob = float(1.0 / (1.0 + np.exp(-np.clip(s_svm, -30.0, 30.0))))
+                active_threshold = 0.50
+            elif selected_model == "Random Forest":
+                active_system = "Random Forest"
+                active_score = s_rf
+                active_prob = s_rf
+                active_threshold = 0.50
+            elif selected_model == "Logistic Regression":
+                active_system = "Logistic Regression"
+                active_score = s_lr
+                active_prob = s_lr
+                active_threshold = 0.50
+            else:
+                active_system = "CRNN-LFCC"
+                active_score = s_crnn_lfcc
+                active_prob = crnn_prob
+                active_threshold = 0.50
+
+            if active_prob > 0.60:
                 verdict = "BONA FIDE (GENUINE)"
                 confidence_band = "high_confidence_bonafide"
-                confidence_note = f"Acoustic markers and harmonic structures are consistent with authentic human vocal tract dynamics ({proba_bonafide*100:.1f}% genuine probability)."
-            else:
+                confidence_note = f"Acoustic markers and harmonic structures are consistent with authentic human vocal tract dynamics ({active_prob*100:.1f}% genuine probability)."
+            elif active_prob < 0.40:
                 verdict = "SPOOF (SYNTHETIC)"
                 confidence_band = "high_confidence_spoof"
-                confidence_note = f"Anomalous spectral transitions, phase discontinuities, or vocoder artifacts detected ({(1.0 - proba_bonafide)*100:.1f}% synthetic probability)."
+                confidence_note = f"Anomalous spectral transitions, phase discontinuities, or vocoder artifacts detected ({(1.0 - active_prob)*100:.1f}% synthetic probability)."
+            else:
+                verdict = "INCONCLUSIVE"
+                confidence_band = "uncertainty_band"
+                confidence_note = f"Score falls within the indeterminate uncertainty band [0.40, 0.60] ({active_prob*100:.1f}% genuine probability). Forensic certainty is diminished."
 
             all_model_names = ["CRNN-LFCC", "CRNN-LogMel", "GMM", "SVM", "Random Forest", "Logistic Regression"]
             meta_alias = {"GMM": "GMM-LFCC", "SVM": "SVM-LFCC", "Random Forest": "RandomForest-LFCC", "Logistic Regression": "LogisticRegression-LFCC"}
@@ -493,8 +799,11 @@ class ForensicService:
             )
 
             explanation = (
-                f"Stacked meta-learner fused 6 base models with decision threshold {threshold:.4f}. "
-                f"{confidence_note} Key contributors: CRNN-LFCC ({scores_by_name['CRNN-LFCC']:+.2f}) and GMM ({scores_by_name['GMM']:+.2f})."
+                f"{active_system} evaluation: continuous score = {active_score:+.4f}, "
+                f"calibrated P(genuine) = {active_prob*100:.1f}%. "
+                f"Operating threshold = {active_threshold:.4f} (abstain band: [0.40, 0.60]). "
+                f"{confidence_note} "
+                f"Audio characteristics: {orig_dur:.2f}s duration, {int(bw)} Hz effective bandwidth, {snr:.1f} dB SNR."
             )
 
             caveat = (
@@ -502,24 +811,32 @@ class ForensicService:
                 "Accuracy may degrade on unseen generative vocoders, acoustic reverberation, or lossy codec re-encoding."
             )
 
-            crnn_prob = 1.0 / (1.0 + np.exp(-np.clip(s_crnn_lfcc - self.crnn_dev_threshold, -30.0, 30.0)))
-            crnn_verdict = "BONA FIDE (GENUINE)" if s_crnn_lfcc >= self.crnn_dev_threshold else "SPOOF (SYNTHETIC)"
+            gt_label = job_info.get("ground_truth")
+            attack_id = job_info.get("attack_id")
+            is_correct = None
+            if gt_label:
+                if verdict == "BONA FIDE (GENUINE)":
+                    is_correct = (gt_label == "bonafide")
+                elif verdict == "SPOOF (SYNTHETIC)":
+                    is_correct = (gt_label == "spoof")
+                else:
+                    is_correct = None
 
             result_obj = AnalysisResult(
                 job_id=job_id,
-                primary_system="CRNN-LFCC",
+                primary_system=active_system,
                 primary_checkpoint_sha256=self.primary_checkpoint_sha256,
                 crnn_score=round(s_crnn_lfcc, 4),
                 crnn_verdict=crnn_verdict,
                 crnn_probability=round(float(crnn_prob), 4),
                 ensemble_status="EXPERIMENTAL ABLATION",
                 verdict=verdict,
-                probability_bonafide=round(proba_bonafide, 4),
+                probability_bonafide=round(active_prob, 4),
                 confidence_band=confidence_band,
                 confidence_note=confidence_note,
                 fused_score=round(fused_score, 4),
                 baseline_mean_score=round(baseline_mean, 4),
-                decision_threshold=round(threshold, 4),
+                decision_threshold=round(active_threshold, 4),
                 explanation=explanation,
                 caveat=caveat,
                 models=model_items,
@@ -531,6 +848,9 @@ class ForensicService:
                 time_axis_sec=time_axis,
                 latency_ms=elapsed(),
                 created_at=datetime.now(timezone.utc).isoformat(),
+                ground_truth=gt_label,
+                attack_id=attack_id,
+                is_correct=is_correct,
             )
 
             self.results[job_id] = result_obj

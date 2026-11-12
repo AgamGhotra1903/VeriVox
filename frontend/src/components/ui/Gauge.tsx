@@ -14,7 +14,7 @@ export interface GaugeProps {
 export const Gauge: React.FC<GaugeProps> = ({
   probability,
   verdict,
-  threshold = 0.1795,
+  threshold = 0.50,
   className,
   size = 180,
 }) => {

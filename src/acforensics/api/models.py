@@ -80,6 +80,52 @@ class AnalysisResult(BaseModel):
     time_axis_sec: list[float]
     latency_ms: float
     created_at: str
+    ground_truth: Optional[str] = None
+    attack_id: Optional[str] = None
+    is_correct: Optional[bool] = None
+
+
+class ModelInfoItem(BaseModel):
+    """Metadata describing an available neural or baseline model."""
+    id: str
+    name: str
+    description: str
+    is_primary: bool
+    architecture: str
+    feature: str
+    operating_threshold: float
+
+
+class AttackCountItem(BaseModel):
+    """Attack description and sample count."""
+    attack_id: str
+    name: str
+    count: int
+
+
+class DatasetSummaryResponse(BaseModel):
+    """Overview summary of the ASVspoof 2019 evaluation dataset."""
+    total_samples: int
+    bonafide_count: int
+    spoof_count: int
+    attacks: list[AttackCountItem]
+
+
+class DatasetSampleItem(BaseModel):
+    """Single sample metadata from the evaluation corpus."""
+    file_id: str
+    label: str
+    attack_id: str
+    speaker: str
+    audio_url: str
+
+
+class DatasetSamplesResponse(BaseModel):
+    """Paginated collection of evaluation dataset samples."""
+    total: int
+    page: int
+    page_size: int
+    samples: list[DatasetSampleItem]
 
 
 class PipelineEvent(BaseModel):

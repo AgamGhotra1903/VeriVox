@@ -57,15 +57,15 @@ def compute_spectral_bandwidth_hz(
         return float(sr / 2.0)
 
     freqs, psd = scipy.signal.welch(waveform, fs=sr, nperseg=min(512, len(waveform)))
-    cum_energy = np.cumsum(psd)
-    total_energy = cum_energy[-1]
+    total_energy = np.sum(psd)
     if total_energy <= 1e-12:
         return 0.0
 
-    threshold = rolloff_percent * total_energy
-    idx = np.where(cum_energy >= threshold)[0]
-    if len(idx) > 0:
-        return float(freqs[idx[0]])
+    peak_db = 10.0 * np.log10(np.max(psd) + 1e-12)
+    db = 10.0 * np.log10(psd + 1e-12)
+    active_idx = np.where(db >= peak_db - 45.0)[0]
+    if len(active_idx) > 0:
+        return float(freqs[active_idx[-1]])
     return float(freqs[-1])
 
 

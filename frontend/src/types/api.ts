@@ -41,6 +41,7 @@ export interface ModelScoreItem {
 
 export interface AnalysisResult {
   job_id: string;
+  primary_system?: string;
   verdict: 'BONA FIDE (GENUINE)' | 'SPOOF (SYNTHETIC)' | 'INCONCLUSIVE';
   probability_bonafide: number;
   confidence_band: 'high_confidence_bonafide' | 'high_confidence_spoof' | 'uncertainty_band';
@@ -59,6 +60,47 @@ export interface AnalysisResult {
   time_axis_sec: number[];
   latency_ms: number;
   created_at: string;
+  ground_truth?: string | null;
+  attack_id?: string | null;
+  is_correct?: boolean | null;
+}
+
+export interface ModelInfoItem {
+  id: string;
+  name: string;
+  description: string;
+  is_primary: boolean;
+  architecture: string;
+  feature: string;
+  operating_threshold: number;
+}
+
+export interface AttackCountItem {
+  attack_id: string;
+  name: string;
+  count: number;
+}
+
+export interface DatasetSummaryResponse {
+  total_samples: number;
+  bonafide_count: number;
+  spoof_count: number;
+  attacks: AttackCountItem[];
+}
+
+export interface DatasetSampleItem {
+  file_id: string;
+  label: 'bonafide' | 'spoof';
+  attack_id: string;
+  speaker: string;
+  audio_url: string;
+}
+
+export interface DatasetSamplesResponse {
+  total: number;
+  page: number;
+  page_size: number;
+  samples: DatasetSampleItem[];
 }
 
 export interface PipelineEvent {

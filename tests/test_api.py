@@ -199,3 +199,39 @@ def test_benchmarks_endpoint(client):
     assert len(bench["crossdomain_itw"]) >= 1
     assert "Stacked Ensemble" in bench["roc_curves"]
 
+
+def test_models_endpoint(client):
+    """GET /api/models returns complete architecture catalog."""
+    resp = client.get("/api/models")
+    assert resp.status_code == 200
+    models = resp.json()
+    assert len(models) == 7
+    ids = [m["id"] for m in models]
+    assert "CRNN-LFCC" in ids
+    assert "CRNN-LogMel" in ids
+    assert "GMM" in ids
+    assert "SVM" in ids
+    assert "Stacked Ensemble" in ids
+
+
+def test_dataset_summary_and_samples_endpoints(client):
+    """GET /api/dataset/summary and /api/dataset/samples query the eval manifest."""
+    resp_sum = client.get("/api/dataset/summary")
+    assert resp_sum.status_code == 200
+    sum_data = resp_sum.json()
+    assert sum_data["total_samples"] > 0
+    assert sum_data["bonafide_count"] > 0
+    assert sum_data["spoof_count"] > 0
+    assert len(sum_data["attacks"]) >= 13
+
+    resp_samples = client.get("/api/dataset/samples?page=1&page_size=5&label=bonafide")
+    assert resp_samples.status_code == 200
+    data = resp_samples.json()
+    assert len(data["samples"]) == 5
+    assert all(s["label"] == "bonafide" for s in data["samples"])
+
+    sample_id = data["samples"][0]["file_id"]
+    resp_audio = client.get(f"/api/dataset/audio/{sample_id}")
+    assert resp_audio.status_code == 200
+    assert resp_audio.headers["content-type"] == "audio/flac"
+
